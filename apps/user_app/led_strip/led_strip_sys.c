@@ -39,6 +39,8 @@ void fc_data_init(void)
     fc_effect.ls_speed = 3;
     fc_effect.sequence = NEO_RGBW;
     fc_effect.auto_f = IS_PAUSE;
+
+    // 声控模式的灵敏度，值越小越灵敏
     // fc_effect.music.s = 80;
     // fc_effect.music.s = 40;
     fc_effect.music.s = 20;
@@ -49,9 +51,9 @@ void fc_data_init(void)
 
     fc_effect.app_rgb_mode = 0;
     // 闹钟
-    zd_countdown[0].set_on_off = DEVICE_OFF;
-    zd_countdown[1].set_on_off = DEVICE_OFF;
-    zd_countdown[2].set_on_off = DEVICE_OFF;
+    // zd_countdown[0].set_on_off = DEVICE_OFF;
+    // zd_countdown[1].set_on_off = DEVICE_OFF;
+    // zd_countdown[2].set_on_off = DEVICE_OFF;
 
     // 流星
     fc_effect.star_on_off = DEVICE_ON;
@@ -88,21 +90,12 @@ void soft_turn_on_the_light(void) // 软开灯处理
     // printf("tk %u\n", tk);
     // printf("fc_effect.star_on_off %u\n", fc_effect.star_on_off);
 
-    // if (tk)
-    // { 
-    //     OpenMortor();
-    // }
-    // else
-    // {
-    //     tk = 1;
-    // } 
-
     // motor_Init();
     // WS2812FX_start();
     // open_fan();
 
-    OpenMortor();
-    set_fc_effect();  // 设置七彩灯的动画
+    OpenMortor();            // 打开电机
+    set_fc_effect();         // 设置七彩灯的动画
     ls_meteor_stat_effect(); // 设置流星灯的动画
 
     fb_led_on_off_state();  // 与app同步开关状态
@@ -119,9 +112,8 @@ void soft_turn_off_lights(void) // 软关灯处理
     // tk = 1; //
     WS2812FX_stop();
     WS2812FX_strip_off();
-    
-    // close_fan();
 
+    // close_fan();
 
     CloseMotor();
 
@@ -796,8 +788,8 @@ void ls_sub_motor_speed(void)
 }
 
 void CloseMotor(void)
-{ 
-    fc_effect.motor_on_off = DEVICE_OFF; 
+{
+    fc_effect.motor_on_off = DEVICE_OFF;
     one_wire_set_period(motor_period[fc_effect.star_speed_index]);
     one_wire_set_mode(6); // 关闭电机
     enable_one_wire();    // 启动发送电机数据
@@ -1145,7 +1137,10 @@ void ir_timer_handler(void)
 
 // 全彩效果初始化
 void full_color_init(void)
-{ 
+{
+    // 测试时使用：
+    fc_effect.b = 100;
+
     WS2812FX_init(fc_effect.led_num, fc_effect.sequence); // 初始化ws2811
     WS2812FX_setBrightness(fc_effect.b);
     set_on_off_led(fc_effect.on_off_flag);
@@ -1153,9 +1148,8 @@ void full_color_init(void)
     extern void count_down_run(void);
     extern void time_clock_handler(void);
 
-
-    sys_s_hi_timer_add(NULL, count_down_run, 10);     // 
-    // sys_s_hi_timer_add(NULL, ir_timer_handler, 10);   // 
+    // sys_s_hi_timer_add(NULL, count_down_run, 10);     //
+    // sys_s_hi_timer_add(NULL, ir_timer_handler, 10);   //
     // sys_s_hi_timer_add(NULL, time_clock_handler, 10); // 闹钟
-    sys_s_hi_timer_add(NULL, meteor_period_sub, 10);  // 流星周期控制
+    sys_s_hi_timer_add(NULL, meteor_period_sub, 10); // 流星周期控制
 }

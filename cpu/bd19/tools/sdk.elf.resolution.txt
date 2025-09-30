@@ -2172,7 +2172,7 @@ obj/Release/apps/user_app/led_strip/led_strand_effect.o
 -r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,WS2812FX_mode_comet_6,l
 -r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,meteor,l
 -r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,music_meteor3,l
--r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,meteor_light_two_channel_equalizer_effect,l
+-r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,meteor_light_random_breath,l
 -r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,save_user_data_area3,l
 -r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,app_set_bright,l
 -r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,fc_music_gradual,l
@@ -2291,9 +2291,7 @@ obj/Release/apps/user_app/led_strip/led_strip_sys.o
 -r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,ir_timer_handler,pl
 -r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,full_color_init,pl
 -r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,usr_timer_add,l
--r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,count_down_run,l
 -r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,fc_effect,l
--r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,zd_countdown,l
 -r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,led_b_array,pl
 -r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,led_speed_array,pl
 -r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,RGBsequence_map,pl
@@ -2312,6 +2310,7 @@ obj/Release/apps/user_app/led_strip/led_strip_sys.o
 -r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,ir_mode_cnt,pl
 -r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,ir_timer_state,pl
 -r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,ir_time_cnt,pl
+-r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,zd_countdown,l
 -r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,ws2811fx_set_cycle,l
 obj/Release/apps/user_app/led_strip/led_strip_voice.o
 -r=obj/Release/apps/user_app/led_strip/led_strip_voice.o,get_sound_result,pl
@@ -2601,7 +2600,8 @@ obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,get_sound_result,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_setPixelColor_rgbw,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,meteor_light_two_channel_equalizer_effect,pl
--r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,Adafruit_NeoPixel_clear,l
+-r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,meteor_light_single_point_flow,pl
+-r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,meteor_light_random_breath,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,meteor,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_copyPixels,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,meteor1,pl
@@ -2795,10 +2795,10 @@ obj/Release/apps/spp_and_le/app_main.o
 -r=obj/Release/apps/spp_and_le/app_main.o,effect_stepmotor,l
 -r=obj/Release/apps/spp_and_le/app_main.o,stepmotor,l
 -r=obj/Release/apps/spp_and_le/app_main.o,meteor_period_sub,l
--r=obj/Release/apps/spp_and_le/app_main.o,sound_handle,l
 -r=obj/Release/apps/spp_and_le/app_main.o,rf24_key_handle,l
 -r=obj/Release/apps/spp_and_le/app_main.o,os_time_dly,
 -r=obj/Release/apps/spp_and_le/app_main.o,WS2812_circle_task,pl
+-r=obj/Release/apps/spp_and_le/app_main.o,sound_handle,l
 -r=obj/Release/apps/spp_and_le/app_main.o,run_tick_per_10ms,l
 -r=obj/Release/apps/spp_and_le/app_main.o,WS2812FX_service,l
 -r=obj/Release/apps/spp_and_le/app_main.o,my_main,pl
@@ -2809,9 +2809,8 @@ obj/Release/apps/spp_and_le/app_main.o
 -r=obj/Release/apps/spp_and_le/app_main.o,mcu_com_init,l
 -r=obj/Release/apps/spp_and_le/app_main.o,read_flash_device_status_init,l
 -r=obj/Release/apps/spp_and_le/app_main.o,full_color_init,l
--r=obj/Release/apps/spp_and_le/app_main.o,os_sem_create,
--r=obj/Release/apps/spp_and_le/app_main.o,task_create,l
 -r=obj/Release/apps/spp_and_le/app_main.o,usr_timer_add,l
+-r=obj/Release/apps/spp_and_le/app_main.o,task_create,l
 -r=obj/Release/apps/spp_and_le/app_main.o,task_info_table,pl
 -r=obj/Release/apps/spp_and_le/app_main.o,app_var,pl
 -r=obj/Release/apps/spp_and_le/app_main.o,config_update_mode,l

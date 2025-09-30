@@ -117,7 +117,10 @@ void ws281x_show(unsigned char *pixels_pattern, unsigned short pattern_size)
             *(buf + wOffset + (i - 3)) = w;
         }
     }
+    
     // 幻彩灯驱动函数
+
+    // 流星灯驱动函数
     extern void ledc_send_rgbbuf_isr(u8 index, u8 * rgbbuf, u32 buf_len, u16 again_cnt);
     ledc_send_rgbbuf_isr(0, buf, pattern_size / 4, 0);
 

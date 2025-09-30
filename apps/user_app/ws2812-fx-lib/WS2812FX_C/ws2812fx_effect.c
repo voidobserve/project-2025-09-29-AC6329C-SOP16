@@ -18,7 +18,7 @@ uint8_t step2_flag, music_dly, change_mode, cycle_t;
 
 u8 ws2811fx_set_cycle; // 1：效果跑完一轮
 
-//-----------------------------------天奕流星效果 -----------------------------------
+//----------------------------------- 天奕流星效果 -----------------------------------
 #pragma region
 /**
  * @brief 单色灯带渐变灭灯,做流星效果   兼容正反方向
@@ -567,16 +567,27 @@ uint16_t music_mode1(void)
     return 30;
 }
 
-// 双路并行均衡器效果
+//
+
+/**
+ * @brief 双路并行均衡器效果
+ *          需要流星灯摆放位置为：
+ *          头 --- --- 中间
+ *          尾 --- --- 中间
+ *
+ * @return u16
+ */
 u16 meteor_light_two_channel_equalizer_effect(void)
 {
-    static u8 trg_cnt = 0;
-    static u8 no_trg_cnt = 0;
+    static volatile u8 trg_cnt = 0;
+    static volatile u8 no_trg_cnt = 0;
 
     // 下面的 WS2812FX_setPixelColor_rgbw() 传参是 颜色值 - rate，所以这里是由亮到暗
     const u8 rate[12] = {0, 50, 75, 100, 130, 180, 200, 220, 230, 240, 250, 253};
 
-    // Adafruit_NeoPixel_clear(); // 清空缓存残留 -- 在这里添加会导致所有灯光闪烁    
+    // printf("_seg->start:  %u\n", (u16)_seg->start);
+    // printf("_seg->stop:  %u\n", (u16)_seg->stop);
+    // printf("trg_cnt:  %u\n", (u16)trg_cnt);
 
     if (get_sound_result())
     {
@@ -589,11 +600,10 @@ u16 meteor_light_two_channel_equalizer_effect(void)
         WS2812FX_setPixelColor_rgbw(_seg->start + trg_cnt, r1 - rate[trg_cnt], g1 - rate[trg_cnt], b1 - rate[trg_cnt], w1 - rate[trg_cnt]);
         WS2812FX_setPixelColor_rgbw(_seg->stop - trg_cnt, r1 - rate[trg_cnt], g1 - rate[trg_cnt], b1 - rate[trg_cnt], w1 - rate[trg_cnt]);
 
-        // WS2812FX_setPixelColor(_seg->start+trg_cnt , _seg->colors[0] );
-        if (trg_cnt < _seg_len)
+        // if (trg_cnt < _seg_len)
+        if (trg_cnt < _seg_len / 2 - 1) //
         {
             trg_cnt++;
-            trg_cnt %= 6; // 限制范围
             no_trg_cnt = 0;
         }
         else
@@ -616,7 +626,134 @@ u16 meteor_light_two_channel_equalizer_effect(void)
             }
         }
     }
-    return 30;
+
+    // 返回值会影响均衡器动画的上升和下落速度，值越小，越快
+    // return 60;
+    // return 30;
+    // return 15;
+    return 10;
+}
+
+// 声控模式下，流星灯单点流水
+u16 meteor_light_single_point_flow(void)
+{
+    // printf("cycle\n");
+    // printf("_seg_rt->counter_mode_step: %u\n", (u16)_seg_rt->counter_mode_step);
+    // printf("_seg->start:  %u\n", (u16)_seg->start); // 1
+    // printf("_seg->stop:  %u\n", (u16)_seg->stop);
+    // printf("_seg_len:  %u\n", (u16)_seg_len);
+
+    static volatile u8 sound_trigger_cnt = 0; // 声音触发计数器
+
+    u16 cur_led_index = _seg_rt->counter_mode_step;
+    u16 animation_time_interval = 2000 / _seg_len; // 动画时间间隔（样机最长是约2s流水一轮）
+                                                   // u16 animation_time_interval = 4000 / _seg_len; // 动画时间间隔（样机最长是2s流水一轮）
+    if (cur_led_index > _seg->stop)                // 最后一个灯，防止越界
+    {
+        cur_led_index = _seg->stop;
+    }
+
+    if (get_sound_result())
+    {
+        sound_trigger_cnt = 3;
+
+        // animation_time_interval = 100 / _seg_len;
+        // animation_time_interval = 0;
+    }
+
+    if (sound_trigger_cnt > 0)
+    {
+        // 如果有触发声控
+        // animation_time_interval = 400 / _seg_len;
+
+        // animation_time_interval = 200 / _seg_len;
+        // animation_time_interval = 100 / _seg_len;
+
+        animation_time_interval = 0;
+    }
+
+    if (sound_trigger_cnt > 0)
+    {
+        sound_trigger_cnt--;
+    }
+
+    // 从起始索引开始，填充多少个（第三个参数不能用 _seg->stop ）
+    Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
+
+    if (0 == IS_REVERSE)
+    {
+        // 如果方向是正向
+
+        // 第一个参数不能为0，0是RGBW灯珠(不属于流星灯)，如果传参为0，会导致灯珠闪烁
+        WS2812FX_setPixelColor(_seg->start + cur_led_index, WHITE); // 点亮单个灯
+    }
+    else
+    {
+        // 如果方向是要反向
+        // 第一个参数不能为0，0是RGBW灯珠(不属于流星灯)，如果传参为0，会导致灯珠闪烁
+        WS2812FX_setPixelColor(_seg->stop - cur_led_index, WHITE); // 点亮单个灯
+    }
+
+    _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (_seg_len);
+    if (_seg_rt->counter_mode_step == 0)
+    {
+    }
+
+    return (animation_time_interval);
+}
+
+u16 meteor_light_random_breath(void)
+{
+#if 0 
+    WS2812FX_fade_out();
+
+    /* 修改后更多闪点 */
+    // if (WS2812FX_random8_lim(2) == 0)
+    if (WS2812FX_random8_lim(1) == 0)
+    {
+        uint8_t size = 1 << SIZE_OPTION; /* 像素大小 */
+        uint16_t index = _seg->start + WS2812FX_random16_lim(_seg_len - size);
+        Adafruit_NeoPixel_fill(WHITE, index, size);
+        SET_CYCLE;
+    }
+
+    // return (_seg->speed / 8);
+#endif
+
+    // 需要结合呼吸+随机的效果进行修改
+
+    /*
+        1、3、5、8、10、2、4、7依次点亮，再慢慢熄灭
+        之后开始迅速乱闪
+    */
+    // WS2812FX_fade_out();
+
+    
+
+    WS2812FX_fade_out_targetColor(WHITE);
+
+    // 目前测试没有慢慢点亮的效果，但是有慢慢熄灭的效果
+    if (_seg_rt->counter_mode_step <= 0)
+    {
+        Adafruit_NeoPixel_fill(WHITE, _seg->start, 1);
+    }
+    else if (_seg_rt->counter_mode_step <= 1)
+    {
+        Adafruit_NeoPixel_fill(WHITE, _seg->start + 2, 1);
+    }
+    else if (_seg_rt->counter_mode_step <= 2)
+    {
+        Adafruit_NeoPixel_fill(WHITE, _seg->start + 4, 1);
+    }
+    else if (_seg_rt->counter_mode_step <= 3)
+    {
+        Adafruit_NeoPixel_fill(WHITE, _seg->start + 6, 1);
+    }
+
+    // _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (_seg_len);
+    _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (1024);
+
+    return _seg->speed;
 }
 
 // 流星发射，声音触发，不支持连续发射，等上个流星发射完成再发射第二个

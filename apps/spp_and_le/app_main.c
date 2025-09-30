@@ -72,6 +72,7 @@ const struct task_info task_info_table[] = {
 #endif
 
     {"led_task", 2, 0, 512, 512}, // 灯光
+    // {"led_task", 3, 0, 512, 512}, // 灯光
     {0, 0},
 };
 
@@ -361,13 +362,14 @@ void main_while(void)
 
     while (1)
     {
-        effect_stepmotor();  // 声控，电机的音乐效果
-        stepmotor();         // 无霍尔时，电机停止指令计时
+        effect_stepmotor(); // 声控，电机的音乐效果
+        stepmotor();        // 无霍尔时，电机停止指令计时
 
         // power_motor_Init();  // 电机
 
         meteor_period_sub(); // 流星周期控制
-        sound_handle();
+
+        
 
         rf24_key_handle();
         // printf("main circle\n"); // 主循环约10ms
@@ -380,8 +382,11 @@ void main_while(void)
 
 void WS2812_circle_task(void)
 {
+    sound_handle();
     run_tick_per_10ms();
     WS2812FX_service();
+
+    // printf("cycle\n"); // 测试调用的周期
 }
 
 void my_main(void)
@@ -390,13 +395,15 @@ void my_main(void)
     led_pwm_init();  // 七彩灯控制引脚对应的PWM初始化
     mic_gpio_init();
     // fan_gpio_init();
-    led_state_init(); 
+    led_state_init();
     mcu_com_init(); // 电机一线通信
 
     read_flash_device_status_init();
     full_color_init();
-    os_sem_create(&LED_TASK_SEM, 0);
-    task_create(main_while, NULL, "led_task");
+
+    // os_sem_create(&LED_TASK_SEM, 0);
 
     sys_s_hi_timer_add(NULL, WS2812_circle_task, 10); // 10ms
+
+    task_create(main_while, NULL, "led_task");
 }

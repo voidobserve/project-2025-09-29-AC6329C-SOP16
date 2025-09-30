@@ -23,6 +23,9 @@ const u8 fade_type[3] =
 #define _0_seg_start 0
 #define _0_seg_stop 0
 
+
+extern void WS2812FX_setSegment_colorOptions(uint8_t n, uint16_t start, uint16_t stop, mode_ptr mode, uint32_t color, uint16_t speed, uint8_t options);
+
 /**
  * @brief 设置段的颜色
  *
@@ -960,18 +963,27 @@ void ls_meteor_stat_effect(void)
         {
             extern u16 music_mode1(void);
             extern u16 meteor_light_two_channel_equalizer_effect(void);
+            extern u16 WS2812FX_mode_comet_5(void);
+            extern u16 meteor_light_single_point_flow(void); // 流星灯单点流水
 
+            extern u16 meteor_light_random_breath(void);
 
             WS2812FX_stop();
             WS2812FX_setSegment_colorOptions(
-                1,                         // 第0段
-                1,                         // 起始位置
+                1,                     // 第0段
+                1,                     // 起始位置
                 fc_effect.led_num - 1, // 结束位置
                 /* &music_mode1,              // 效果 */
-                meteor_light_two_channel_equalizer_effect, 
-                WHITE,                     // 颜色，WS2812FX_setColors设置
-                fc_effect.star_speed,      // 速度
-                0);                        // 选项，这里像素点大小：3 REVERSE决定方向
+                /* meteor_light_two_channel_equalizer_effect,  */
+                /* WS2812FX_mode_comet_5, */
+                // meteor_light_single_point_flow,
+                meteor_light_random_breath,
+                // WS2812FX_mode_comet_1,
+                WHITE,                // 颜色，WS2812FX_setColors设置
+                // fc_effect.star_speed, // 速度
+                2000, // 速度
+                NO_OPTIONS);                   // 选项，这里像素点大小：3 REVERSE决定方向
+                // REVERSE);                   // 选项，这里像素点大小：3 REVERSE决定方向
 
             WS2812FX_start();
         }

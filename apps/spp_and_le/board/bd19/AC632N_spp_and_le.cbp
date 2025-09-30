@@ -2,7 +2,7 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="RGBW-使用触摸遥控" />
+		<Option title="RGBW" />
 		<Option compiler="q32s_lto_compiler" />
 		<Build>
 			<Target title="Release">
