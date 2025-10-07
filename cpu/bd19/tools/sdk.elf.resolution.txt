@@ -2602,6 +2602,8 @@ obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,meteor_light_two_channel_equalizer_effect,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,meteor_light_single_point_flow,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,meteor_light_random_breath,pl
+-r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_color_blend,l
+-r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_random8_lim,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,meteor,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_copyPixels,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,meteor1,pl
@@ -2642,7 +2644,6 @@ obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,set_music_s_m,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_mode_mutil_fade,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,memcpy,l
--r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_color_blend,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,memmove,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_mode_mutil_breath,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_mode_mutil_twihkle,pl
@@ -2653,7 +2654,6 @@ obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_mode_fireworks_random,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_fireworks,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_mode_fireworks,pl
--r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_random8_lim,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_mode_comet,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_mode_larson_scanner,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_mode_running_random,pl

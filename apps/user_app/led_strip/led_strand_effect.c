@@ -981,9 +981,11 @@ void ls_meteor_stat_effect(void)
                 // WS2812FX_mode_comet_1,
                 WHITE,                // 颜色，WS2812FX_setColors设置
                 // fc_effect.star_speed, // 速度
-                2000, // 速度
-                NO_OPTIONS);                   // 选项，这里像素点大小：3 REVERSE决定方向
+                // 1000, // 速度
+                3000, // 速度
+                // NO_OPTIONS);                   // 选项，这里像素点大小：3 REVERSE决定方向
                 // REVERSE);                   // 选项，这里像素点大小：3 REVERSE决定方向
+                FADE_XXSLOW);                   // 选项
 
             WS2812FX_start();
         }
