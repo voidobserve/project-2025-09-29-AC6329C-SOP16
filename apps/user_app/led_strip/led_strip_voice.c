@@ -53,7 +53,7 @@ void sound_handle(void)
     u16 adc;
     u8 i;
     // 记录adc值
-#if 1
+#if 0
     // if (fc_effect.on_off_flag == DEVICE_ON &&
     //     (fc_effect.Now_state == IS_light_music ||
     //      fc_effect.base_ins.mode == 0x05 ||

@@ -968,6 +968,9 @@ void ls_meteor_stat_effect(void)
 
             extern u16 meteor_light_random_breath(void);
 
+
+            fc_effect.meteor_period = 1000;
+
             WS2812FX_stop();
             WS2812FX_setSegment_colorOptions(
                 1,                     // 第0段
@@ -977,19 +980,27 @@ void ls_meteor_stat_effect(void)
                 /* meteor_light_two_channel_equalizer_effect,  */
                 /* WS2812FX_mode_comet_5, */
                 // meteor_light_single_point_flow,
-                meteor_light_random_breath,
+
+                // meteor_light_random_breath,
+
                 // WS2812FX_mode_comet_1,
+                meteor_effect,
+
                 WHITE,                // 颜色，WS2812FX_setColors设置
                 // fc_effect.star_speed, // 速度
+                200, // 速度
                 // 1000, // 速度
-                3000, // 速度
+                // 3000, // 速度
                 // NO_OPTIONS);                   // 选项，这里像素点大小：3 REVERSE决定方向
                 // REVERSE);                   // 选项，这里像素点大小：3 REVERSE决定方向
-                FADE_XXSLOW);                   // 选项
+                // FADE_FAST);                   // 选项
+                // SIZE_SMALL);                   // 选项
+                REVERSE);                   // 选项
 
             WS2812FX_start();
         }
     }
+
     save_user_data_area3(); // 保存参数配置到flash
 }
 

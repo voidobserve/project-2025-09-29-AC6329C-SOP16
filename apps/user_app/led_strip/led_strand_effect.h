@@ -161,12 +161,12 @@ typedef struct
 
   unsigned char auto_f;
   base_ins_t base_ins;           //电机
-  unsigned char motor_on_off;
+  unsigned char motor_on_off; // 电机开关状态
   unsigned char star_on_off;  //流星开关
   unsigned char star_index; // 流星灯动画索引
   unsigned short star_speed;
-  unsigned char app_star_speed;
-  unsigned char star_speed_index;
+  unsigned char app_star_speed;  // 反馈给APP流星速度
+  unsigned char star_speed_index; // 电机速度索引
 
 
   unsigned char app_rgb_mode;

@@ -19,7 +19,6 @@
 // 效果数据初始化
 void fc_data_init(void)
 {
-
     // 灯具
     fc_effect.on_off_flag = DEVICE_ON; // 灯为开启状态
     fc_effect.led_num = 13;            // 灯带的总灯珠数量 （12颗流星灯+1颗七彩灯）
@@ -38,7 +37,7 @@ void fc_data_init(void)
     fc_effect.dream_scene.speed = 100;
     fc_effect.ls_speed = 3;
     fc_effect.sequence = NEO_RGBW;
-    fc_effect.auto_f = IS_PAUSE;
+    // fc_effect.auto_f = IS_PAUSE;
 
     // 声控模式的灵敏度，值越小越灵敏
     // fc_effect.music.s = 80;
@@ -1031,29 +1030,29 @@ u8 ir_sensitive = 0;
 u8 auto_mode[3] = {0x04, 0x02, 0x07};
 //--------------------------------------------------自动
 /* 设置自动开与关 */
-void set_ir_auto(_AUTO_T auto_f)
-{
-    /* 检测合法性，和有变化 */
-    if (auto_f <= IS_PAUSE && fc_effect.auto_f != auto_f)
-    {
+// void set_ir_auto(_AUTO_T auto_f)
+// {
+//     /* 检测合法性，和有变化 */
+//     if (auto_f <= IS_PAUSE && fc_effect.auto_f != auto_f)
+//     {
 
-        fc_effect.auto_f = auto_f;
-        printf("\r set_ir_auto OK");
-    }
-    else
-    {
-    }
-}
+//         fc_effect.auto_f = auto_f;
+//         printf("\r set_ir_auto OK");
+//     }
+//     else
+//     {
+//     }
+// }
 
-void auto_Function_Switch(void)
-{
-    fc_effect.auto_f = !fc_effect.auto_f;
-}
+// void auto_Function_Switch(void)
+// {
+//     fc_effect.auto_f = !fc_effect.auto_f;
+// }
 /* 获取自动状态 */
-_AUTO_T get_ir_auto(void)
-{
-    return fc_effect.auto_f;
-}
+// _AUTO_T get_ir_auto(void)
+// {
+//     return fc_effect.auto_f;
+// }
 
 // 返回遥控器当前操作的模式
 u8 get_ir_mode(void)
@@ -1096,44 +1095,44 @@ AUTO_TIME_T get_ir_timer(void)
     return ir_timer_state;
 }
 
-static void ir_auto_change_mode(void)
-{
+// static void ir_auto_change_mode(void)
+// {
 
-    extern u8 ws2811fx_set_cycle;
+//     extern u8 ws2811fx_set_cycle;
 
-    // 循环模式
-    if (fc_effect.auto_f == IS_AUTO)
-    {
+//     // 循环模式
+//     if (fc_effect.auto_f == IS_AUTO)
+//     {
 
-        if (ir_auto_change_tcnt != 0)
-        {
+//         if (ir_auto_change_tcnt != 0)
+//         {
 
-            ir_auto_change_tcnt -= 10;
-        }
+//             ir_auto_change_tcnt -= 10;
+//         }
 
-        if (ws2811fx_set_cycle == 1)
-        {
-            ws2811fx_set_cycle = 0;
-            ir_auto_change_tcnt = IR_CHANGE_MODE_T;
-            if (auto_mode[2] < 0x15)
-            {
-                auto_mode[2] += 1;
-            }
-            else
-            {
-                auto_mode[2] = 7;
-            }
-            printf("auto change\n");
-            parse_zd_data(auto_mode);
-        }
-    }
-}
+//         if (ws2811fx_set_cycle == 1)
+//         {
+//             ws2811fx_set_cycle = 0;
+//             ir_auto_change_tcnt = IR_CHANGE_MODE_T;
+//             if (auto_mode[2] < 0x15)
+//             {
+//                 auto_mode[2] += 1;
+//             }
+//             else
+//             {
+//                 auto_mode[2] = 7;
+//             }
+//             printf("auto change\n");
+//             parse_zd_data(auto_mode);
+//         }
+//     }
+// }
 
 // 10ms调用一次
-void ir_timer_handler(void)
-{
-    ir_auto_change_mode();
-}
+// void ir_timer_handler(void)
+// {
+//     ir_auto_change_mode();
+// }
 
 // 全彩效果初始化
 void full_color_init(void)
@@ -1142,6 +1141,7 @@ void full_color_init(void)
     fc_effect.b = 100;
 
     WS2812FX_init(fc_effect.led_num, fc_effect.sequence); // 初始化ws2811
+    // WS2812FX_stop();
     WS2812FX_setBrightness(fc_effect.b);
     set_on_off_led(fc_effect.on_off_flag);
 
@@ -1151,5 +1151,5 @@ void full_color_init(void)
     // sys_s_hi_timer_add(NULL, count_down_run, 10);     //
     // sys_s_hi_timer_add(NULL, ir_timer_handler, 10);   //
     // sys_s_hi_timer_add(NULL, time_clock_handler, 10); // 闹钟
-    sys_s_hi_timer_add(NULL, meteor_period_sub, 10); // 流星周期控制
+    // sys_s_hi_timer_add(NULL, meteor_period_sub, 10); // 流星周期控制
 }

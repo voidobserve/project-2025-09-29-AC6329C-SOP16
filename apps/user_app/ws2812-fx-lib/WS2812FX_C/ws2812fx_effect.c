@@ -513,6 +513,120 @@ void close_metemor(void)
 
 //-----------------------------------声控流星效果--------------------------------------
 #pragma region
+
+// 快速流星效果
+u16 meteor_fast_effect(void)
+{
+    u16 cur_led_index = _seg_rt->counter_mode_step;
+    u16 animation_time_interval = 500 / _seg_len; // 动画时间间隔
+    if (cur_led_index > _seg->stop)               // 最后一个灯，防止越界
+    {
+        cur_led_index = _seg->stop;
+    }
+
+    // 从起始索引开始，填充多少个
+    Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
+
+    if (0 == IS_REVERSE)
+    {
+        // 如果方向是正向 
+        // 第一个参数不能为0，0是RGBW灯珠(不属于流星灯)，如果传参为0，会导致灯珠闪烁
+        WS2812FX_setPixelColor(_seg->start + cur_led_index, WHITE); // 点亮单个灯
+    }
+    else
+    {
+        // 如果方向是要反向
+        // 第一个参数不能为0，0是RGBW灯珠(不属于流星灯)，如果传参为0，会导致灯珠闪烁
+        WS2812FX_setPixelColor(_seg->stop - cur_led_index + _seg->start, WHITE); // 点亮单个灯
+    }
+
+    /*
+        到最后一个灯也需要点亮一段时间，所以要改成 _seg_len + 1
+    */
+    _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (_seg->stop - _seg->start + 1);
+    if (_seg_rt->counter_mode_step == 0)
+    {
+        // 循环完成，应该切换到其他的流星动画
+    }
+
+    return (animation_time_interval);
+}
+
+/*
+    流星效果
+    对应样机的正常流星
+*/
+u16 meteor_effect(void)
+{
+    u8 brightness_levels_buff[12] = {0};
+    // 流星灯尾焰长度（由外部传入）：
+    // u8 meteor_tail_len = 12; // 测试用
+    u8 meteor_tail_len = 6; // 测试用
+
+    // 根据尾焰长度，自动划分亮度等级：
+    for (u8 i = 0; i < ARRAY_SIZE(brightness_levels_buff); i++)
+    {
+        brightness_levels_buff[i] = 255 - ((u32)i * 255 / meteor_tail_len);
+    }
+
+    Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
+
+    if (IS_REVERSE) // 反向流星
+    {
+        // u16 begin_index = _seg->stop - _seg_rt->counter_mode_step; // 当前流星灯的头部
+
+        // 要用带符号的数据类型，可能会计算出负数 (begin_index 和 cur_index 都需要是带符号的)
+        int32_t begin_index = _seg->stop - _seg_rt->counter_mode_step; // 当前流星灯的头部
+        int32_t cur_index = begin_index;                               // 当前要绘制的流星灯索引
+        for (u8 i = 0; i < meteor_tail_len; i++)                       // 根据流星灯尾焰长度进行绘制
+        {
+            if (cur_index <= (int32_t)_seg->stop)
+            {
+                cur_index++;
+
+                // 防止越界：
+                if (cur_index >= (int32_t)_seg->start && cur_index <= (int32_t)_seg->stop)
+                {
+                    u8 brightness = brightness_levels_buff[i];
+                    u32 color = WS2812FX_color_blend(BLACK, WHITE, brightness);
+                    WS2812FX_setPixelColor(cur_index, color);
+                }
+            }
+        }
+    }
+    else // 正向流星
+    {
+        u16 begin_index = _seg->start + _seg_rt->counter_mode_step; // 当前流星灯的头部
+        u16 cur_index = begin_index;                                // 当前要绘制的流星灯索引
+        for (u8 i = 0; i < meteor_tail_len; i++)                    // 根据流星灯尾焰长度进行绘制
+        {
+            if (cur_index > _seg->start)
+            {
+                cur_index--;
+
+                // 防止越界：
+                if (cur_index >= (int32_t)_seg->start && cur_index <= (int32_t)_seg->stop)
+                {
+                    u8 brightness = brightness_levels_buff[i];
+                    u32 color = WS2812FX_color_blend(BLACK, WHITE, brightness);
+                    WS2812FX_setPixelColor(cur_index, color);
+                }
+            }
+        }
+    }
+
+    // 需要给流星灯的尾焰留出动画时间
+    // 还需要加入动画时间间隔 USER_TO_DO
+    _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (_seg_len + meteor_tail_len + fc_effect.meteor_period);
+    if (_seg_rt->counter_mode_step == 0)
+    {
+        SET_CYCLE;
+    }
+
+    // USER_TO_DO
+    return (_seg->speed / _seg_len);
+}
+
 #define MAX_RATE 8
 /**
  * @brief 飙升（相当于声控模式下的单路均衡器效果）
@@ -565,7 +679,6 @@ uint16_t music_mode1(void)
         }
     }
 
-    
     return 30;
 }
 
@@ -704,6 +817,11 @@ u16 meteor_light_single_point_flow(void)
     return (animation_time_interval);
 }
 
+/**
+ * @brief 流星动画，对应样机的乱闪效果
+ *
+ * @return u16
+ */
 u16 meteor_light_random_breath(void)
 {
     static u32 last_sys_time = 0;
@@ -723,28 +841,39 @@ u16 meteor_light_random_breath(void)
 
         Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
 
-        if (0 == _seg_rt->aux_param)
+        // if (0 == _seg_rt->aux_param)
+        // {
+        //     // 刚进入该动画，应该先执行一次快速的流星
+        //     _seg_rt->aux_param = 1;
+        //     _seg_rt->cur_animation_stage = ANIMATION_STAGE_INIT_BEGIN;
+        // }
+        // else if (ANIMATION_STAGE_INIT_END == _seg_rt->cur_animation_stage ||
+        //          ANIMATION_STAGE_2_END == _seg_rt->cur_animation_stage)
+        // {
+        //     _seg_rt->cur_animation_stage = ANIMATION_STAGE_1_BEGIN;
+        //     _seg_rt->counter_mode_step = 0; // 进入 ANIMATION_STAGE_1 之前，需要确保 _seg_rt->counter_mode_step == 0
+        // }
+        // else if (ANIMATION_STAGE_1_END == _seg_rt->cur_animation_stage)
+        // {
+        //     _seg_rt->cur_animation_stage = ANIMATION_STAGE_2_BEGIN;
+        //     _seg_rt->counter_mode_step = 0; // 进入 ANIMATION_STAGE_2 之前，需要确保 _seg_rt->counter_mode_step == 0
+        // }
+
+        if (0 == _seg_rt->aux_param ||
+            ANIMATION_STAGE_2_END == _seg_rt->cur_animation_stage)
         {
-            // 刚进入该动画，应该先执行一次快速的流星
             _seg_rt->aux_param = 1;
-            _seg_rt->cur_animation_stage = ANIMATION_STAGE_INIT_BEGIN;
-        }
-        else if (ANIMATION_STAGE_INIT_END == _seg_rt->cur_animation_stage ||
-                 ANIMATION_STAGE_2_END == _seg_rt->cur_animation_stage)
-        {
             _seg_rt->cur_animation_stage = ANIMATION_STAGE_1_BEGIN;
-            _seg_rt->counter_mode_step = 0; // 进入 ANIMATION_STAGE_1 之前，需要确保 _seg_rt->counter_mode_step == 0
+            // _seg_rt->counter_mode_step = 0; // 进入 ANIMATION_STAGE_1 之前，需要确保 _seg_rt->counter_mode_step == 0
         }
         else if (ANIMATION_STAGE_1_END == _seg_rt->cur_animation_stage)
         {
             _seg_rt->cur_animation_stage = ANIMATION_STAGE_2_BEGIN;
-            _seg_rt->counter_mode_step = 0; // 进入 ANIMATION_STAGE_2 之前，需要确保 _seg_rt->counter_mode_step == 0
+            // _seg_rt->counter_mode_step = 0; // 进入 ANIMATION_STAGE_2 之前，需要确保 _seg_rt->counter_mode_step == 0
         }
-
-        // printf("sys time %lu\n", sys_time_get() - last_sys_time);
-        // last_sys_time = sys_time_get();
     }
 
+#if 0
     if (ANIMATION_STAGE_INIT_BEGIN == _seg_rt->cur_animation_stage)
     {
         u16 cur_led_index = _seg_rt->counter_mode_step;
@@ -782,6 +911,7 @@ u16 meteor_light_random_breath(void)
 
         return (animation_time_interval);
     }
+#endif
 
     if (ANIMATION_STAGE_1_BEGIN == _seg_rt->cur_animation_stage)
     {

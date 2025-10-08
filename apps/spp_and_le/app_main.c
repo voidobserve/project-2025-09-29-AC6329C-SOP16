@@ -362,12 +362,12 @@ void main_while(void)
 
     while (1)
     {
-        effect_stepmotor(); // 声控，电机的音乐效果
-        stepmotor();        // 无霍尔时，电机停止指令计时
+        // effect_stepmotor(); // 声控，电机的音乐效果
+        // stepmotor();        // 无霍尔时，电机停止指令计时
 
         // power_motor_Init();  // 电机
 
-        meteor_period_sub(); // 流星周期控制
+        // meteor_period_sub(); // 流星周期控制
 
         
 
@@ -395,7 +395,7 @@ void my_main(void)
     led_pwm_init();  // 七彩灯控制引脚对应的PWM初始化
     mic_gpio_init();
     // fan_gpio_init();
-    led_state_init();
+    led_state_init(); // 
     mcu_com_init(); // 电机一线通信
 
     read_flash_device_status_init();

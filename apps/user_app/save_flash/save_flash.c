@@ -30,7 +30,6 @@ void read_flash_device_status_init(void)
 
     if (save_flash3.header != 0x55) // 第一次上电
     {
-
         fc_data_init();
     }
     else

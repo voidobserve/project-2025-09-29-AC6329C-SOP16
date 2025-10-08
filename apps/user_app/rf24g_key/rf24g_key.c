@@ -4,8 +4,11 @@
 
 #if 1
 
-static volatile u8 rf24g_rx_flag = 0;        // 是否收到了新的数据
-static volatile u8 rf24g_recved_key_val = 0; // 存放接收到的按键键值
+static volatile u8 rf24g_rx_flag = 0;           // 是否收到了新的数据
+static volatile u8 rf24g_recved_key_val = 0;    // 存放接收到的按键键值
+static volatile u8 rf24g_dynamic_code_last = 0; // 存放动态码，长按--动态码会一直变化，短按--动态码不变
+static volatile u8 rf24g_dynamic_code_cur = 0;  // 存放动态码，长按--动态码会一直变化，短按--动态码不变
+
 // volatile rf24g_recv_info_t rf24g_recv_info;  // 存放接收到的数据包
 // volatile u8 chromatic_circle_val = 0;        // 存放色环按键对应的数值，范围：0x00~0xFF
 
@@ -61,6 +64,8 @@ void rf24g_scan(void *recv_buff)
         // 直接接收键值
         // rf24g_recv_info = *p; // 结构体变量赋值
         rf24g_recved_key_val = p->key;
+        // rf24g_dynamic_code_cur = p->dynamic_code_1;
+
         rf24g_rx_flag = 1;
     }
 }
@@ -68,47 +73,40 @@ void rf24g_scan(void *recv_buff)
 static u8 rf24g_get_key_value(void)
 {
     u8 key_value = 0;
-    static u8 time_out_cnt = 0; // 加入超时，防止丢包（超时时间与按键扫描时间有关）
+    static volatile u8 time_out_cnt = 0; // 加入超时，防止丢包（超时时间与按键扫描时间有关）
     static u8 last_key_value = 0;
 
     if (rf24g_rx_flag == 1) // 收到2.4G广播
     {
         rf24g_rx_flag = 0;
 
-        // if (rf24g_recv_info.header1 == RF24G_HEADER_1 &&
-        //     rf24g_recv_info.header2 == RF24G_HEADER_2)
+        key_value = rf24g_recved_key_val;
+
+        // if (rf24g_dynamic_code_last != rf24g_dynamic_code_cur)
         {
-            // if (rf24g_recv_info.key_1 == RF24G_KEY_CHROMATIC_CIRCLE)
-            // {
-            //     // 如果是色环按键
-            //     chromatic_circle_val = rf24g_recv_info.key_2; // 获取色环对应的数值
-            //     key_value = rf24g_recv_info.key_1;            // 存放键值
-            // }
-            // else
-            // {
-            //     // 如果是其他按键
-            //     key_value = rf24g_recv_info.key_2; // 存放键值
-            // }
-
-            key_value = rf24g_recved_key_val;
-            // printf("key_value 0x %x\n", (u16)key_value);
-
             time_out_cnt = 30; // 2.4G接收可能会丢失100~200ms的数据包（响应会慢一些）
-            // time_out_cnt = 30; // 2.4G接收可能会丢失100~200ms的数据包（响应会慢一些）
-            
-            last_key_value = key_value;
-
-            // rf24g_recv_info.key_v = NO_KEY;
-            return last_key_value;
+            // time_out_cnt = 50; // 2.4G接收可能会丢失100~200ms的数据包（响应会慢一些）
+            // rf24g_dynamic_code_last = rf24g_dynamic_code_cur;
         }
+        // else
+        // {
+        //     // 如果动态码一样，认为是短按，返回NO_KEY，认为按键已经松手
+        //     time_out_cnt = 0;
+        //     return NO_KEY;
+        // }
+
+        last_key_value = key_value;
+        return last_key_value;
     }
 
-    if (time_out_cnt != 0)
+    if (time_out_cnt > 0)
     {
+        // 还在长按的超时延迟中时，返回上一次按键键值
         time_out_cnt--;
         return last_key_value;
     }
 
+    // 如果没有收到数据，也不在长按的超时中：
     return NO_KEY;
 }
 
@@ -214,7 +212,7 @@ void rf24_key_handle(void)
 
         static u8 motor_speed = 0;
 
-#if 1
+#if 0
         if (0 == motor_speed)
         {
             one_wire_set_period(0x08);
@@ -269,14 +267,15 @@ void rf24_key_handle(void)
 #endif
 
         // os_time_dly(1);
-        enable_one_wire(); // 发送数据给驱动电机的ic
-        printf("motor speed %u\n", (u16)motor_speed);
 
-        motor_speed++;
-        if (motor_speed >= 6)
-        {
-            motor_speed = 0;
-        }
+        // enable_one_wire(); // 发送数据给驱动电机的ic
+        // printf("motor speed %u\n", (u16)motor_speed);
+
+        // motor_speed++;
+        // if (motor_speed >= 6)
+        // {
+        //     motor_speed = 0;
+        // }
 
         break;
     }

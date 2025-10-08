@@ -57,6 +57,7 @@ void ledc_init(const struct ledc_platform_data *arg)
 
     // os_sem_create(&ledc0_sem, 1);
     // os_sem_create(&ledc1_sem, 1);
+    // request_irq(16, 1, ledc_isr, 0);
     request_irq(16, 1, ledc_isr, 0);
     if (arg->cbfun) {
         if (arg->index == 0) {

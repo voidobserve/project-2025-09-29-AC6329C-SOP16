@@ -105,7 +105,11 @@ uint16_t WS2812FX_mode_comet_6(void);
 uint16_t fc_double_meteor(void);
 void close_metemor(void);
 
-
+/*
+    流星效果
+*/ 
+u16 meteor_effect(void); 
+u16 meteor_light_random_breath(void); // 流星动画，对应样机的乱闪效果
 
 
 
