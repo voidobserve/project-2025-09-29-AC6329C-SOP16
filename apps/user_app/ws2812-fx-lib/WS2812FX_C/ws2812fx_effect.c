@@ -515,6 +515,7 @@ void close_metemor(void)
 #pragma region
 
 // 快速流星效果
+// 在每次开启流星灯时使用
 u16 meteor_fast_effect(void)
 {
     u16 cur_led_index = _seg_rt->counter_mode_step;
@@ -529,7 +530,7 @@ u16 meteor_fast_effect(void)
 
     if (0 == IS_REVERSE)
     {
-        // 如果方向是正向 
+        // 如果方向是正向
         // 第一个参数不能为0，0是RGBW灯珠(不属于流星灯)，如果传参为0，会导致灯珠闪烁
         WS2812FX_setPixelColor(_seg->start + cur_led_index, WHITE); // 点亮单个灯
     }
@@ -553,6 +554,13 @@ u16 meteor_fast_effect(void)
 }
 
 /*
+    正常流星时，流星灯的尾焰长度
+
+    样机在正常流星时，尾焰长度没有记忆功能，
+    并且只有在正常流星时才调节尾焰长度
+*/
+volatile u8 meteor_tail_len = 6;
+/*
     流星效果
     对应样机的正常流星
 */
@@ -561,7 +569,7 @@ u16 meteor_effect(void)
     u8 brightness_levels_buff[12] = {0};
     // 流星灯尾焰长度（由外部传入）：
     // u8 meteor_tail_len = 12; // 测试用
-    u8 meteor_tail_len = 6; // 测试用
+    // u8 meteor_tail_len = 6; // 测试用
 
     // 根据尾焰长度，自动划分亮度等级：
     for (u8 i = 0; i < ARRAY_SIZE(brightness_levels_buff); i++)
@@ -623,8 +631,110 @@ u16 meteor_effect(void)
         SET_CYCLE;
     }
 
-    // USER_TO_DO
+    // USER_TO_DO：
     return (_seg->speed / _seg_len);
+}
+
+/*
+    正常流星（慢速）模式
+    流星动画3s，灯全部黑1s，流星动画3s，灯全部黑5s，依次循环
+
+    改变流星尾焰数量并不会影响动画时间
+*/
+u16 meteor_effect_slow(void)
+{
+    // 动画时间
+    u16 meteor_animation_time = 0;
+    // 返回值
+    u16 return_value = 0;
+
+    Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
+
+    // 流星动画3s
+    if (0 == _seg_rt->aux_param || 2 == _seg_rt->aux_param)
+    {
+        meteor_animation_time = 3000 + meteor_tail_len; //
+
+        u8 brightness_levels_buff[12] = {0};
+        // 根据尾焰长度，自动划分亮度等级：
+        for (u8 i = 0; i < ARRAY_SIZE(brightness_levels_buff); i++)
+        {
+            brightness_levels_buff[i] = 255 - ((u32)i * 255 / meteor_tail_len);
+        }
+
+        if (IS_REVERSE) // 反向流星
+        {
+            // 要用带符号的数据类型，可能会计算出负数 (begin_index 和 cur_index 都需要是带符号的)
+            int32_t begin_index = _seg->stop - _seg_rt->counter_mode_step; // 当前流星灯的头部
+            int32_t cur_index = begin_index;                               // 当前要绘制的流星灯索引
+            for (u8 i = 0; i < meteor_tail_len; i++)                       // 根据流星灯尾焰长度进行绘制
+            {
+                if (cur_index <= (int32_t)_seg->stop)
+                {
+                    cur_index++;
+
+                    // 防止越界：
+                    if (cur_index >= (int32_t)_seg->start && cur_index <= (int32_t)_seg->stop)
+                    {
+                        u8 brightness = brightness_levels_buff[i];
+                        u32 color = WS2812FX_color_blend(BLACK, WHITE, brightness);
+                        WS2812FX_setPixelColor(cur_index, color);
+                    }
+                }
+            }
+        }
+        else // 正向流星
+        {
+            u16 begin_index = _seg->start + _seg_rt->counter_mode_step; // 当前流星灯的头部
+            u16 cur_index = begin_index;                                // 当前要绘制的流星灯索引
+            for (u8 i = 0; i < meteor_tail_len; i++)                    // 根据流星灯尾焰长度进行绘制
+            {
+                if (cur_index > _seg->start)
+                {
+                    cur_index--;
+
+                    // 防止越界：
+                    if (cur_index >= (int32_t)_seg->start && cur_index <= (int32_t)_seg->stop)
+                    {
+                        u8 brightness = brightness_levels_buff[i];
+                        u32 color = WS2812FX_color_blend(BLACK, WHITE, brightness);
+                        WS2812FX_setPixelColor(cur_index, color);
+                    }
+                }
+            }
+        }
+
+        // return (_seg->speed / _seg_len);
+        return_value = meteor_animation_time / _seg_len;
+    }
+    else if (1 == _seg_rt->aux_param) // 灯全部黑1s
+    {
+        meteor_animation_time = 1000;
+        return_value = 1;
+    }
+    // else if (2 == _seg_rt->aux_param) // 流星动画3s
+    // {
+    // }
+    else if (3 == _seg_rt->aux_param) // 灯全部黑5s
+    {
+        meteor_animation_time = 5000;
+        return_value = 1;
+    }
+
+
+    _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (meteor_animation_time);
+    if (_seg_rt->counter_mode_step == 0)
+    {
+        SET_CYCLE;
+        _seg_rt->aux_param++;
+        if (_seg_rt->aux_param >= 4)
+        {
+            _seg_rt->aux_param = 0;
+        }
+    }
+
+    // return (_seg->speed / _seg_len);
+    return return_value;
 }
 
 #define MAX_RATE 8

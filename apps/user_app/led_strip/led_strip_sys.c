@@ -71,6 +71,8 @@ void fc_data_init(void)
     fc_effect.base_ins.dir = 0;    // 0: 正转  1：
     fc_effect.base_ins.music_mode = 0;
     fc_effect.motor_on_off = DEVICE_ON;
+
+    sizeof(fc_effect_t);
 }
 
 void OpenMortor(void);

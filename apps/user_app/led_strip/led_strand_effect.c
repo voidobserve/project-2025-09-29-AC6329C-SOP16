@@ -984,7 +984,7 @@ void ls_meteor_stat_effect(void)
                 // meteor_light_random_breath,
 
                 // WS2812FX_mode_comet_1,
-                meteor_effect,
+                meteor_effect_slow,
 
                 WHITE,                // 颜色，WS2812FX_setColors设置
                 // fc_effect.star_speed, // 速度

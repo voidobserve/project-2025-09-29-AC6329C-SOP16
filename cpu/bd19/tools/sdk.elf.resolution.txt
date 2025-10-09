@@ -2172,7 +2172,7 @@ obj/Release/apps/user_app/led_strip/led_strand_effect.o
 -r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,WS2812FX_mode_comet_6,l
 -r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,meteor,l
 -r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,music_meteor3,l
--r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,meteor_effect,l
+-r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,meteor_effect_slow,l
 -r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,save_user_data_area3,l
 -r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,app_set_bright,l
 -r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,fc_music_gradual,l
@@ -2426,6 +2426,8 @@ obj/Release/apps/user_app/rf24g_key/rf24g_key.o
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,rf24g_key_driver_event,pl
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,rf24g_key_driver_value,pl
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,rf24g_scan_para,pl
+-r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,fc_effect,l
+-r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,zd_countdown,l
 obj/Release/apps/user_app/save_flash/save_flash.o
 -r=obj/Release/apps/user_app/save_flash/save_flash.o,read_flash_device_status_init,pl
 -r=obj/Release/apps/user_app/save_flash/save_flash.o,memset,l
@@ -2588,6 +2590,7 @@ obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,meteor_fast_effect,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,meteor_effect,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_color_blend,l
+-r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,meteor_effect_slow,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,music_mode1,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,get_sound_result,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_setPixelColor_rgbw,l
@@ -2726,6 +2729,7 @@ obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,meteor_twinkling_cnt,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,step2_flag,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,meteor_twinkling_speed,pl
+-r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,meteor_tail_len,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,cycle_t,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,change_mode,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,music_dly,pl
