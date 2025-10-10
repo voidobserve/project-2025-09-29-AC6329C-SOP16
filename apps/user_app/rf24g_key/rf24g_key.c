@@ -2,7 +2,9 @@
 
 #include "../../../apps/user_app/one_wire/one_wire.h" // 包含电机的驱动程序
 
-#include "../../../apps/user_app/led_strip/led_strand_effect.h" // 包含 fc_effect 的声明
+#include "../../../apps/user_app/led_strip/led_strand_effect.h"              // 包含 fc_effect 的声明
+#include "../../../apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.h" // 包含部分写好的动画
+#include "../../../apps/user_app/ws2812-fx-lib/WS2812FX_C/WS2812FX.H"        // 包含 ws2812的部分函数接口
 
 #if 1
 
@@ -309,6 +311,7 @@ void rf24_key_handle(void)
 
             每次按下切换模式的时候，不会跑一次快速流星模式，而是切换到下一个模式
         */
+        mode_ptr *animation_ptr = NULL;
         printf("meteor mode change\n");
         fc_effect.star_index++;
         if (fc_effect.star_index >= STAR_INDEX_METEOR_MAX) // 防止溢出
@@ -319,18 +322,36 @@ void rf24_key_handle(void)
         switch (fc_effect.star_index)
         {
         case STAR_INDEX_METEOR_NORMAL_SLOW:
-            
+            animation_ptr = meteor_effect_slow;
             break;
 
         case STAR_INDEX_METEOR_NORMAL_MIDDLE:
-
+            animation_ptr = meteor_effect_middle;
             break;
 
         case STAR_INDEX_METEOR_NORMAL_FAST:
-
+            animation_ptr = meteor_effect_fast;
             break;
 
+        // case STAR_INDEX_METEOR_RANDOM_BREATH:
+            // animation_ptr = meteor_light_random_breath;
+            // break;
+
+        default:
+            return; // 出错，直接返回
+            // break;
         }
+
+        WS2812FX_stop();  
+        WS2812FX_setSegment_colorOptions(
+            1,                     // 第0段
+            1,                     // 起始位置
+            fc_effect.led_num - 1, // 结束位置
+            animation_ptr,         // 动画效果
+            WHITE,                 // 颜色，WS2812FX_setColors设置
+            0,                     // 速度，对于样机的正常流星模式，速度这一属性无效
+            NO_OPTIONS);           // 选项
+        WS2812FX_start();
 
         break;
     }

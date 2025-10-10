@@ -193,6 +193,8 @@ void WS2812FX_start() {
 
 void WS2812FX_stop() {
   _running = false;
+
+  // 不能在这里清除显示的缓冲区，会导致七彩灯也闪烁
   // WS2812FX_strip_off();
 
 }

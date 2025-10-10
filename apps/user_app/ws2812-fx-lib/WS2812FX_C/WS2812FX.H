@@ -136,6 +136,7 @@ typedef struct Segment_runtime
     // 只在对应的动画中使用：
     u8 cur_animation_stage; // 当前动画阶段
     u8 led_index_enable_buff[12];
+    u8 dest_brightness; // 目标亮度
     u32 led_index_mode_step[12];
 
 } Segment_runtime;
@@ -146,8 +147,8 @@ enum
     // ANIMATION_STAGE_1,
     // ANIMATION_STAGE_2,
 
-    ANIMATION_STAGE_INIT_BEGIN,
-    ANIMATION_STAGE_INIT_END,
+    // ANIMATION_STAGE_INIT_BEGIN,
+    // ANIMATION_STAGE_INIT_END,
     ANIMATION_STAGE_1_BEGIN,
     ANIMATION_STAGE_1_END,
     ANIMATION_STAGE_2_BEGIN,

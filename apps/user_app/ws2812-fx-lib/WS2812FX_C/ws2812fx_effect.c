@@ -516,7 +516,8 @@ void close_metemor(void)
 
 // 快速流星效果
 // 在每次开启流星灯时使用
-u16 meteor_fast_effect(void)
+// u16 meteor_fast_effect(void)
+u16 meteor_effect_when_pwr_on(void)
 {
     u16 cur_led_index = _seg_rt->counter_mode_step;
     u16 animation_time_interval = 500 / _seg_len; // 动画时间间隔
@@ -639,13 +640,15 @@ u16 meteor_effect(void)
     正常流星（慢速）模式
     流星动画3s，灯全部黑1s，流星动画3s，灯全部黑5s，依次循环
 
+    由外部全局变量传参： meteor_tail_len 流星尾焰长度
+
     改变流星尾焰数量并不会影响动画时间
 */
 u16 meteor_effect_slow(void)
 {
-    // 动画时间
-    u16 meteor_animation_time = 0;
-    // 返回值
+    // 动画步骤
+    u16 meteor_animation_step = 0;
+    // 返回值（每一动画步骤的时间间隔）
     u16 return_value = 0;
 
     Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
@@ -653,7 +656,8 @@ u16 meteor_effect_slow(void)
     // 流星动画3s
     if (0 == _seg_rt->aux_param || 2 == _seg_rt->aux_param)
     {
-        meteor_animation_time = 3000 + meteor_tail_len; //
+        meteor_animation_step = _seg_len + meteor_tail_len; //
+        return_value = 3000 / meteor_animation_step;
 
         u8 brightness_levels_buff[12] = {0};
         // 根据尾焰长度，自动划分亮度等级：
@@ -703,29 +707,26 @@ u16 meteor_effect_slow(void)
                 }
             }
         }
-
-        // return (_seg->speed / _seg_len);
-        return_value = meteor_animation_time / _seg_len;
     }
     else if (1 == _seg_rt->aux_param) // 灯全部黑1s
     {
-        meteor_animation_time = 1000;
-        return_value = 1;
+        meteor_animation_step = 1;
+        return_value = 1000;
     }
-    // else if (2 == _seg_rt->aux_param) // 流星动画3s
-    // {
-    // }
     else if (3 == _seg_rt->aux_param) // 灯全部黑5s
     {
-        meteor_animation_time = 5000;
-        return_value = 1;
+        meteor_animation_step = 1;
+        return_value = 5000;
     }
 
+    // printf("_seg_rt->aux_param %u\n", _seg_rt->aux_param);
 
-    _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (meteor_animation_time);
+    _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (meteor_animation_step);
     if (_seg_rt->counter_mode_step == 0)
     {
         SET_CYCLE;
+
+        // printf("_seg_rt->aux_param %u\n", _seg_rt->aux_param);
         _seg_rt->aux_param++;
         if (_seg_rt->aux_param >= 4)
         {
@@ -733,7 +734,231 @@ u16 meteor_effect_slow(void)
         }
     }
 
-    // return (_seg->speed / _seg_len);
+    return return_value;
+}
+
+/*
+    正常流星（中速）模式
+    流星动画1s，灯全部黑1s，流星动画1s，灯全部黑4s，依次循环
+
+    由外部全局变量传参： meteor_tail_len 流星尾焰长度
+
+    改变流星尾焰数量并不会影响动画时间
+*/
+u16 meteor_effect_middle(void)
+{
+    // 动画步骤
+    u16 meteor_animation_step = 0;
+    // 返回值（每一动画步骤的时间间隔）
+    u16 return_value = 0;
+
+    Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
+
+    // 流星动画1s
+    if (0 == _seg_rt->aux_param || 2 == _seg_rt->aux_param)
+    {
+        meteor_animation_step = _seg_len + meteor_tail_len; //
+        return_value = 1000 / meteor_animation_step;
+
+        u8 brightness_levels_buff[12] = {0};
+        // 根据尾焰长度，自动划分亮度等级：
+        for (u8 i = 0; i < ARRAY_SIZE(brightness_levels_buff); i++)
+        {
+            brightness_levels_buff[i] = 255 - ((u32)i * 255 / meteor_tail_len);
+        }
+
+        if (IS_REVERSE) // 反向流星
+        {
+            // 要用带符号的数据类型，可能会计算出负数 (begin_index 和 cur_index 都需要是带符号的)
+            int32_t begin_index = _seg->stop - _seg_rt->counter_mode_step; // 当前流星灯的头部
+            int32_t cur_index = begin_index;                               // 当前要绘制的流星灯索引
+            for (u8 i = 0; i < meteor_tail_len; i++)                       // 根据流星灯尾焰长度进行绘制
+            {
+                if (cur_index <= (int32_t)_seg->stop)
+                {
+                    cur_index++;
+
+                    // 防止越界：
+                    if (cur_index >= (int32_t)_seg->start && cur_index <= (int32_t)_seg->stop)
+                    {
+                        u8 brightness = brightness_levels_buff[i];
+                        u32 color = WS2812FX_color_blend(BLACK, WHITE, brightness);
+                        WS2812FX_setPixelColor(cur_index, color);
+                    }
+                }
+            }
+        }
+        else // 正向流星
+        {
+            u16 begin_index = _seg->start + _seg_rt->counter_mode_step; // 当前流星灯的头部
+            u16 cur_index = begin_index;                                // 当前要绘制的流星灯索引
+            for (u8 i = 0; i < meteor_tail_len; i++)                    // 根据流星灯尾焰长度进行绘制
+            {
+                if (cur_index > _seg->start)
+                {
+                    cur_index--;
+
+                    // 防止越界：
+                    if (cur_index >= (int32_t)_seg->start && cur_index <= (int32_t)_seg->stop)
+                    {
+                        u8 brightness = brightness_levels_buff[i];
+                        u32 color = WS2812FX_color_blend(BLACK, WHITE, brightness);
+                        WS2812FX_setPixelColor(cur_index, color);
+                    }
+                }
+            }
+        }
+    }
+    else if (1 == _seg_rt->aux_param) // 灯全部黑1s
+    {
+        meteor_animation_step = 1;
+        return_value = 1000;
+    }
+    else if (3 == _seg_rt->aux_param) // 灯全部黑4s
+    {
+        meteor_animation_step = 1;
+        return_value = 4000;
+    }
+
+    // printf("_seg_rt->aux_param %u\n", _seg_rt->aux_param);
+
+    _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (meteor_animation_step);
+    if (_seg_rt->counter_mode_step == 0)
+    {
+        SET_CYCLE;
+
+        // printf("_seg_rt->aux_param %u\n", _seg_rt->aux_param);
+        _seg_rt->aux_param++;
+        if (_seg_rt->aux_param >= 4)
+        {
+            _seg_rt->aux_param = 0;
+        }
+    }
+
+    return return_value;
+}
+
+/*
+    正常流星（快速）模式
+    流星动画200ms，留一点时间间隔，流星动画200ms，
+    灯全部黑3s，
+    流星动画200ms，留一点时间间隔，流星动画200ms，
+    灯全部黑5s，
+    流星动画200ms，
+    灯全部黑10s，
+    依次循环
+
+    由外部全局变量传参： meteor_tail_len 流星尾焰长度
+
+    _seg_rt->aux_param 控制流星动画的子动画
+
+    改变流星尾焰数量并不会影响动画时间
+*/
+u16 meteor_effect_fast(void)
+{
+    // 动画步骤
+    u16 meteor_animation_step = 0;
+    // 返回值（每一动画步骤的时间间隔）
+    u16 return_value = 0;
+
+    Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
+
+    // 流星动画200ms
+    if (0 == _seg_rt->aux_param ||
+        2 == _seg_rt->aux_param ||
+        4 == _seg_rt->aux_param ||
+        6 == _seg_rt->aux_param ||
+        8 == _seg_rt->aux_param)
+    {
+        meteor_animation_step = _seg_len + meteor_tail_len; //
+        return_value = 200 / meteor_animation_step;
+
+        u8 brightness_levels_buff[12] = {0};
+        // 根据尾焰长度，自动划分亮度等级：
+        for (u8 i = 0; i < ARRAY_SIZE(brightness_levels_buff); i++)
+        {
+            brightness_levels_buff[i] = 255 - ((u32)i * 255 / meteor_tail_len);
+        }
+
+        if (IS_REVERSE) // 反向流星
+        {
+            // 要用带符号的数据类型，可能会计算出负数 (begin_index 和 cur_index 都需要是带符号的)
+            int32_t begin_index = _seg->stop - _seg_rt->counter_mode_step; // 当前流星灯的头部
+            int32_t cur_index = begin_index;                               // 当前要绘制的流星灯索引
+            for (u8 i = 0; i < meteor_tail_len; i++)                       // 根据流星灯尾焰长度进行绘制
+            {
+                if (cur_index <= (int32_t)_seg->stop)
+                {
+                    cur_index++;
+
+                    // 防止越界：
+                    if (cur_index >= (int32_t)_seg->start && cur_index <= (int32_t)_seg->stop)
+                    {
+                        u8 brightness = brightness_levels_buff[i];
+                        u32 color = WS2812FX_color_blend(BLACK, WHITE, brightness);
+                        WS2812FX_setPixelColor(cur_index, color);
+                    }
+                }
+            }
+        }
+        else // 正向流星
+        {
+            u16 begin_index = _seg->start + _seg_rt->counter_mode_step; // 当前流星灯的头部
+            u16 cur_index = begin_index;                                // 当前要绘制的流星灯索引
+            for (u8 i = 0; i < meteor_tail_len; i++)                    // 根据流星灯尾焰长度进行绘制
+            {
+                if (cur_index > _seg->start)
+                {
+                    cur_index--;
+
+                    // 防止越界：
+                    if (cur_index >= (int32_t)_seg->start && cur_index <= (int32_t)_seg->stop)
+                    {
+                        u8 brightness = brightness_levels_buff[i];
+                        u32 color = WS2812FX_color_blend(BLACK, WHITE, brightness);
+                        WS2812FX_setPixelColor(cur_index, color);
+                    }
+                }
+            }
+        }
+    }
+    else if (1 == _seg_rt->aux_param) // 灯全部黑100ms
+    {
+        meteor_animation_step = 1;
+        return_value = 100;
+    }
+    else if (3 == _seg_rt->aux_param) // 灯全部黑3s
+    {
+        meteor_animation_step = 1;
+        return_value = 3000;
+    }
+    else if (5 == _seg_rt->aux_param) // 灯全部黑100ms
+    {
+        meteor_animation_step = 1;
+        return_value = 100;
+    }
+    else if (7 == _seg_rt->aux_param) // 灯全部黑5s
+    {
+        meteor_animation_step = 1;
+        return_value = 5000;
+    }
+    else if (9 == _seg_rt->aux_param) // 灯全部黑10s
+    {
+        meteor_animation_step = 1;
+        return_value = 10000;
+    }
+
+    _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (meteor_animation_step);
+    if (_seg_rt->counter_mode_step == 0)
+    {
+        SET_CYCLE;
+        _seg_rt->aux_param++;
+        if (_seg_rt->aux_param >= 10)
+        {
+            _seg_rt->aux_param = 0;
+        }
+    }
+
     return return_value;
 }
 
@@ -930,45 +1155,120 @@ u16 meteor_light_single_point_flow(void)
 /**
  * @brief 流星动画，对应样机的乱闪效果
  *
+ * 要根据 random_breath_index 来设置动画时间和时间间隔
+ *
+ *  0 -- 呼吸动画2s，乱闪动画1~1.5s
+ *  1 -- 呼吸动画3s，乱闪动画2s
+ *  2 -- 呼吸动画3s，乱闪动画3s
+ *  3 -- 呼吸动画3s，接下来一直乱闪
+ *  4 -- 呼吸动画5s，乱闪动画3s
+ *  5 -- 呼吸动画7s，乱闪动画4s
+ *
+ *  6 -- 呼吸动画18s，乱闪动画8s
+ *  7 -- 呼吸动画38s，乱闪动画18s
+ *
  * @return u16
  */
-u16 meteor_light_random_breath(void)
+volatile u8 random_breath_index = 6;
+u16 meteor_effect_random_breath(void)
 {
-    static u32 last_sys_time = 0;
-    extern u32 sys_time_get(void);
+    // static u32 last_sys_time = 0;
+    // extern u32 sys_time_get(void);
 
-    // 默认从第0个开始渐亮
-    const u8 led_index_buff[] = {0, 2, 4, 7, 9, 11, 1, 3, 5, 6, 8, 10};
+    // 存放灯光点亮顺序的缓冲区:
+    // 默认从第0个开始渐亮（这里是根据样机点亮灯光的顺序，并拓展得到）
+    const u8 led_lighting_sequence_buff[] = {0, 2, 4, 7, 9, 11, 1, 3, 5, 6, 8, 10};
+    const u8 brightness_add_step = 32; // 灯光渐亮时的步长（注意亮度范围是 0 ~ 255，255为最亮）
+    // const u8 brightness_sub_step = 8;  // 灯光渐暗时的步长（注意亮度范围是 0 ~ 255，255为最亮）
+    u8 brightness_sub_step = 1; // 灯光渐暗时的步长（注意亮度范围是 0 ~ 255，255为最亮）
+    // 前一个灯渐渐暗到什么程度，再点亮下一个灯，亮度范围：0~255，255为前一个灯最亮的时候，此时刚开始渐灭
+    // const u8 next_led_begin_threshold_val = (u16)255 * 8 / 10;
+    const u8 next_led_begin_threshold_val = (u16)255;
 
-    // if (0 == _seg_rt->counter_mode_step ||
-    //     1 == _seg_rt->aux_param)
+    u16 ret = 0;
+
+    /*
+        步长 32
+        255 / 32 == 8，从最暗到最亮要经过8个步骤
+        每个步骤用时 ret ms
+        如果前一个灯要渐渐熄灭的时候就点亮下一个灯，从前一个灯点亮到点亮下一个灯用时 ret * 8 ms
+
+        一共12个灯，整个过程用时 12 * ret * 8 ms
+
+        那么整个动画的用时时间
+        ret == 整个动画用时 / 12 / (255 / 步长)
+
+        如果前一个灯熄灭了一段时间再点亮下一个灯
+        前一个灯点亮时的步长 brightness_add_step    32
+        前一个灯熄灭时的步长 brightness_sub_step    8
+        前一个灯熄灭亮度到 next_led_begin_threshold_val  255/2 时，再点亮下一个灯，
+        那么从前一个灯点亮到点亮下一个灯，总共要经过 255 / brightness_add_step + (255/2) / brightness_sub_step 个步骤
+        每个步骤用时 ret ms
+
+        一个12个灯，整个过程用时 12 * ret * (255 / brightness_add_step + (255/2) / brightness_sub_step) ms
+        那么整个动画的用时时间：
+        ret == 整个动画用时 / 12 / (255 / brightness_add_step + (255/2) / brightness_sub_step)
+
+        补充，熄灭的时候，是从255->0，从 next_led_begin_threshold_val 开始点亮下一个灯，所以步骤约为：
+        (255 - next_led_begin_threshold_val) / brightness_sub_step
+
+        例如：
+        12个灯，动画时间2000ms
+        ret = (u32)2000 / _seg_len / (255 / brightness_add_step + (255 - next_led_begin_threshold_val) / brightness_sub_step);
+
+        12个灯，动画时间18000ms
+        ret = (u32)18000 / _seg_len / (255 / brightness_add_step + (255 - next_led_begin_threshold_val) / brightness_sub_step);
+    */
+    u16 animation_time_during_breath = 0; // 一轮呼吸动画所需时间，单位：ms
+    // brightness_sub_step = 1; // 随着动画时间变长，这里衰减速度显得太慢 
+
+    // 最后得到的动画时间肯定会有一定误差，因为计算和返回值都会丢失部分精度
+    switch (random_breath_index)
+    {
+    case 0:
+        brightness_sub_step = 1; // 动画时间越短，渐渐变暗的步长就要变慢
+        animation_time_during_breath = 2000;
+        break;
+    case 1:
+    case 2:
+    case 3:                      // 1、2、3，一轮呼吸动画的时间都是3s，breath_time_interval = 3000
+        brightness_sub_step = 2; // 亮度变化越快，越快变暗
+        animation_time_during_breath = 3000;
+        break;
+    case 4:
+        brightness_sub_step = 3;
+        animation_time_during_breath = 5000;
+        break;
+
+    case 5:
+        brightness_sub_step = 4;
+        animation_time_during_breath = 7000;
+        break;
+
+    case 6:
+        brightness_sub_step = 10; // 动画时间越长，渐渐变暗的速度就要变快，但是会造成灯光闪烁
+        animation_time_during_breath = 18000;
+        break;
+    case 7:
+        brightness_sub_step = 12; 
+        animation_time_during_breath = 38000;
+        break;
+    }
+
+    // 2000 / 12 / (7 + (51) / 1)  == 2 【next_led_begin_threshold_val == 255 * 8 / 10】
+    // 2000 / 12 / (7) == 23 【next_led_begin_threshold_val == 255】
+    // 应该是经过一段时间再熄灭亮度到 next_led_begin_threshold_val 时，再点亮下一个灯，每一帧动画的时间间隔更短
+
+    ret = (u32)animation_time_during_breath / _seg_len / (255 / brightness_add_step + (255 - next_led_begin_threshold_val) / brightness_sub_step);
 
     if (0 == _seg_rt->counter_mode_step)
     {
-        // _seg_rt->cur_animation_stage = ANIMATION_STAGE_INIT;
-
-        // _seg_rt->aux_param = 0;
-
         Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
 
-        // if (0 == _seg_rt->aux_param)
-        // {
-        //     // 刚进入该动画，应该先执行一次快速的流星
-        //     _seg_rt->aux_param = 1;
-        //     _seg_rt->cur_animation_stage = ANIMATION_STAGE_INIT_BEGIN;
-        // }
-        // else if (ANIMATION_STAGE_INIT_END == _seg_rt->cur_animation_stage ||
-        //          ANIMATION_STAGE_2_END == _seg_rt->cur_animation_stage)
-        // {
-        //     _seg_rt->cur_animation_stage = ANIMATION_STAGE_1_BEGIN;
-        //     _seg_rt->counter_mode_step = 0; // 进入 ANIMATION_STAGE_1 之前，需要确保 _seg_rt->counter_mode_step == 0
-        // }
-        // else if (ANIMATION_STAGE_1_END == _seg_rt->cur_animation_stage)
-        // {
-        //     _seg_rt->cur_animation_stage = ANIMATION_STAGE_2_BEGIN;
-        //     _seg_rt->counter_mode_step = 0; // 进入 ANIMATION_STAGE_2 之前，需要确保 _seg_rt->counter_mode_step == 0
-        // }
+        // printf("sys time %lu\n", sys_time_get() - last_sys_time);
+        // last_sys_time = sys_time_get();
 
+        // 刚开始动画/上一轮动画结束
         if (0 == _seg_rt->aux_param ||
             ANIMATION_STAGE_2_END == _seg_rt->cur_animation_stage)
         {
@@ -983,82 +1283,56 @@ u16 meteor_light_random_breath(void)
         }
     }
 
-#if 0
-    if (ANIMATION_STAGE_INIT_BEGIN == _seg_rt->cur_animation_stage)
-    {
-        u16 cur_led_index = _seg_rt->counter_mode_step;
-        u16 animation_time_interval = 500 / _seg_len; // 动画时间间隔（样机最长是2s流水一轮）
-        if (cur_led_index > _seg->stop)               // 最后一个灯，防止越界
-        {
-            cur_led_index = _seg->stop;
-        }
-
-        // 从起始索引开始，填充多少个
-        Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
-
-        if (0 == IS_REVERSE)
-        {
-            // 如果方向是正向
-
-            // 第一个参数不能为0，0是RGBW灯珠(不属于流星灯)，如果传参为0，会导致灯珠闪烁
-            WS2812FX_setPixelColor(_seg->start + cur_led_index, WHITE); // 点亮单个灯
-        }
-        else
-        {
-            // 如果方向是要反向
-            // 第一个参数不能为0，0是RGBW灯珠(不属于流星灯)，如果传参为0，会导致灯珠闪烁
-            WS2812FX_setPixelColor(_seg->stop - cur_led_index + _seg->start, WHITE); // 点亮单个灯
-        }
-
-        /*
-            到最后一个灯也需要点亮一段时间，所以要改成 _seg_len + 1
-        */
-        _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (_seg->stop - _seg->start + 1);
-        if (_seg_rt->counter_mode_step == 0)
-        {
-            _seg_rt->cur_animation_stage = ANIMATION_STAGE_INIT_END;
-        }
-
-        return (animation_time_interval);
-    }
-#endif
-
+    // 按一定顺序进行点亮灯光，并渐灭的动画：
     if (ANIMATION_STAGE_1_BEGIN == _seg_rt->cur_animation_stage)
     {
         if (_seg_rt->counter_mode_step == 0)
         {
-            u8 index = led_index_buff[0];
+            // 如果是刚开始动画
+            u8 index = led_lighting_sequence_buff[0];
             _seg_rt->led_index_enable_buff[index] = 1;
             _seg_rt->counter_mode_step = 1;
         }
 
-        //
+        // 在数组中遍历，看看有没有灯光需要调节
         for (u8 i = 0; i < sizeof(_seg_rt->led_index_enable_buff); i++)
         {
+            // 如果当前led是点亮着的，就调节亮度
             if (_seg_rt->led_index_enable_buff[i])
             {
-                u32 lum = _seg_rt->led_index_mode_step[i];
+                u32 brightness = _seg_rt->led_index_mode_step[i];
                 u8 dir = 0; // 0 -- 渐亮，1 -- 渐灭
 
-                if (lum > 255) // 如果已经达到最大亮度，开始渐灭
+                if (brightness > 255) // 如果已经达到最大亮度，开始渐灭
                 {
-                    lum = 511 - lum; // lum = 0 -> 255 -> 0
+                    // if (brightness > 511)
+                    // {
+                    //     brightness = 0;
+                    // }
+                    // else
+                    {
+                        brightness = 511 - brightness; // brightness = 0 -> 255 -> 0
+                    }
+
                     dir = 1;
 
-                    // if (lum < 512 / 4)
-                    // if (lum < 512 / 2)
+                    if (brightness < next_led_begin_threshold_val)
                     {
                         // 熄灭（渐灭）动画还未结束，就要使能下一个灯的动画
                         // 灯珠的索引，从第0个开始
 
                         u8 next_led_index = 0; // 下一个灯的索引
 
-                        // 在 led_index_buff 中寻找当前索引的下一个灯的索引
-                        for (u8 j = 0; j < sizeof(led_index_buff); j++)
+                        // printf("sys time %lu\n", sys_time_get() - last_sys_time);
+                        // last_sys_time = sys_time_get();
+
+                        // 在 led_lighting_sequence_buff 中寻找当前索引的下一个灯的索引
+                        for (u8 j = 0; j < sizeof(led_lighting_sequence_buff); j++)
                         {
-                            if (j == sizeof(led_index_buff) - 1)
+                            // 最后一个灯，要切换成另一种动画
+                            if (j == sizeof(led_lighting_sequence_buff) - 1)
                             {
-                                // 最后一个灯，要切换成另一种动画
+
                                 // printf("tail \n");
 
                                 // 测试一轮动画所需的时间
@@ -1076,12 +1350,10 @@ u16 meteor_light_random_breath(void)
                                 break;
                             }
 
-                            // printf("sizeof(led_index_buff) %u\n", (u16)sizeof(led_index_buff)); // 打印是12
-
-                            if (i == led_index_buff[j])
+                            if (i == led_lighting_sequence_buff[j])
                             {
-                                // 在 led_index_buff 中找到了当前灯的索引，得到下一个灯的索引
-                                next_led_index = led_index_buff[j + 1];
+                                // 在 led_lighting_sequence_buff 中找到了当前灯的索引，得到下一个灯的索引
+                                next_led_index = led_lighting_sequence_buff[j + 1];
                                 break;
                             }
                         }
@@ -1094,41 +1366,42 @@ u16 meteor_light_random_breath(void)
                     }
                 }
 
-                u32 color = WS2812FX_color_blend(BLACK, WHITE, lum);
+                u32 color = WS2812FX_color_blend(BLACK, WHITE, brightness); // 得到当前亮度
                 Adafruit_NeoPixel_fill(color, _seg->start + i, 1);
 
                 if (dir == 0)
                 {
                     // 渐亮，时间要比渐灭的短
-                    // _seg_rt->led_index_mode_step[i] += 8;
-                    // _seg_rt->led_index_mode_step[i] += 16;
-                    _seg_rt->led_index_mode_step[i] += 32;
+                    _seg_rt->led_index_mode_step[i] += brightness_add_step;
                 }
                 else
                 {
                     // 渐灭，时间要比渐亮的长
-                    // _seg_rt->led_index_mode_step[i] += 2;
-                    _seg_rt->led_index_mode_step[i] += 1;
+                    _seg_rt->led_index_mode_step[i] += brightness_sub_step;
                 }
 
                 if (_seg_rt->led_index_mode_step[i] > 511)
                 {
                     _seg_rt->led_index_mode_step[i] = 0;
+
+                    // 测试发现led不会熄灭，这里要加上这一句：熄灭当前led
+                    Adafruit_NeoPixel_fill(BLACK, _seg->start + i, 1); // 熄灭当前led
+
                     _seg_rt->led_index_enable_buff[i] = 0;
                 }
             } // if (_seg_rt->led_index_enable_buff[i])
-        }
+        } // 
 
-        return (_seg->speed / _seg_len / 10); // 速度和对应的时间由调试得出
+        return ret;
     }
 
     // 让灯光乱闪
     if (ANIMATION_STAGE_2_BEGIN == _seg_rt->cur_animation_stage)
     {
-        for (u8 i = 0; i < (sizeof(led_index_buff) - 1) / 2; i++)
+        for (u8 i = 0; i < (sizeof(led_lighting_sequence_buff) - 1) / 2; i++)
         {
-            u8 random_index = WS2812FX_random8_lim(sizeof(led_index_buff)); // 随机灯光索引
-            u16 random_lum = WS2812FX_random16_lim((u16)512);               // 随机亮度
+            u8 random_index = WS2812FX_random8_lim(sizeof(led_lighting_sequence_buff)); // 随机灯光索引
+            u16 random_lum = WS2812FX_random16_lim((u16)512);                           // 随机亮度
             if (0 == _seg_rt->led_index_enable_buff[random_index])
             {
                 _seg_rt->led_index_enable_buff[random_index] = 1;
@@ -1170,9 +1443,6 @@ u16 meteor_light_random_breath(void)
                 }
             } // if (_seg_rt->led_index_enable_buff[i])
         }
-
-        // printf("sys time %lu\n", sys_time_get() - last_sys_time);
-        // last_sys_time = sys_time_get();
 
         /* WS2812FX_service() 10ms调用一次，而 _seg->speed 以ms为单位，一般是 1000ms以上，这里除以10 */
         _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (_seg->speed / 10);

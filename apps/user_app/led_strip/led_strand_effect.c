@@ -961,12 +961,12 @@ void ls_meteor_stat_effect(void)
         // 测试用：
         else if (fc_effect.star_index == 99)
         {
-            extern u16 music_mode1(void);
-            extern u16 meteor_light_two_channel_equalizer_effect(void);
-            extern u16 WS2812FX_mode_comet_5(void);
-            extern u16 meteor_light_single_point_flow(void); // 流星灯单点流水
+            // extern u16 music_mode1(void);
+            // extern u16 meteor_light_two_channel_equalizer_effect(void);
+            // extern u16 WS2812FX_mode_comet_5(void);
+            // extern u16 meteor_light_single_point_flow(void); // 流星灯单点流水
 
-            extern u16 meteor_light_random_breath(void);
+            // extern u16 meteor_light_random_breath(void);
 
 
             fc_effect.meteor_period = 1000;
@@ -984,12 +984,12 @@ void ls_meteor_stat_effect(void)
                 // meteor_light_random_breath,
 
                 // WS2812FX_mode_comet_1,
-                meteor_effect_slow,
+                meteor_effect_random_breath,
 
                 WHITE,                // 颜色，WS2812FX_setColors设置
                 // fc_effect.star_speed, // 速度
-                200, // 速度
-                // 1000, // 速度
+                // 200, // 速度
+                1000, // 速度
                 // 3000, // 速度
                 // NO_OPTIONS);                   // 选项，这里像素点大小：3 REVERSE决定方向
                 // REVERSE);                   // 选项，这里像素点大小：3 REVERSE决定方向
