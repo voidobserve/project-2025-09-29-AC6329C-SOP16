@@ -206,6 +206,7 @@ u8 rf24g_convert_key_event(u8 key_value, u8 key_driver_event)
 void rf24_key_handle(void)
 {
     u8 rf24g_key_event = 0;
+    color_t color_structure = {0};
 
     if (NO_KEY == rf24g_key_driver_value)
         return;
@@ -262,6 +263,140 @@ void rf24_key_handle(void)
 
     case RF24G_KEY_EVENT_R1C1_LOOSE:
         printf("key event R1C1 loose\n");
+
+        break;
+
+    case RF24G_WHITE_KEY_EVENT_R2C1_CLICK: // R
+        // printf("key event R2C1 click\n");
+        color_structure.r = 0xFF;
+        color_structure.g = 0x00;
+        color_structure.b = 0x00;
+        color_structure.w = 0x00;
+        colorful_lights_set_static_mode(color_structure);
+        break;
+
+    case RF24G_WHITE_KEY_EVENT_R2C2_CLICK: // G
+        // printf("key event R2C2 click\n");
+        color_structure.r = 0x00;
+        color_structure.g = 0xFF;
+        color_structure.b = 0x00;
+        color_structure.w = 0x00;
+        colorful_lights_set_static_mode(color_structure);
+
+        break;
+    case RF24G_WHITE_KEY_EVENT_R2C3_CLICK: // B
+        // printf("key event R2C3 click\n");
+
+        color_structure.r = 0x00;
+        color_structure.g = 0x00;
+        color_structure.b = 0xFF;
+        color_structure.w = 0x00;
+        colorful_lights_set_static_mode(color_structure);
+
+        break;
+
+    case RF24G_WHITE_KEY_EVENT_R2C4_CLICK:
+
+        color_structure.r = 0x00;
+        color_structure.g = 0x00;
+        color_structure.b = 0x00;
+        color_structure.w = 0xFF;
+        colorful_lights_set_static_mode(color_structure);
+        break;
+
+    case RF24G_WHITE_KEY_EVENT_R3C1_CLICK:
+
+        color_structure.r = 0xFF;
+        color_structure.g = 0xFF / 2;
+        color_structure.b = 0x00;
+        color_structure.w = 0x00;
+        colorful_lights_set_static_mode(color_structure);
+        break;
+
+    case RF24G_WHITE_KEY_EVENT_R3C2_CLICK:
+
+        color_structure.r = 0x00;
+        color_structure.g = 0xFF;
+        color_structure.b = 0xFF / 2;
+        color_structure.w = 0x00;
+        colorful_lights_set_static_mode(color_structure);
+        break;
+
+    case RF24G_WHITE_KEY_EVENT_R3C3_CLICK:
+
+        color_structure.r = 0x00;
+        color_structure.g = 0xFF;
+        color_structure.b = 0xFF;
+        color_structure.w = 0x00;
+        colorful_lights_set_static_mode(color_structure);
+        break;
+
+    case RF24G_WHITE_KEY_EVENT_R3C4_CLICK:
+        color_structure.r = 0xFF;
+        color_structure.g = 0xFF;
+        color_structure.b = 0xFF;
+        color_structure.w = 0xFF;
+        colorful_lights_set_static_mode(color_structure);
+        break;
+
+    case RF24G_WHITE_KEY_EVENT_R4C1_CLICK:
+        color_structure.r = 0xFF;
+        color_structure.g = 0xFF;
+        color_structure.b = 0x00;
+        color_structure.w = 0x00;
+        colorful_lights_set_static_mode(color_structure);
+        break;
+
+    case RF24G_WHITE_KEY_EVENT_R4C2_CLICK:
+        color_structure.r = 0xFF;
+        color_structure.g = 0x00;
+        color_structure.b = 0xFF / 2;
+        color_structure.w = 0x00;
+        colorful_lights_set_static_mode(color_structure);
+        break;
+
+    case RF24G_WHITE_KEY_EVENT_R4C3_CLICK:
+        color_structure.r = 0xFF;
+        color_structure.g = 0x00;
+        color_structure.b = 0xFF;
+        color_structure.w = 0x00;
+        colorful_lights_set_static_mode(color_structure);
+        break;
+
+    case RF24G_WHITE_KEY_EVENT_R5C1_CLICK: // 七彩频闪
+
+        fc_effect.dream_scene.speed = 1000 / 5; // 测试时使用
+
+        ls_set_color(0, BLUE);
+        ls_set_color(1, GREEN);
+        ls_set_color(2, RED);
+        ls_set_color(3, WHITE);
+        ls_set_color(4, YELLOW);
+        ls_set_color(5, CYAN);
+        ls_set_color(6, PURPLE);
+        fc_effect.dream_scene.change_type = MODE_STROBE; //
+        fc_effect.dream_scene.c_n = 7;                   // 有效颜色数量
+        fc_effect.Now_state = IS_light_scene;
+        set_fc_effect();
+        break;
+
+    case RF24G_WHITE_KEY_EVENT_R5C2_CLICK: // 七色跳变
+
+        // printf("key event R5C2 click\n");
+
+        fc_effect.dream_scene.speed = 1000 / 5; // 测试时使用
+
+        ls_set_color(0, RED);
+        ls_set_color(1, GREEN);
+        ls_set_color(2, BLUE);
+        ls_set_color(3, YELLOW);
+        ls_set_color(4, CYAN);
+        ls_set_color(5, PURPLE);
+        ls_set_color(6, WHITE);
+        fc_effect.dream_scene.change_type = MODE_MUTIL_JUMP; //
+        fc_effect.dream_scene.c_n = 7;                       // 有效颜色数量
+        fc_effect.Now_state = IS_light_scene;
+        set_fc_effect();
 
         break;
 
@@ -333,7 +468,7 @@ void rf24_key_handle(void)
             animation_ptr = meteor_effect_fast;
             break;
 
-        // case STAR_INDEX_METEOR_RANDOM_BREATH:
+            // case STAR_INDEX_METEOR_RANDOM_BREATH:
             // animation_ptr = meteor_light_random_breath;
             // break;
 
@@ -342,7 +477,7 @@ void rf24_key_handle(void)
             // break;
         }
 
-        WS2812FX_stop();  
+        WS2812FX_stop();
         WS2812FX_setSegment_colorOptions(
             1,                     // 第0段
             1,                     // 起始位置
@@ -354,6 +489,6 @@ void rf24_key_handle(void)
         WS2812FX_start();
 
         break;
-    }
+    } // switch (rf24g_key_event)
 }
 #endif

@@ -192,4 +192,6 @@ extern fc_effect_t fc_effect; // 幻彩灯串效果数据
 
 void base_Dynamic_Effect(u8 tp_num);
 
+void ls_set_color(uint8_t n, uint32_t c);
+
 #endif

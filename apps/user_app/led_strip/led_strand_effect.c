@@ -23,7 +23,6 @@ const u8 fade_type[3] =
 #define _0_seg_start 0
 #define _0_seg_stop 0
 
-
 extern void WS2812FX_setSegment_colorOptions(uint8_t n, uint16_t start, uint16_t stop, mode_ptr mode, uint32_t color, uint16_t speed, uint8_t options);
 
 /**
@@ -97,7 +96,8 @@ static void static_mode(void)
     WS2812FX_set_coloQty(0, fc_effect.dream_scene.c_n); // 设置颜色数量  0：第0段   fc_effect.dream_scene.c_n  颜色数量，一个颜色包含（RGB）
     ls_set_colors(1, &fc_effect.rgb);                   // 1:1个颜色    &fc_effect.rgb 这个颜色是什么色
 
-    WS2812FX_start();
+    // WS2812FX_start(); // 同时有七彩灯和流星灯时，不能调用这个函数，会导致流星灯闪烁一次
+    WS2812FX_running_flag_set(); // 置位运行标志
 }
 
 /*----------------------------------彩虹效果----------------------------------*/
@@ -128,12 +128,14 @@ void strand_jump_change(void)
         &WS2812FX_mode_single_block_scan, // 效果
         0,                                // 颜色，WS2812FX_setColors设置
         fc_effect.dream_scene.speed,      // 速度
-        SIZE_MEDIUM);                     // 选项，这里像素点大小：3
+        SIZE_SMALL);                      // 选项，这里像素点大小：1
+    // SIZE_MEDIUM);                     // 选项，这里像素点大小：3
 
     WS2812FX_set_coloQty(0, fc_effect.dream_scene.c_n);
     ls_set_colors(fc_effect.dream_scene.c_n, &fc_effect.dream_scene.rgb);
 
-    WS2812FX_start();
+    // WS2812FX_start();
+    WS2812FX_running_flag_set();
 }
 /*----------------------------------呼吸系列效果----------------------------------*/
 void strand_breath(void)
@@ -180,15 +182,17 @@ void strand_twihkle(void)
     WS2812FX_setSegment_colorOptions(
         0,                               // 第0段
         0, 0,                            // 起始位置，结束位置
-        &WS2812FX_mode_mutil_twihkle,    // 效果
+        &WS2812FX_mode_mutil_twihkle,    // 效果 
         0,                               // 颜色，WS2812FX_setColors设置
         fc_effect.dream_scene.speed * 4, // 速度
         SIZE_SMALL);                     // 选项，这里像素点大小：1
     WS2812FX_set_coloQty(0, fc_effect.dream_scene.c_n);
     ls_set_colors(fc_effect.dream_scene.c_n, &fc_effect.dream_scene.rgb);
 
-    WS2812FX_start();
+    // WS2812FX_start();
+    WS2812FX_running_flag_set();
 }
+
 // 多颜色频闪
 void ls_strobe(void)
 {
@@ -203,8 +207,10 @@ void ls_strobe(void)
 
     WS2812FX_set_coloQty(0, fc_effect.dream_scene.c_n);
     ls_set_colors(fc_effect.dream_scene.c_n, &fc_effect.dream_scene.rgb);
-    WS2812FX_start();
+    // WS2812FX_start();
+    WS2812FX_running_flag_set();
 }
+
 /*----------------------------------流水效果----------------------------------*/
 void strand_flow_water(void)
 {
@@ -968,7 +974,6 @@ void ls_meteor_stat_effect(void)
 
             // extern u16 meteor_light_random_breath(void);
 
-
             fc_effect.meteor_period = 1000;
 
             WS2812FX_stop();
@@ -986,7 +991,7 @@ void ls_meteor_stat_effect(void)
                 // WS2812FX_mode_comet_1,
                 meteor_effect_random_breath,
 
-                WHITE,                // 颜色，WS2812FX_setColors设置
+                WHITE, // 颜色，WS2812FX_setColors设置
                 // fc_effect.star_speed, // 速度
                 // 200, // 速度
                 1000, // 速度
@@ -995,7 +1000,7 @@ void ls_meteor_stat_effect(void)
                 // REVERSE);                   // 选项，这里像素点大小：3 REVERSE决定方向
                 // FADE_FAST);                   // 选项
                 // SIZE_SMALL);                   // 选项
-                REVERSE);                   // 选项
+                REVERSE); // 选项
 
             WS2812FX_start();
         }

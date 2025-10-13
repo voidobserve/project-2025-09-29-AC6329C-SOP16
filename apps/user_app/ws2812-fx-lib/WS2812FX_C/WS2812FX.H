@@ -208,6 +208,8 @@ void WS2812FX_service(void),
     WS2812FX_setPixels(uint16_t, uint8_t *),
     WS2812FX_show(void);
 
+void WS2812FX_running_flag_set(void); // 置位运行标志，值设置为true
+
 uint8_t
 WS2812FX_isRunning(void),
     WS2812FX_isTriggered(void),

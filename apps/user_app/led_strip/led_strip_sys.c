@@ -94,6 +94,9 @@ void soft_turn_on_the_light(void) // 软开灯处理
     // motor_Init();
     // WS2812FX_start();
     // open_fan();
+    // 测试时使用：
+    // fc_effect.b = 100;
+    fc_effect.b = 255;
 
     OpenMortor();            // 打开电机
     set_fc_effect();         // 设置七彩灯的动画
@@ -898,6 +901,53 @@ void set_static_mode(u8 r, u8 g, u8 b)
 }
 
 /**
+ * @brief 七彩灯设置为静态模式，颜色值由传参设定
+ *
+ * @param colors_structure 结构体必须包含 r、g、b、w 成员
+ *
+ */
+void colorful_lights_set_static_mode(color_t colors_structure)
+{
+    fc_effect.Now_state = IS_STATIC;
+
+    // if (colors_structure.r == 0x00 &&
+    //     colors_structure.g == 0x00 &&
+    //     colors_structure.b == 0x00 &&
+    //     colors_structure.w == 0xFF) // 只点亮白光 W
+    // {
+
+    //     fc_effect.rgb.r = 0;
+    //     fc_effect.rgb.g = 0;
+    //     fc_effect.rgb.b = 0;
+    //     fc_effect.rgb.w = 255;
+    // }
+    // else if (colors_structure.r == 0xFF &&
+    //          colors_structure.g == 0xFF &&
+    //          colors_structure.b == 0xFF &&
+    //          colors_structure.w == 0xFF) // RGBW都要点亮
+    // {
+    //     fc_effect.rgb.r = 255;
+    //     fc_effect.rgb.g = 255;
+    //     fc_effect.rgb.b = 255;
+    //     fc_effect.rgb.w = 255;
+    // }
+    // else
+    // {
+    //     fc_effect.rgb.r = colors_structure.r;
+    //     fc_effect.rgb.g = colors_structure.g;
+    //     fc_effect.rgb.b = colors_structure.b;
+    //     fc_effect.rgb.w = 0;
+    // }
+
+    fc_effect.rgb.r = colors_structure.r;
+    fc_effect.rgb.g = colors_structure.g;
+    fc_effect.rgb.b = colors_structure.b;
+    fc_effect.rgb.w = colors_structure.w;
+
+    set_fc_effect(); // 效果调度
+}
+
+/**
  * @brief APP设置暖白光的颜色
  *
  */
@@ -1139,8 +1189,7 @@ AUTO_TIME_T get_ir_timer(void)
 // 全彩效果初始化
 void full_color_init(void)
 {
-    // 测试时使用：
-    fc_effect.b = 100;
+  
 
     WS2812FX_init(fc_effect.led_num, fc_effect.sequence); // 初始化ws2811
     // WS2812FX_stop();

@@ -191,6 +191,12 @@ void WS2812FX_start() {
   _running = true;
 }
 
+// 置位运行标志，值设置为true
+void WS2812FX_running_flag_set(void)
+{
+  _running = true;
+}
+
 void WS2812FX_stop() {
   _running = false;
 

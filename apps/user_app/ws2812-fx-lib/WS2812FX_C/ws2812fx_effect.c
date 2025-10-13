@@ -1169,7 +1169,7 @@ u16 meteor_light_single_point_flow(void)
  *
  * @return u16
  */
-volatile u8 random_breath_index = 6;
+volatile u8 random_breath_index = 0;
 u16 meteor_effect_random_breath(void)
 {
     // static u32 last_sys_time = 0;
@@ -1220,7 +1220,7 @@ u16 meteor_effect_random_breath(void)
         ret = (u32)18000 / _seg_len / (255 / brightness_add_step + (255 - next_led_begin_threshold_val) / brightness_sub_step);
     */
     u16 animation_time_during_breath = 0; // 一轮呼吸动画所需时间，单位：ms
-    // brightness_sub_step = 1; // 随着动画时间变长，这里衰减速度显得太慢 
+    // brightness_sub_step = 1; // 随着动画时间变长，这里衰减速度显得太慢
 
     // 最后得到的动画时间肯定会有一定误差，因为计算和返回值都会丢失部分精度
     switch (random_breath_index)
@@ -1250,7 +1250,7 @@ u16 meteor_effect_random_breath(void)
         animation_time_during_breath = 18000;
         break;
     case 7:
-        brightness_sub_step = 12; 
+        brightness_sub_step = 12;
         animation_time_during_breath = 38000;
         break;
     }
@@ -1263,10 +1263,16 @@ u16 meteor_effect_random_breath(void)
 
     if (0 == _seg_rt->counter_mode_step)
     {
-        Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
 
         // printf("sys time %lu\n", sys_time_get() - last_sys_time);
         // last_sys_time = sys_time_get();
+
+        /*
+            ANIMATION_STAGE_1_END 到 ANIMATION_STAGE_2_BEGIN 时，
+            不能调用 Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len);
+            会导致灯光闪一下
+        */
+        //    Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
 
         // 刚开始动画/上一轮动画结束
         if (0 == _seg_rt->aux_param ||
@@ -1275,6 +1281,8 @@ u16 meteor_effect_random_breath(void)
             _seg_rt->aux_param = 1;
             _seg_rt->cur_animation_stage = ANIMATION_STAGE_1_BEGIN;
             // _seg_rt->counter_mode_step = 0; // 进入 ANIMATION_STAGE_1 之前，需要确保 _seg_rt->counter_mode_step == 0
+
+            Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
         }
         else if (ANIMATION_STAGE_1_END == _seg_rt->cur_animation_stage)
         {
@@ -1390,7 +1398,7 @@ u16 meteor_effect_random_breath(void)
                     _seg_rt->led_index_enable_buff[i] = 0;
                 }
             } // if (_seg_rt->led_index_enable_buff[i])
-        } // 
+        } //
 
         return ret;
     }
@@ -2235,11 +2243,11 @@ uint16_t WS2812FX_mode_fade_each_led(void)
 }
 
 /*
-功能：颜色块跳变效果，多个颜色块组成背景,以块为单位步进做流水,
-_seg->c_n:有效颜色数量
-SIZE_OPTION：决定颜色块大小
-IS_REVERSE:0 反向流水 ；1正向流水，WS2812FX_setOptions(REVERSE)来设置
- */
+    功能：颜色块跳变效果，多个颜色块组成背景,以块为单位步进做流水,
+    _seg->c_n:有效颜色数量
+    SIZE_OPTION：决定颜色块大小
+    IS_REVERSE:0 反向流水 ；1正向流水，WS2812FX_setOptions(REVERSE)来设置
+*/
 uint16_t WS2812FX_mode_single_block_scan(void)
 {
     uint8_t size = (SIZE_OPTION << 1) + 1;
@@ -2263,6 +2271,7 @@ uint16_t WS2812FX_mode_single_block_scan(void)
             {
                 WS2812FX_setPixelColor(_seg->stop - _seg_rt->counter_mode_step, _seg->colors[_seg_rt->aux_param]);
             }
+
             _seg_rt->counter_mode_step++;
             if (_seg_rt->counter_mode_step > _seg->stop)
             {
@@ -2271,6 +2280,8 @@ uint16_t WS2812FX_mode_single_block_scan(void)
         }
         _seg_rt->aux_param++;
         _seg_rt->aux_param %= _seg->c_n;
+
+        // printf("%d\n", __LINE__); // 好像没有跑到这里
     }
 
     c = _seg->colors[0];
