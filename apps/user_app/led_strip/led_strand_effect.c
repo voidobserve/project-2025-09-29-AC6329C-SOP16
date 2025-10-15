@@ -182,7 +182,7 @@ void strand_twihkle(void)
     WS2812FX_setSegment_colorOptions(
         0,                               // 第0段
         0, 0,                            // 起始位置，结束位置
-        &WS2812FX_mode_mutil_twihkle,    // 效果 
+        &WS2812FX_mode_mutil_twihkle,    // 效果
         0,                               // 颜色，WS2812FX_setColors设置
         fc_effect.dream_scene.speed * 4, // 速度
         SIZE_SMALL);                     // 选项，这里像素点大小：1
@@ -351,13 +351,14 @@ void standard_jump(void)
         0,                                  // 第0段
         0, 0,                               // 起始位置，结束位置
         &WS2812FX_mutil_c_jump,             // 效果
-        0,                                  // 颜色，WS2812FX_setColors设置
+        0,                                  // 颜色， WS2812FX_setColors 设置
         (fc_effect.dream_scene.speed * 40), // 速度
         0);                                 // 选项，这里像素点大小：3
 
     WS2812FX_set_coloQty(0, fc_effect.dream_scene.c_n);
     ls_set_colors(fc_effect.dream_scene.c_n, &fc_effect.dream_scene.rgb);
-    WS2812FX_start();
+    // WS2812FX_start();
+    WS2812FX_running_flag_set();
 }
 
 //====================================================================================================
@@ -638,7 +639,7 @@ void base_Dynamic_Effect(u8 tp_num)
  */
 static void ls_scene_effect(void)
 {
-    app_set_bright(100);
+    // app_set_bright(100); // 设置为最大亮度
     switch (fc_effect.dream_scene.change_type)
     {
 
@@ -692,6 +693,92 @@ static void ls_scene_effect(void)
 
     case MODE_SINGLE_C_BREATH:
         single_c_breath();
+        break;
+
+    case MODO_COLORFUL_LIGHTS_FLASH: // 七彩灯频闪
+
+        WS2812FX_setSegment_colorOptions(
+            0,                           // 第0段
+            0,                           // 起始位置
+            0,                           // 结束位置
+            &colorful_lights_flash,      // 效果  // 七彩灯渐变
+            0,                           // 颜色，WS2812FX_setColors设置
+            fc_effect.dream_scene.speed, // 速 度
+            NO_OPTIONS                   // 选项
+        );
+
+        WS2812FX_set_coloQty(0, fc_effect.dream_scene.c_n); // 设置颜色数量
+        ls_set_colors(fc_effect.dream_scene.c_n, &fc_effect.dream_scene.rgb);
+        WS2812FX_running_flag_set();
+
+        break;
+
+    case MODE_COLORFUL_LIGHTS_JUMP: // 七彩灯跳变
+
+        WS2812FX_setSegment_colorOptions(
+            0,                           // 第0段
+            0,                           // 起始位置
+            0,                           // 结束位置
+            &colorful_lights_jump,       // 效果  // 七彩灯渐变
+            0,                           // 颜色，WS2812FX_setColors设置
+            fc_effect.dream_scene.speed, // 速 度
+            NO_OPTIONS                   // 选项
+        );
+
+        WS2812FX_set_coloQty(0, fc_effect.dream_scene.c_n); // 设置颜色数量
+        ls_set_colors(fc_effect.dream_scene.c_n, &fc_effect.dream_scene.rgb);
+        WS2812FX_running_flag_set();
+
+        break;
+
+    case MODE_COLORFUL_LIGHTS_GRADUAL: // 七彩灯渐变
+
+        // 注意，提供的颜色数量至少要有两个，否则函数内部会越界访问
+
+        WS2812FX_setSegment_colorOptions(
+            0,                           // 第0段
+            0,                           // 起始位置
+            0,                           // 结束位置
+            &colorful_lights_gradual,    // 效果  // 七彩灯渐变
+            0,                           // 颜色，WS2812FX_setColors设置
+            fc_effect.dream_scene.speed, // 速 度
+            NO_OPTIONS                   // 选项
+        );
+
+        WS2812FX_set_coloQty(0, fc_effect.dream_scene.c_n);
+        ls_set_colors(fc_effect.dream_scene.c_n, &fc_effect.dream_scene.rgb);
+        WS2812FX_running_flag_set();
+        break;
+
+    case MODE_COLORFUL_LIGHTS_BREATH: // 七彩灯呼吸
+
+        WS2812FX_setSegment_colorOptions(
+            0,                           // 第0段
+            0,                           // 起始位置
+            0,                           // 结束位置
+            &colorful_lights_breathing,  // 效果  // 七彩灯呼吸
+            0,                           // 颜色，WS2812FX_setColors设置
+            fc_effect.dream_scene.speed, // 速 度
+            NO_OPTIONS                   // 选项
+        );
+
+        WS2812FX_set_coloQty(0, fc_effect.dream_scene.c_n); // 设置颜色数量
+        ls_set_colors(fc_effect.dream_scene.c_n, &fc_effect.dream_scene.rgb);
+        WS2812FX_running_flag_set();
+        break;
+
+    case MODE_COLORFUL_LIGHTS_AUTO: // 七彩灯的自动模式
+  
+        WS2812FX_setSegment_colorOptions(
+            0,                           // 第0段
+            0,                           // 起始位置
+            0,                           // 结束位置
+            &colorful_lights_auto,       // 效果  // 七彩灯自动（颜色和颜色数量在函数内部设置，这里不用再设置）
+            0,                           // 颜色，WS2812FX_setColors设置
+            fc_effect.dream_scene.speed, // 速 度
+            NO_OPTIONS                   // 选项
+        );
+        WS2812FX_running_flag_set();
         break;
 
     default:
@@ -1088,7 +1175,6 @@ void set_fc_effect(void)
 
     if (fc_effect.on_off_flag == DEVICE_ON)
     {
-
         switch (fc_effect.Now_state)
         {
         // 幻彩场景
@@ -1113,7 +1199,7 @@ void set_fc_effect(void)
 
         // 涂抹模式
         case IS_smear_adjust:
-            ls_smear_adjust_effect();
+            // ls_smear_adjust_effect();
             break;
 
         // 静态模式

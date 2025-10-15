@@ -133,7 +133,7 @@ typedef struct Segment_runtime
     uint8_t aux_param2;  // auxilary param (usually stores bitwise options)
     uint16_t aux_param3; // auxilary param (usually stores a segment index)
 
-    // 只在对应的动画中使用：
+    // 只在对应的动画中使用：（流星灯动画）
     u8 cur_animation_stage; // 当前动画阶段
     u8 led_index_enable_buff[12];
     u8 dest_brightness; // 目标亮度

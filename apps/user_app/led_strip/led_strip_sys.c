@@ -144,8 +144,7 @@ const u16 led_speed_array[MAX_SPEED_RANK] = {
  * @param tp_b  0-100
  */
 void app_set_bright(u8 tp_b)
-{
-
+{ 
     if (fc_effect.Now_state == IS_STATIC)
     {
         if (tp_b < MIN_BRIGHT_VALUE)

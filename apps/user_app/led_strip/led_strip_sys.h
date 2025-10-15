@@ -114,6 +114,8 @@ typedef enum
 void set_static_mode(u8 r, u8 g, u8 b);
 void colorful_lights_set_static_mode(color_t colors_structure); // 七彩灯设置为静态模式，颜色值由传参设定
 
+void ls_set_music_mode(void); // 通过遥控器控制七彩灯的音乐模式切换
+
 void OpenMortor(void);
 void CloseMotor(void);
 

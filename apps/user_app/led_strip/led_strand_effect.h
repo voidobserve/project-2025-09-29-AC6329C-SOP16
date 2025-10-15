@@ -52,7 +52,7 @@ typedef enum
     MODE_STROBE,                                                 // 频闪，颜色之间插入黑mode
     MODE_MUTIL_C_GRADUAL,                                        // 多种颜色切换整条渐变
     MODE_2_C_FIX_FLOW,                                           // 两种颜色混合流水，渐变色流水
-    MODE_SINGLE_FLASH_RANDOM = 21,                               /// 星空效果，单灯随机闪烁
+    MODE_SINGLE_FLASH_RANDOM = 21,                               // 星空效果，单灯随机闪烁
     MODE_SEG_FLASH_RANDOM = 22,                                  // 星云效果，一段随机闪烁
     MODE_SINGLE_METEOR = 23,                                     // 流星效果
     MODE_SINGLE_C_BREATH = 24,                                   // 单色呼吸
@@ -62,12 +62,17 @@ typedef enum
     MODE_DOT_RUNNING = 28,                                       // 多个点跑马 ，点和点直接固定间隔5，支持每个点不同颜色，支持设置背景色
     MODE_DOT_RUNNING_COLLECTIONS = 29,                           // 跑马集合模式
     MODE_SINGLE_SUPERPOSITION = 30,                              // 单色堆积
-    MODE_B_G_SUPERPOSITION = 31,                                 //带底色堆积
+    MODE_B_G_SUPERPOSITION = 31,                                 // 带底色堆积
                                  MODE_MUTILE_SUPERPOSITION = 32, // 多色堆积，不灭
     MODE_BREATH_W = 33,                                          // W通道呼吸
     MODE_GRADUAL = 34,                                           // 标准渐变，彩虹颜色
     MODE_MUTIL_C_BREATH = 35,
 
+    MODO_COLORFUL_LIGHTS_FLASH, // 七彩灯动画，频闪（闪烁使用到的颜色，在颜色数组中循环索引 ）
+    MODE_COLORFUL_LIGHTS_JUMP,    // 七彩灯动画，跳变（跳变使用到的颜色，在颜色数组中循环索引 ）
+    MODE_COLORFUL_LIGHTS_GRADUAL, // 七彩灯动画，渐变（渐变使用到的颜色，在颜色数组中循环索引；至少要有两个颜色）
+    MODE_COLORFUL_LIGHTS_BREATH,  // 七彩灯动画，呼吸（呼吸使用到的颜色，在颜色数组中循环索引；可以只有一个颜色）
+    MODE_COLORFUL_LIGHTS_AUTO,    // 七彩灯动画，自动模式
 } change_type_e;
 
 #pragma pack(1)
@@ -121,26 +126,26 @@ typedef struct
 
 typedef struct
 {
-    unsigned char m;      // 效果模式
-    unsigned char s;      // 灵敏度
+    unsigned char m; // 效果模式
+    // unsigned char mode_index;      // 效果模式
+    unsigned char s;      // 灵敏度（范围：0-100，值越小越灵敏）
     unsigned char m_type; // 区分音乐的模式，手机麦或者外麦
 } music_t;
-
 
 // 定义流星灯的动画索引
 enum
 {
-    STAR_INDEX_METEOR_NORMAL_SLOW, // 正常流星，慢速
+    STAR_INDEX_METEOR_NORMAL_SLOW,   // 正常流星，慢速
     STAR_INDEX_METEOR_NORMAL_MIDDLE, // 正常流星，中速
-    STAR_INDEX_METEOR_NORMAL_FAST, // 正常流星，快速
+    STAR_INDEX_METEOR_NORMAL_FAST,   // 正常流星，快速
 
     STAR_INDEX_METEOR_RANDOM_BREATH, // 乱闪模式
 
     STAR_INDEX_METEOR_RANDOM_BREATH_2, // 同时最多2个灯随机呼吸的模式
 
-    STAR_INDEX_METEOR_MUSIC_CONTROL,// 带声控的流星灯模式
+    STAR_INDEX_METEOR_MUSIC_CONTROL, // 带声控的流星灯模式
 
-    STAR_INDEX_METEOR_MAX, 
+    STAR_INDEX_METEOR_MAX,
 };
 
 /*----------------------------幻彩灯串效果大结构体----------------------------------*/
@@ -172,11 +177,10 @@ typedef struct
 
     // =========================================================
     // 流星灯的相关参数
-    unsigned char star_on_off;  // 流星灯开关
-    unsigned char star_index;   // 流星灯动画索引
-    unsigned short star_speed; 
-    unsigned char app_star_speed;   // 反馈给APP流星速度
-
+    unsigned char star_on_off; // 流星灯开关
+    unsigned char star_index;  // 流星灯动画索引
+    unsigned short star_speed;
+    unsigned char app_star_speed; // 反馈给APP流星速度
 
     unsigned char star_speed_index; // 电机速度索引
 

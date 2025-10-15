@@ -53,16 +53,14 @@ void sound_handle(void)
     u16 adc;
     u8 i;
     // 记录adc值
-#if 0
-    // if (fc_effect.on_off_flag == DEVICE_ON &&
-    //     (fc_effect.Now_state == IS_light_music ||
-    //      fc_effect.base_ins.mode == 0x05 ||
-    //      fc_effect.star_index == 17 ||
-    //      fc_effect.star_index == 18))
+#if 1
 
-    if (fc_effect.star_index == 99) // 测试时使用
+    // 如果是七彩灯的声控模式、如果是流星灯的声控模式
+    if ((fc_effect.on_off_flag == DEVICE_ON &&     /* 如果设备开启 */
+         fc_effect.Now_state == IS_light_music) || /* 如果是七彩灯的声控模式 */
+        (fc_effect.star_on_off == DEVICE_ON &&     /* 流星灯开启 */
+         fc_effect.star_index == 0) /* 流星灯处于声控模式 */)
     {
-
         music_voic.sound_buf[music_voic.sound_cnt] = check_mic_adc();
         music_voic.c_v = music_voic.sound_buf[music_voic.sound_cnt]; // 记录当前值
         music_voic.sound_cnt++;
@@ -89,8 +87,8 @@ void sound_handle(void)
                     music_voic.sound_trg = 1;  // 七彩声控
                     music_voic.meteor_trg = 1; // 流星声控
 
-                    // USER_TO_DO 需要再这里也加一层限制
-                    WS2812FX_trigger();        // 让主循环扫描到立刻更新动画（注意不能在非声控模式使用，否则一检测到有声控，就会立即触发动画切换）
+                    // USER_TO_DO 需要再这里也加一层限制，或者让动画内部调用 WS2812FX_trigger()，而不是在这里调用 WS2812FX_trigger() 
+                    // WS2812FX_trigger(); // 让主循环扫描到立刻更新动画（注意不能在非声控模式使用，否则一检测到有声控，就会立即触发动画切换）
                 }
             }
         }

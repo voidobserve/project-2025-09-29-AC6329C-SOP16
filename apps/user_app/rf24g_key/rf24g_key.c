@@ -18,29 +18,6 @@ static volatile u8 rf24g_dynamic_code_same_cnt = 0; // 存放动态码连续相�
 // volatile u8 chromatic_circle_val = 0;        // 存放色环按键对应的数值，范围：0x00~0xFF
 
 const u8 rf24g_key_event_table[][RF34G_KEY_EVENT_MAX + 1] = {
-    // 0,
-    // {RF24G_KEY_ON_OFF, RF24G_KEY_EVENT_ON_OFF_CLICK, RF24G_KEY_EVENT_ON_OFF_HOLD, RF24G_KEY_EVENT_ON_OFF_LOOSE},
-
-    // {RF24G_KEY_MODE_ADD, RF24G_KEY_EVENT_MODE_ADD_CLICK, RF24G_KEY_EVENT_MODE_ADD_HOLD, RF24G_KEY_EVENT_MODE_ADD_LOOSE},
-    // {RF24G_KEY_MODE_SUB, RF24G_KEY_EVENT_MODE_SUB_CLICK, RF24G_KEY_EVENT_MODE_SUB_HOLD, RF24G_KEY_EVENT_MODE_SUB_LOOSE},
-
-    // {RF24G_KEY_SPEED_ADD, RF24G_KEY_EVENT_SPEED_ADD_CLICK, RF24G_KEY_EVENT_SPEED_ADD_HOLD, RF24G_KEY_EVENT_SPEED_ADD_LOOSE},
-    // {RF24G_KEY_SPEED_SUB, RF24G_KEY_EVENT_SPEED_SUB_CLICK, RF24G_KEY_EVENT_SPEED_SUB_HOLD, RF24G_KEY_EVENT_SPEED_SUB_LOOSE},
-
-    // {RF24G_KEY_DEMO, RF24G_KEY_EVENT_DEMO_CLICK, RF24G_KEY_EVENT_DEMO_HOLD, RF24G_KEY_EVENT_DEMO_LOOSE},
-
-    // {RF24G_KEY_COLOR_ADD, RF24G_KEY_EVENT_COLOR_ADD_CLICK, RF24G_KEY_EVENT_COLOR_ADD_HOLD, RF24G_KEY_EVENT_COLOR_ADD_LOOSE},
-    // {RF24G_KEY_COLOR_SUB, RF24G_KEY_EVENT_COLOR_SUB_CLICK, RF24G_KEY_EVENT_COLOR_SUB_HOLD, RF24G_KEY_EVENT_COLOR_SUB_LOOSE},
-
-    // {RF24G_KEY_BRIGHT_ADD, RF24G_KEY_EVENT_BRIGHT_ADD_CLICK, RF24G_KEY_EVENT_BRIGHT_ADD_HOLD, RF24G_KEY_EVENT_BRIGHT_ADD_LOOSE},
-    // {RF24G_KEY_BRIGHT_SUB, RF24G_KEY_EVENT_BRIGHT_SUB_CLICK, RF24G_KEY_EVENT_BRIGHT_SUB_HOLD, RF24G_KEY_EVENT_BRIGHT_SUB_LOOSE},
-
-    // {RF24G_KEY_B, RF24G_KEY_EVENT_B_CLICK, RF24G_KEY_EVENT_B_HOLD, RF24G_KEY_EVENT_B_LOOSE},
-    // {RF24G_KEY_F, RF24G_KEY_EVENT_F_CLICK, RF24G_KEY_EVENT_F_HOLD, RF24G_KEY_EVENT_F_LOOSE},
-    // {RF24G_KEY_G, RF24G_KEY_EVENT_G_CLICK, RF24G_KEY_EVENT_G_HOLD, RF24G_KEY_EVENT_G_LOOSE},
-
-    // 测试时使用：
-    {RF24G_KEY_VAL_R1C1, RF24G_KEY_EVENT_R1C1_CLICK, RF24G_KEY_EVENT_R1C1_HOLD, RF24G_KEY_EVENT_R1C1_LOOSE},
 
     // ==============================
     // 白色面板遥控器按键：
@@ -214,55 +191,29 @@ void rf24_key_handle(void)
     rf24g_key_event = rf24g_convert_key_event(rf24g_key_driver_value, rf24g_key_driver_event);
     rf24g_key_driver_value = NO_KEY;
 
+    /*
+        fc_effect.dream_scene.speed 最大应该是2000
+        最小应该是 
+    */ 
+    fc_effect.dream_scene.speed = 200; // 测试时使用
+
     switch (rf24g_key_event)
     {
-        // 收到短按、长按后松手，再执行对应的功能
+        // 收到短按 再执行对应的功能 ；不处理长按的事件
 
-#if 0
-    case RF24G_KEY_EVENT_ON_OFF_CLICK:
-        printf("key event on/off click\n");
-
-        soft_turn_on_the_light();
-
-        set_static_mode(255, 255, 255);
-
+    case RF24G_WHITE_KEY_EVENT_R1C1_CLICK: // +
+    {
+    }
     break;
-    case RF24G_KEY_EVENT_ON_OFF_HOLD:
-        printf("key event on/off hold\n");
-
-        soft_turn_off_lights();
-
-    break;
-
-    case RF24G_KEY_EVENT_ON_OFF_LOOSE:
-        printf("key event on/off loose\n");
-        // 开机/关机
-        break;
-#endif
-
-    case RF24G_KEY_EVENT_R1C1_CLICK:
-        printf("key event R1C1 click\n");
-
-        // static u8 dir = 0;
-        // if (0 == dir)
-        // {
-        //     soft_turn_on_the_light();
-        //     dir = 1;
-        // }
-        // else
-        // {
-        //     soft_turn_off_lights();
-        //     dir = 0;
-        // }
+    case RF24G_WHITE_KEY_EVENT_R1C2_CLICK: // -
 
         break;
 
-    case RF24G_KEY_EVENT_R1C1_HOLD:
-        printf("key event R1C1 hold\n");
+    case RF24G_WHITE_KEY_EVENT_R1C3_CLICK: // OFF
+
         break;
 
-    case RF24G_KEY_EVENT_R1C1_LOOSE:
-        printf("key event R1C1 loose\n");
+    case RF24G_WHITE_KEY_EVENT_R1C4_CLICK: // ON
 
         break;
 
@@ -365,8 +316,6 @@ void rf24_key_handle(void)
 
     case RF24G_WHITE_KEY_EVENT_R5C1_CLICK: // 七彩频闪
 
-        fc_effect.dream_scene.speed = 1000 / 5; // 测试时使用
-
         ls_set_color(0, BLUE);
         ls_set_color(1, GREEN);
         ls_set_color(2, RED);
@@ -374,17 +323,27 @@ void rf24_key_handle(void)
         ls_set_color(4, YELLOW);
         ls_set_color(5, CYAN);
         ls_set_color(6, PURPLE);
-        fc_effect.dream_scene.change_type = MODE_STROBE; //
-        fc_effect.dream_scene.c_n = 7;                   // 有效颜色数量
+
+        if ((fc_effect.dream_scene.change_type != MODO_COLORFUL_LIGHTS_FLASH) ||
+            (fc_effect.Now_state != IS_light_scene))
+        {
+            /*
+                如果之前不是七彩灯的跳变模式，
+                清空灯光动画运行时使用的数据，让动画重新开始跑
+            */
+            WS2812FX_resetSegmentRuntime(0); //
+        }
+
+        fc_effect.dream_scene.change_type = MODO_COLORFUL_LIGHTS_FLASH; //
+        fc_effect.dream_scene.c_n = 7;                                  // 有效颜色数量
         fc_effect.Now_state = IS_light_scene;
         set_fc_effect();
+
         break;
 
     case RF24G_WHITE_KEY_EVENT_R5C2_CLICK: // 七色跳变
 
         // printf("key event R5C2 click\n");
-
-        fc_effect.dream_scene.speed = 1000 / 5; // 测试时使用
 
         ls_set_color(0, RED);
         ls_set_color(1, GREEN);
@@ -393,14 +352,60 @@ void rf24_key_handle(void)
         ls_set_color(4, CYAN);
         ls_set_color(5, PURPLE);
         ls_set_color(6, WHITE);
-        fc_effect.dream_scene.change_type = MODE_MUTIL_JUMP; //
-        fc_effect.dream_scene.c_n = 7;                       // 有效颜色数量
+
+        if ((fc_effect.dream_scene.change_type != MODE_COLORFUL_LIGHTS_JUMP) ||
+            (fc_effect.Now_state != IS_light_scene))
+        {
+            /*
+                如果之前不是七彩灯的跳变模式，
+                清空灯光动画运行时使用的数据，让动画重新开始跑
+            */
+            WS2812FX_resetSegmentRuntime(0); //
+        }
+
+        fc_effect.dream_scene.change_type = MODE_COLORFUL_LIGHTS_JUMP; //
+        fc_effect.dream_scene.c_n = 7;                                 // 有效颜色数量
         fc_effect.Now_state = IS_light_scene;
         set_fc_effect();
 
         break;
 
-    case RF24G_WHITE_KEY_EVENT_R6C1_CLICK:
+    case RF24G_WHITE_KEY_EVENT_R5C3_CLICK: // 七彩渐变
+
+        // printf("key event R5C3 click\n");
+
+        u8 color_nums = 0; // 存放颜色数量
+        ls_set_color(color_nums++, RED);
+        ls_set_color(color_nums++, ORANGE);
+        ls_set_color(color_nums++, YELLOW);
+        ls_set_color(color_nums++, GREEN);
+        ls_set_color(color_nums++, CYAN);
+        ls_set_color(color_nums++, BLUE);
+        ls_set_color(color_nums++, PURPLE);
+        ls_set_color(color_nums++, PINK);
+        ls_set_color(color_nums++, MAGENTA); // 品红
+        ls_set_color(color_nums++, WHITE);
+
+        if ((fc_effect.dream_scene.change_type != MODE_COLORFUL_LIGHTS_GRADUAL) ||
+            (fc_effect.Now_state != IS_light_scene))
+        {
+            /*
+                如果之前不是七彩灯的渐变模式，
+                清空灯光动画运行时使用的数据，让动画重新开始跑
+            */
+            WS2812FX_resetSegmentRuntime(0); //
+        }
+
+        fc_effect.dream_scene.change_type = MODE_COLORFUL_LIGHTS_GRADUAL;
+        fc_effect.dream_scene.c_n = color_nums; // 颜色数量
+        fc_effect.Now_state = IS_light_scene;
+        set_fc_effect();
+
+        break;
+
+    case RF24G_WHITE_KEY_EVENT_R6C1_CLICK: // AUTO
+
+#if 0
         /*
             流星灯声控模式下，增加灵敏度
             流星灯乱闪模式下，增加速度
@@ -410,11 +415,27 @@ void rf24_key_handle(void)
             例如，在声控模式下增加了灵敏度，切换回正常流星模式后，尾焰也会变长
         */
         printf("meteor param add\n");
+#endif
+
+        if ((fc_effect.dream_scene.change_type != MODE_COLORFUL_LIGHTS_AUTO) ||
+            (fc_effect.Now_state != IS_light_scene))
+        {
+            /*
+                如果之前不是七彩灯的自动模式，
+                清空灯光动画运行时使用的数据，让动画重新开始跑
+            */
+            WS2812FX_resetSegmentRuntime(0); //
+        }
+
+        fc_effect.dream_scene.change_type = MODE_COLORFUL_LIGHTS_AUTO;
+        fc_effect.Now_state = IS_light_scene;
+        set_fc_effect();
 
         break;
 
     case RF24G_WHITE_KEY_EVENT_R6C2_CLICK:
 
+#if 0
         /*
             流星灯声控模式下，减少灵敏度
             流星灯乱闪模式下，减少速度
@@ -425,8 +446,65 @@ void rf24_key_handle(void)
         */
 
         printf("meteor param sub\n");
+#endif
+
+        fc_effect.music.s = 40; // 测试时使用，灵敏度
+
+        ls_set_music_mode();
+        // printf("fc_effect.music.m = %u\n", (u16)fc_effect.music.m);
 
         break;
+
+    case RF24G_WHITE_KEY_EVENT_R6C3_CLICK: // 呼吸模式，1，先按单色键，再按呼吸键，则为单色呼吸，2，先按变色键，再按呼吸，则为变色呼吸
+    {
+        u8 color_nums = 0; // 存放颜色数量
+
+        if (fc_effect.Now_state == IS_STATIC)
+        {
+            /*
+                如果是从静态模式进入呼吸模式
+                变成单色呼吸
+            */
+            color_nums = 1; // 颜色数量 -- 只有1个颜色
+            fc_effect.dream_scene.rgb[0].r = fc_effect.rgb.r;
+            fc_effect.dream_scene.rgb[0].g = fc_effect.rgb.g;
+            fc_effect.dream_scene.rgb[0].b = fc_effect.rgb.b;
+            fc_effect.dream_scene.rgb[0].w = fc_effect.rgb.w;
+        }
+        else
+        {
+            /*
+                如果不是从静态模式进入呼吸模式，
+                变成变色呼吸
+            */
+            ls_set_color(color_nums++, RED);
+            ls_set_color(color_nums++, ORANGE);
+            ls_set_color(color_nums++, YELLOW);
+            ls_set_color(color_nums++, GREEN);
+            ls_set_color(color_nums++, CYAN);
+            ls_set_color(color_nums++, BLUE);
+            ls_set_color(color_nums++, PURPLE);
+            ls_set_color(color_nums++, PINK);
+            ls_set_color(color_nums++, MAGENTA); // 品红
+            ls_set_color(color_nums++, WHITE);
+        }
+
+        if ((fc_effect.dream_scene.change_type != MODE_COLORFUL_LIGHTS_BREATH) ||
+            (fc_effect.Now_state != IS_light_scene))
+        {
+            /*
+                如果之前不是七彩灯的呼吸模式，
+                清空灯光动画运行时使用的数据，让动画重新开始跑
+            */
+            WS2812FX_resetSegmentRuntime(0); //
+        }
+
+        fc_effect.dream_scene.change_type = MODE_COLORFUL_LIGHTS_BREATH;
+        fc_effect.dream_scene.c_n = color_nums; // 颜色数量
+        fc_effect.Now_state = IS_light_scene;
+        set_fc_effect();
+    }
+    break;
 
     case RF24G_WHITE_KEY_EVENT_R5C4_CLICK:
         /*
@@ -474,7 +552,6 @@ void rf24_key_handle(void)
 
         default:
             return; // 出错，直接返回
-            // break;
         }
 
         WS2812FX_stop();
