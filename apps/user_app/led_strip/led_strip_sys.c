@@ -4,7 +4,7 @@
 #include "Adafruit_NeoPixel.H"
 #include "led_strand_effect.h"
 
-#define MAX_BRIGHT_RANK 10
+
 #define MAX_SPEED_RANK 10
 #define MIN_BRIGHT_VALUE 10
 #define MIN_SLOW_SPEED 500
@@ -144,7 +144,7 @@ const u16 led_speed_array[MAX_SPEED_RANK] = {
  * @param tp_b  0-100
  */
 void app_set_bright(u8 tp_b)
-{ 
+{
     if (fc_effect.Now_state == IS_STATIC)
     {
         if (tp_b < MIN_BRIGHT_VALUE)
@@ -207,7 +207,7 @@ void ls_add_bright(void)
         WS2812FX_setBrightness(fc_effect.b);
     }
 
-    printf(" fc_effect.b = %d", fc_effect.b);
+    // printf(" fc_effect.b = %d", fc_effect.b);
 }
 
 /**
@@ -228,7 +228,7 @@ void ls_sub_bright(void)
         WS2812FX_setBrightness(fc_effect.b);
     }
 
-    printf(" fc_effect.b = %d", fc_effect.b);
+    // printf(" fc_effect.b = %d", fc_effect.b);
 }
 
 /**
@@ -1188,7 +1188,6 @@ AUTO_TIME_T get_ir_timer(void)
 // 全彩效果初始化
 void full_color_init(void)
 {
-  
 
     WS2812FX_init(fc_effect.led_num, fc_effect.sequence); // 初始化ws2811
     // WS2812FX_stop();

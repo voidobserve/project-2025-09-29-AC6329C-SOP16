@@ -41,6 +41,9 @@
 
 /******************************************************************common*****************************************************************/
 
+#define MAX_BRIGHT_RANK 10
+
+
 typedef struct _HSV_COLOUR_DAT
 {
     u32 h_val;
@@ -110,6 +113,12 @@ typedef enum
     IR_TIMER_90MIN = 90 * 60 * 1000,
     IR_TIMER_120MIN = 120 * 60 * 1000,
 } AUTO_TIME_T;
+
+extern const u8 led_b_array[MAX_BRIGHT_RANK];
+
+void ls_add_bright(void); // 增加亮度
+void ls_sub_bright(void); // 减少亮度
+
 
 void set_static_mode(u8 r, u8 g, u8 b);
 void colorful_lights_set_static_mode(color_t colors_structure); // 七彩灯设置为静态模式，颜色值由传参设定

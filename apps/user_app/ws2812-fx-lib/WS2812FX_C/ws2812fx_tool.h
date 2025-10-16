@@ -19,4 +19,6 @@ uint16_t
 uint32_t
   WS2812FX_color_blend(uint32_t, uint32_t, uint8_t);
 
+// uint32_t WS2812FX_color_blend_uint16(uint32_t color1, uint32_t color2, uint16_t blend);
+
 #endif

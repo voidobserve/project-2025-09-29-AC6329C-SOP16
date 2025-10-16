@@ -199,6 +199,28 @@ uint32_t WS2812FX_color_blend(uint32_t color1, uint32_t color2, uint8_t blend) {
   return ((w3 << 24) | (r3 << 16) | (g3 << 8) | (b3));
 }
 
+// uint32_t WS2812FX_color_blend_uint16(uint32_t color1, uint32_t color2, uint16_t blend) {
+//   if(blend == 0)   return color1;
+//   if(blend == 65535) return color2;
+
+//   uint8_t w1 = (color1 >> 24) & 0xff;
+//   uint8_t r1 = (color1 >> 16) & 0xff;
+//   uint8_t g1 = (color1 >>  8) & 0xff;
+//   uint8_t b1 =  color1        & 0xff;
+
+//   uint8_t w2 = (color2 >> 24) & 0xff;
+//   uint8_t r2 = (color2 >> 16) & 0xff;
+//   uint8_t g2 = (color2 >>  8) & 0xff;
+//   uint8_t b2 =  color2        & 0xff;
+
+//   uint32_t w3 = (((uint32_t)w2 * blend) + ((uint32_t)w1 * ((uint16_t)65535 - blend))) / 256U;
+//   uint32_t r3 = (((uint32_t)r2 * blend) + ((uint32_t)r1 * ((uint16_t)65535 - blend))) / 256U;
+//   uint32_t g3 = (((uint32_t)g2 * blend) + ((uint32_t)g1 * ((uint16_t)65535 - blend))) / 256U;
+//   uint32_t b3 = (((uint32_t)b2 * blend) + ((uint32_t)b1 * ((uint16_t)65535 - blend))) / 256U;
+
+//   return ((w3 << 24) | (r3 << 16) | (g3 << 8) | (b3));
+// }
+
 
 
 /*

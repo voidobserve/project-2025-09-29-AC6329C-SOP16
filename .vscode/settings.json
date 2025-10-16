@@ -4,6 +4,7 @@
         "rf24g_key.h": "c",
         "led_strand_effect.h": "c",
         "led_strip_drive.h": "c",
-        "one_wire.h": "c"
+        "one_wire.h": "c",
+        "led_strip_sys.h": "c"
     }
 }

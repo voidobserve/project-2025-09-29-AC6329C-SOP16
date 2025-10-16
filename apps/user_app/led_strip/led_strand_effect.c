@@ -7,7 +7,7 @@
 #include "app_main.h"
 #include "asm/mcpwm.h"
 
-fc_effect_t fc_effect; // 幻彩灯串效果数据
+volatile fc_effect_t fc_effect; // 幻彩灯串效果数据
 void set_fc_effect(void);
 
 // FADE_SLOW：12颗
@@ -86,16 +86,18 @@ static void static_mode(void)
 {
     extern uint16_t WS2812FX_mode_static(void);
 
-    WS2812FX_setSegment_colorOptions(                   // 设置一段颜色的效果
-        0,                                              // 第0段
-        0, 0,                                           // 起始位置，结束位置
-        &WS2812FX_mode_static,                          // 效果
-        0,                                              // 颜色，WS2812FX_setColors设置
-        100,                                            // 速度
-        0);                                             // 选项，这里像素点大小：1
+
+    WS2812FX_setSegment_colorOptions( // 设置一段颜色的效果
+        0,                            // 第0段
+        0,                            // 起始位置
+        0,                            // 结束位置
+        // &WS2812FX_mode_static,                          // 效果
+        &colorful_lights_static,
+        0,   // 颜色，WS2812FX_setColors设置
+        100, // 速度
+        0);  // 选项，这里像素点大小：1
     WS2812FX_set_coloQty(0, fc_effect.dream_scene.c_n); // 设置颜色数量  0：第0段   fc_effect.dream_scene.c_n  颜色数量，一个颜色包含（RGB）
     ls_set_colors(1, &fc_effect.rgb);                   // 1:1个颜色    &fc_effect.rgb 这个颜色是什么色
-
     // WS2812FX_start(); // 同时有七彩灯和流星灯时，不能调用这个函数，会导致流星灯闪烁一次
     WS2812FX_running_flag_set(); // 置位运行标志
 }
@@ -768,7 +770,7 @@ static void ls_scene_effect(void)
         break;
 
     case MODE_COLORFUL_LIGHTS_AUTO: // 七彩灯的自动模式
-  
+
         WS2812FX_setSegment_colorOptions(
             0,                           // 第0段
             0,                           // 起始位置

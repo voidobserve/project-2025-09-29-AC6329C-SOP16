@@ -119,6 +119,7 @@ enum
     COLORFUL_LIGHTS_BREATHING_END,
 };
 // 七彩灯动画
+u16 colorful_lights_static(void); // 七彩灯的静态效果
 u16 colorful_lights_flash(void); // 七彩灯的频闪效果
 u16 colorful_lights_jump(void);  // 七彩灯跳变动画
 u16 colorful_lights_gradual(void);

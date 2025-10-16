@@ -2185,7 +2185,7 @@ obj/Release/apps/user_app/led_strip/led_strand_effect.o
 -r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,fc_music_breath,l
 -r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,fc_music_static,l
 -r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,fc_music_twinkle,l
--r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,WS2812FX_mode_static,l
+-r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,colorful_lights_static,l
 -r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,fade_type,pl
 -r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,fc_effect,pl
 -r=obj/Release/apps/user_app/led_strip/led_strand_effect.o,zd_countdown,l
@@ -2430,6 +2430,7 @@ obj/Release/apps/user_app/rf24g_key/rf24g_key.o
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,rf24g_scan,pl
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,rf24g_convert_key_event,pl
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,rf24_key_handle,pl
+-r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,fb_bright,l
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,colorful_lights_set_static_mode,l
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,ls_set_color,l
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,WS2812FX_resetSegmentRuntime,l
@@ -2447,6 +2448,7 @@ obj/Release/apps/user_app/rf24g_key/rf24g_key.o
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,rf24g_key_driver_value,pl
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,rf24g_scan_para,pl
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,fc_effect,l
+-r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,led_b_array,l
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,zd_countdown,l
 obj/Release/apps/user_app/save_flash/save_flash.o
 -r=obj/Release/apps/user_app/save_flash/save_flash.o,read_flash_device_status_init,pl
@@ -2608,10 +2610,12 @@ obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,fc_double_meteor,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_mode_comet_6,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,close_metemor,pl
+-r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,colorful_lights_static,pl
+-r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_color_blend,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,colorful_lights_flash,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,colorful_lights_jump,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,colorful_lights_gradual,pl
--r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_color_blend,l
+-r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_color_wheel,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,colorful_lights_breathing,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,colorful_lights_auto,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_setColors,l
@@ -2660,7 +2664,6 @@ obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_mode_multi_forward_same,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_mode_multi_back_same,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_mode_fade_each_led,pl
--r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_color_wheel,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_random8,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_mode_single_block_scan,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_mode_multi_block_scan,pl

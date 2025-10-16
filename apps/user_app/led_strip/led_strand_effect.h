@@ -192,7 +192,7 @@ countdown_t zd_countdown[ALARM_NUMBER];
 
 #pragma pack()
 
-extern fc_effect_t fc_effect; // 幻彩灯串效果数据
+extern volatile fc_effect_t fc_effect; // 幻彩灯串效果数据
 
 void base_Dynamic_Effect(u8 tp_num);
 

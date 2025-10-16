@@ -461,7 +461,7 @@ void WS2812FX_setSegment_colorsReverse(uint8_t n, uint16_t start, uint16_t stop,
 
 void WS2812FX_setSegment_colorOptions(uint8_t n, uint16_t start, uint16_t stop, mode_ptr mode, uint32_t color, uint16_t speed, uint8_t options) {
   // uint32_t colors[ ] = {color, 0, 0};
-    uint32_t colors[MAX_NUM_COLORS] = {color, 0, 0}; // MAX_NUM_COLORS，防止 WS2812FX_setColors() 内部溢出
+    uint32_t colors[MAX_NUM_COLORS] = {color, 0, 0}; // MAX_NUM_COLORS，防止 WS2812FX_setColors() 内部溢出（如果溢出，会导致芯片复位）
   WS2812FX_setSegment_colorsOptions(n, start, stop, mode, colors, speed, options);
 }
 

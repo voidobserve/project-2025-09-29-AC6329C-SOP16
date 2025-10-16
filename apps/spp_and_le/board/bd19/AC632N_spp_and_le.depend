@@ -45863,14 +45863,14 @@
 
 1719196543 d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\hardware\hardware.h
 
-1760509662 d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\led_strip\led_strand_effect.h
+1760601883 d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\led_strip\led_strand_effect.h
 	"cpu.h"
 	"led_strip_sys.h"
 	"WS2812FX.H"
 	"led_strip_drive.h"
 	"one_wire.h"
 
-1760498559 d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\led_strip\led_strip_sys.h
+1760601733 d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\led_strip\led_strip_sys.h
 	"cpu.h"
 
 1760507747 d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\ws2812-fx-lib\ws2812fx_c\ws2812fx.h
@@ -45896,7 +45896,7 @@
 1759133603 d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\one_wire\one_wire.h
 	"system/includes.h"
 
-1760510874 source:d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\led_strip\led_strand_effect.c
+1760601961 source:d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\led_strip\led_strand_effect.c
 	"system/includes.h"
 	"led_strand_effect.h"
 	"WS2812FX.H"
@@ -45906,7 +45906,7 @@
 	"app_main.h"
 	"asm/mcpwm.h"
 
-1760509555 d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\ws2812-fx-lib\ws2812fx_c\ws2812fx_effect.h
+1760601514 d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\ws2812-fx-lib\ws2812fx_c\ws2812fx_effect.h
 	"includes.h"
 
 1719186947 d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\ws2812-fx-lib\adafruit_neopixel_c\adafruit_neopixel.h
@@ -45920,7 +45920,7 @@
 	"asm/mcpwm.h"
 	"led_strand_effect.h"
 
-1760428003 source:d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\led_strip\led_strip_sys.c
+1760601652 source:d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\led_strip\led_strip_sys.c
 	"led_strip_sys.h"
 	"Adafruit_NeoPixel.H"
 	"led_strand_effect.h"
@@ -45994,14 +45994,14 @@
 	"adafruit_typedef.h"
 	"led_strip_sys.h"
 
-1760345108 source:d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\ws2812-fx-lib\ws2812fx_c\ws2812fx2.c
+1760581705 source:d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\ws2812-fx-lib\ws2812fx_c\ws2812fx2.c
 	"WS2812FX.h"
 	"Adafruit_NeoPixel.h"
 	<stdlib.h>
 	<string.h>
 	"led_strip_sys.h"
 
-1760512403 source:d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\ws2812-fx-lib\ws2812fx_c\ws2812fx_effect.c
+1760608734 source:d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\ws2812-fx-lib\ws2812fx_c\ws2812fx_effect.c
 	"WS2812FX.h"
 	"ws2812fx_tool.h"
 	"Adafruit_NeoPixel.h"
@@ -46009,10 +46009,11 @@
 	"system/includes.h"
 	"led_strip_drive.h"
 	"../../../../apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.h"
+	"../../../../apps/user_app/led_strip/led_strand_effect.h"
 
-1719186948 d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\ws2812-fx-lib\ws2812fx_c\ws2812fx_tool.h
+1760608543 d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\ws2812-fx-lib\ws2812fx_c\ws2812fx_tool.h
 
-1719186948 source:d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\ws2812-fx-lib\ws2812fx_c\ws2812fx_tool.c
+1760608539 source:d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\ws2812-fx-lib\ws2812fx_c\ws2812fx_tool.c
 	"WS2812FX.h"
 	"Adafruit_NeoPixel.h"
 	<stdlib.h>
@@ -47440,7 +47441,7 @@
 	"debug.h"
 	"uart_update.h"
 
-1760511795 source:d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\rf24g_key\rf24g_key.c
+1760604090 source:d:\baidusyncdisk\a_workst\aworkst\2025-09-28-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\rf24g_key\rf24g_key.c
 	"rf24g_key.h"
 	"../../../apps/user_app/one_wire/one_wire.h"
 	"../../../apps/user_app/led_strip/led_strand_effect.h"

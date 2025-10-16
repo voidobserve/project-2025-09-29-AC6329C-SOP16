@@ -6,6 +6,7 @@
 #include "system/includes.h"
 #include "led_strip_drive.h"
 #include "../../../../apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.h" // 包含部分灯光动画的接口、类型定义
+#include "../../../../apps/user_app/led_strip/led_strand_effect.h"              //
 
 #define CYCLE_T 0
 extern Segment *_seg;
@@ -519,6 +520,20 @@ void close_metemor(void)
 // 七彩灯动画
 
 /**
+ * @brief 七彩灯的静态效果
+ *
+ * @return u16
+ */
+u16 colorful_lights_static(void)
+{
+    u8 brightness = fc_effect.b;
+    u32 color = WS2812FX_color_blend(BLACK, _seg->colors[0], (u8)brightness); // 得到对应亮度的RGB颜色
+    Adafruit_NeoPixel_fill(color, _seg->start, _seg_len);
+    SET_CYCLE;
+    return _seg->speed;
+}
+
+/**
  * @brief 七彩灯频闪
  *
  */
@@ -529,7 +544,8 @@ u16 colorful_lights_flash(void)
 
     if (_seg_rt->aux_param == 0)
     {
-        Adafruit_NeoPixel_fill(_seg->colors[_seg_rt->counter_mode_step], _seg->start, _seg_len);
+        u32 color = WS2812FX_color_blend(BLACK, _seg->colors[_seg_rt->counter_mode_step], (u8)fc_effect.b);
+        Adafruit_NeoPixel_fill(color, _seg->start, _seg_len);
         _seg_rt->counter_mode_step++;
         _seg_rt->counter_mode_step %= _seg->c_n;
     }
@@ -555,7 +571,8 @@ u16 colorful_lights_jump(void)
     // static u32 last_sys_time = 0;
     // extern u32 sys_time_get(void);
 
-    Adafruit_NeoPixel_fill(_seg->colors[_seg_rt->counter_mode_step], _seg->start, _seg_len);
+    u32 color = WS2812FX_color_blend(BLACK, _seg->colors[_seg_rt->counter_mode_step], (u8)fc_effect.b);
+    Adafruit_NeoPixel_fill(color, _seg->start, _seg_len);
     _seg_rt->counter_mode_step++;
     _seg_rt->counter_mode_step %= _seg->c_n;
 
@@ -583,6 +600,8 @@ u16 colorful_lights_gradual(void)
     static u32 cur_colors = BLACK;
     static u32 dest_colors = BLACK; // 目标颜色
 
+    static u32 temp_step = 0;
+
     /*
         每个步骤用时至少10ms，因为ws2812fx_service() 10ms调用一次
 
@@ -595,51 +614,97 @@ u16 colorful_lights_gradual(void)
         一次循环的时间 == 512 / 步长 * 10ms
         速度值 == 512 / 步长 * 10ms
         步长 == 512 * 10ms / 速度值
+
+        步长为 0.095，共 19 个步骤，至少 200 ms 完成一次循环
     */
-    u16 step = 0; // 步长
-    step = 512 * 10 / _seg->speed;
+    // u16 step = 0; // 步长
+    // step = ((u16)fc_effect.b * 2 - 1) * 10 / _seg->speed;
+
+    u32 step = 0; // 步长（放大了1000倍）
+    step = ((u32)fc_effect.b * 2 - 1) * 10 * 1000 / _seg->speed;
 
     if (0 == _seg_rt->counter_mode_step &&
         0 == _seg_rt->aux_param)
     {
         // 如果是第一次进入，设置默认颜色
-        cur_colors = _seg->colors[_seg_rt->aux_param];
-        dest_colors = _seg->colors[_seg_rt->aux_param + 1];
+        // cur_colors = _seg->colors[_seg_rt->aux_param];
+        // dest_colors = _seg->colors[_seg_rt->aux_param + 1];
 
+        // cur_colors = WS2812FX_color_blend(BLACK, _seg->colors[_seg_rt->aux_param], (u8)fc_effect.b);
+        // dest_colors = WS2812FX_color_blend(BLACK, _seg->colors[_seg_rt->aux_param + 1], (u8)fc_effect.b);
+
+        // 生成指定颜色
+        cur_colors = WS2812FX_color_wheel(_seg_rt->aux_param);
+        dest_colors = WS2812FX_color_wheel(_seg_rt->aux_param + 1);
+        // 生成指定亮度的颜色：
+        cur_colors = WS2812FX_color_blend(BLACK, cur_colors, (u8)fc_effect.b);
+        dest_colors = WS2812FX_color_blend(BLACK, dest_colors, (u8)fc_effect.b);
+
+        temp_step = 0;
         // printf("circle begin\n");
         // printf("sys time %lu\n", sys_time_get() - last_sys_time);
         // last_sys_time = sys_time_get();
     }
 
     u16 brightness = _seg_rt->counter_mode_step;
-    if (brightness > 255)
+    // if (brightness > 255)
+    // {
+    //     brightness = 511 - brightness; // lum = 0 -> 255 -> 0
+    // }
+    if (brightness > (u16)fc_effect.b)
     {
-        brightness = 511 - brightness; // lum = 0 -> 255 -> 0
+        brightness = ((u16)fc_effect.b * 2 - 1) - brightness; // lum = 0 -> fc_effect.b -> 0
     }
 
     uint32_t color = WS2812FX_color_blend(cur_colors, dest_colors, (u8)brightness);
     Adafruit_NeoPixel_fill(color, _seg->start, _seg_len);
 
-    // _seg_rt->counter_mode_step += 1;
-    _seg_rt->counter_mode_step += step;
-    if (_seg_rt->counter_mode_step > 255)
+    temp_step += step;
+    if (temp_step >= 1000)
+    {
+        _seg_rt->counter_mode_step += temp_step / 1000;
+        temp_step /= 1000;
+    }
+
+    // if (_seg_rt->counter_mode_step > 255)
+    if (_seg_rt->counter_mode_step > fc_effect.b)
     {
         _seg_rt->counter_mode_step = 0;
+        temp_step = 0;
+
+#if 0
         _seg_rt->aux_param += 1;
         if (_seg_rt->aux_param > _seg->c_n - 1)
         {
             _seg_rt->aux_param = 0;
         }
 
-        cur_colors = _seg->colors[_seg_rt->aux_param]; // 当前颜色
+        // cur_colors = _seg->colors[_seg_rt->aux_param]; // 当前颜色
+        cur_colors = WS2812FX_color_blend(BLACK, _seg->colors[_seg_rt->aux_param], (u8)fc_effect.b); // 当前颜色
         if (_seg_rt->aux_param == _seg->c_n - 1)
         {
-            dest_colors = _seg->colors[0];
+            // dest_colors = _seg->colors[0];
+            dest_colors = WS2812FX_color_blend(BLACK, _seg->colors[0], (u8)fc_effect.b);
         }
         else
         {
-            dest_colors = _seg->colors[_seg_rt->aux_param + 1]; // 目标颜色
+            // dest_colors = _seg->colors[_seg_rt->aux_param + 1]; // 目标颜色
+            dest_colors = WS2812FX_color_blend(BLACK, _seg->colors[_seg_rt->aux_param + 1], (u8)fc_effect.b);
         }
+#endif
+
+        _seg_rt->aux_param += 1; // USER_TO_DO 应该是亮度越大，这里的步长越大，亮度约小，这里的步长越小
+        // _seg_rt->aux_param += 255 / step;
+        if ((u16)_seg_rt->aux_param + 1 > 255)
+        {
+            _seg_rt->aux_param = 0;
+        }
+
+        cur_colors = WS2812FX_color_wheel(_seg_rt->aux_param);
+        dest_colors = WS2812FX_color_wheel(_seg_rt->aux_param + 1);
+        // 生成指定亮度的颜色：
+        cur_colors = WS2812FX_color_blend(BLACK, cur_colors, (u8)fc_effect.b);
+        dest_colors = WS2812FX_color_blend(BLACK, dest_colors, (u8)fc_effect.b);
 
         SET_CYCLE;
 
@@ -686,7 +751,8 @@ u16 colorful_lights_breathing(void)
             如果是第一次进入，设置默认颜色
             当前颜色为黑色，向目标颜色渐变（看起来像呼吸渐亮）
         */
-        dest_color = _seg->colors[_seg_rt->aux_param];
+        // dest_color = _seg->colors[_seg_rt->aux_param];
+        dest_color = WS2812FX_color_blend(BLACK, _seg->colors[_seg_rt->aux_param], (u8)fc_effect.b);
 
         // printf("sys time %lu\n", sys_time_get() - last_sys_time);
         // last_sys_time = sys_time_get();
