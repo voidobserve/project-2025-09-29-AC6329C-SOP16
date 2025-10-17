@@ -193,10 +193,10 @@ void rf24_key_handle(void)
 
     /*
         fc_effect.dream_scene.speed 最大应该是2000
-        最小应该是
+        最小应该是 200
     */
     // fc_effect.dream_scene.speed = 200; // 测试时使用
-    fc_effect.dream_scene.speed = 2000; // 测试时使用
+    // fc_effect.dream_scene.speed = 2000; // 测试时使用
 
     switch (rf24g_key_event)
     {
@@ -206,74 +206,102 @@ void rf24_key_handle(void)
     {                                      // 亮度加、速度加
         if (IS_STATIC == fc_effect.Now_state)
         {
-            // 单色模式下，调节亮度
-            // fc_effect.b = ;
-            // ls_add_bright();
+            /*
+                单色模式下，调节亮度
+                只修改七彩灯的亮度，不能通过 WS2812FX_setBrightness() 函数调节亮度，
+                这样会连流星灯的亮度也修改
+            */
             if (fc_effect.ls_b < (MAX_BRIGHT_RANK - 1))
+            {
                 fc_effect.ls_b++;
+            }
+
             fc_effect.app_b = (fc_effect.ls_b + 1) * 10;
             fc_effect.b = led_b_array[fc_effect.ls_b];
             fb_bright();
         }
-        else if (MODO_COLORFUL_LIGHTS_FLASH == fc_effect.Now_state ||
-                 MODE_COLORFUL_LIGHTS_BREATH == fc_effect.Now_state ||
-                 MODE_COLORFUL_LIGHTS_GRADUAL == fc_effect.Now_state ||
-                 MODE_COLORFUL_LIGHTS_JUMP == fc_effect.Now_state ||
-                 MODE_COLORFUL_LIGHTS_AUTO == fc_effect.Now_state)
+        else if (IS_light_scene == fc_effect.Now_state &&
+                 (MODO_COLORFUL_LIGHTS_FLASH == fc_effect.dream_scene.change_type ||
+                  MODE_COLORFUL_LIGHTS_BREATH == fc_effect.dream_scene.change_type ||
+                  MODE_COLORFUL_LIGHTS_GRADUAL == fc_effect.dream_scene.change_type ||
+                  MODE_COLORFUL_LIGHTS_JUMP == fc_effect.dream_scene.change_type ||
+                  MODE_COLORFUL_LIGHTS_AUTO == fc_effect.dream_scene.change_type))
         {
             // 七彩灯动态模式下，调节速度
-            // fc_effect.dream_scene.speed = ;
-        }
+            // 注意：速度值是越小越快
+            // 得到速度等级：
+            if (fc_effect.ls_speed > 0)
+            {
+                fc_effect.ls_speed--;
+            }
 
-        // 调节完成后，可能要反馈给app
+            fc_effect.dream_scene.speed = colorful_lights_speed_array[fc_effect.ls_speed]; // 根据速度等级进行查表，得到速度值
+            fc_effect.app_speed = 100 - (fc_effect.ls_speed) * 10;                         // 根据速度等级得到要反馈给app的速度值
+            fb_speed();                                                                    // 给app反馈速度值
+            set_fc_effect();
+
+            // printf("fc_effect.dream_scene.speed %u\n", (u16)fc_effect.dream_scene.speed);
+        }
     }
     break;
     case RF24G_WHITE_KEY_EVENT_R1C2_CLICK: // -
     {                                      // 亮度减、速度减
         if (IS_STATIC == fc_effect.Now_state)
         {
-            // 单色模式下，调节亮度
-            // fc_effect.b = ;
-            // ls_sub_bright();
+            /*
+                单色模式下，调节亮度
+                只修改七彩灯的亮度，不能通过 WS2812FX_setBrightness() 函数调节亮度，
+                这样会连流星灯的亮度也修改
+            */
             if (fc_effect.ls_b > 0)
+            {
                 fc_effect.ls_b--;
+            }
             fc_effect.app_b = (fc_effect.ls_b + 1) * 10;
             fc_effect.b = led_b_array[fc_effect.ls_b];
             fb_bright();
         }
-        else if (MODO_COLORFUL_LIGHTS_FLASH == fc_effect.Now_state ||
-                 MODE_COLORFUL_LIGHTS_BREATH == fc_effect.Now_state ||
-                 MODE_COLORFUL_LIGHTS_GRADUAL == fc_effect.Now_state ||
-                 MODE_COLORFUL_LIGHTS_JUMP == fc_effect.Now_state ||
-                 MODE_COLORFUL_LIGHTS_AUTO == fc_effect.Now_state)
+        else if (IS_light_scene == fc_effect.Now_state &&
+                 (MODO_COLORFUL_LIGHTS_FLASH == fc_effect.dream_scene.change_type ||
+                  MODE_COLORFUL_LIGHTS_BREATH == fc_effect.dream_scene.change_type ||
+                  MODE_COLORFUL_LIGHTS_GRADUAL == fc_effect.dream_scene.change_type ||
+                  MODE_COLORFUL_LIGHTS_JUMP == fc_effect.dream_scene.change_type ||
+                  MODE_COLORFUL_LIGHTS_AUTO == fc_effect.dream_scene.change_type))
         {
             // 七彩灯动态模式下，调节速度
-            // fc_effect.dream_scene.speed = ;
-        }
+            // 注意：速度值是越小越快
+            // 得到速度等级：
+            if (fc_effect.ls_speed < (MAX_SPEED_RANK - 1))
+            {
+                fc_effect.ls_speed++;
+            }
 
-        // 调节完成后，可能要反馈给app
+            fc_effect.dream_scene.speed = colorful_lights_speed_array[fc_effect.ls_speed]; // 根据速度等级进行查表，得到速度值
+            fc_effect.app_speed = 100 - (fc_effect.ls_speed) * 10;                         // 根据速度等级得到要反馈给app的速度值
+            fb_speed();                                                                    // 给app反馈速度值
+            set_fc_effect();
+
+            // printf("fc_effect.dream_scene.speed %u\n", (u16)fc_effect.dream_scene.speed);
+        }
     }
     break;
-
     case RF24G_WHITE_KEY_EVENT_R1C3_CLICK: // OFF
     {
     }
     break;
-
     case RF24G_WHITE_KEY_EVENT_R1C4_CLICK: // ON
     {
     }
     break;
-
     case RF24G_WHITE_KEY_EVENT_R2C1_CLICK: // R
-        // printf("key event R2C1 click\n");
+    {                                      // printf("key event R2C1 click\n");
         color_structure.r = 0xFF;
         color_structure.g = 0x00;
         color_structure.b = 0x00;
         color_structure.w = 0x00;
         colorful_lights_set_static_mode(color_structure);
-        break;
-
+    }
+    break;
     case RF24G_WHITE_KEY_EVENT_R2C2_CLICK: // G
         // printf("key event R2C2 click\n");
         color_structure.r = 0x00;
@@ -419,20 +447,8 @@ void rf24_key_handle(void)
         break;
 
     case RF24G_WHITE_KEY_EVENT_R5C3_CLICK: // 七彩渐变
-
+    {
         // printf("key event R5C3 click\n");
-
-        u8 color_nums = 0; // 存放颜色数量
-        ls_set_color(color_nums++, RED);
-        ls_set_color(color_nums++, ORANGE);
-        ls_set_color(color_nums++, YELLOW);
-        ls_set_color(color_nums++, GREEN);
-        ls_set_color(color_nums++, CYAN);
-        ls_set_color(color_nums++, BLUE);
-        ls_set_color(color_nums++, PURPLE);
-        ls_set_color(color_nums++, PINK);
-        ls_set_color(color_nums++, MAGENTA); // 品红
-        ls_set_color(color_nums++, WHITE);
 
         if ((fc_effect.dream_scene.change_type != MODE_COLORFUL_LIGHTS_GRADUAL) ||
             (fc_effect.Now_state != IS_light_scene))
@@ -445,11 +461,11 @@ void rf24_key_handle(void)
         }
 
         fc_effect.dream_scene.change_type = MODE_COLORFUL_LIGHTS_GRADUAL;
-        fc_effect.dream_scene.c_n = color_nums; // 颜色数量
+        // fc_effect.dream_scene.c_n = color_nums; // 颜色数量
         fc_effect.Now_state = IS_light_scene;
         set_fc_effect();
-
-        break;
+    }
+    break;
 
     case RF24G_WHITE_KEY_EVENT_R6C1_CLICK: // AUTO
 
@@ -507,7 +523,7 @@ void rf24_key_handle(void)
     {
         u8 color_nums = 0; // 存放颜色数量
 
-        if (MODE_COLORFUL_LIGHTS_BREATH == fc_effect.Now_state)
+        if (MODE_COLORFUL_LIGHTS_BREATH == fc_effect.dream_scene.change_type)
         { // 如果本来就是呼吸模式，不响应该事件
         }
         else if (fc_effect.Now_state == IS_STATIC)

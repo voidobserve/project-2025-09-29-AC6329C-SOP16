@@ -588,19 +588,23 @@ u16 colorful_lights_jump(void)
 /**
  * @brief 七彩灯渐变
  *
- *      颜色数量由外部提供，颜色总数至少要有两个，否则函数内部会越界
+ *       颜色和颜色数量由函数内部调用 WS2812FX_color_wheel() 生成，不需要外部来提供
+ *
+ * @attention 亮度值过低，渐变时会闪
+ *              没有办法准确控制渐变速度，只能相对较快、相对较慢
  *
  * @return u16
  */
 u16 colorful_lights_gradual(void)
 {
+#if 0
     // static u32 last_sys_time = 0;
     // extern u32 sys_time_get(void);
 
     static u32 cur_colors = BLACK;
     static u32 dest_colors = BLACK; // 目标颜色
 
-    static u32 temp_step = 0;
+    static volatile u32 temp_step = 0; // 累计放大了1000倍的步长，超过1000后，才执行动画的下一步骤
 
     /*
         每个步骤用时至少10ms，因为ws2812fx_service() 10ms调用一次
@@ -614,8 +618,6 @@ u16 colorful_lights_gradual(void)
         一次循环的时间 == 512 / 步长 * 10ms
         速度值 == 512 / 步长 * 10ms
         步长 == 512 * 10ms / 速度值
-
-        步长为 0.095，共 19 个步骤，至少 200 ms 完成一次循环
     */
     // u16 step = 0; // 步长
     // step = ((u16)fc_effect.b * 2 - 1) * 10 / _seg->speed;
@@ -624,14 +626,18 @@ u16 colorful_lights_gradual(void)
     step = ((u32)fc_effect.b * 2 - 1) * 10 * 1000 / _seg->speed;
 
     if (0 == _seg_rt->counter_mode_step &&
-        0 == _seg_rt->aux_param)
+        0 == _seg_rt->aux_param &&
+        0 == _seg_rt->counter_mode_call)
     {
         // 如果是第一次进入，设置默认颜色
-        // cur_colors = _seg->colors[_seg_rt->aux_param];
-        // dest_colors = _seg->colors[_seg_rt->aux_param + 1];
+
+#if 0  // 旧版的、由外部传入的颜色来作为渐变的颜色
+       // cur_colors = _seg->colors[_seg_rt->aux_param];
+       // dest_colors = _seg->colors[_seg_rt->aux_param + 1];
 
         // cur_colors = WS2812FX_color_blend(BLACK, _seg->colors[_seg_rt->aux_param], (u8)fc_effect.b);
         // dest_colors = WS2812FX_color_blend(BLACK, _seg->colors[_seg_rt->aux_param + 1], (u8)fc_effect.b);
+#endif // 旧版的、由外部传入的颜色来作为渐变的颜色
 
         // 生成指定颜色
         cur_colors = WS2812FX_color_wheel(_seg_rt->aux_param);
@@ -647,13 +653,15 @@ u16 colorful_lights_gradual(void)
     }
 
     u16 brightness = _seg_rt->counter_mode_step;
+    // 固定最大亮度的渐变：
     // if (brightness > 255)
     // {
     //     brightness = 511 - brightness; // lum = 0 -> 255 -> 0
     // }
+    // 没有固定最大亮度的渐变：
     if (brightness > (u16)fc_effect.b)
     {
-        brightness = ((u16)fc_effect.b * 2 - 1) - brightness; // lum = 0 -> fc_effect.b -> 0
+        brightness = ((u16)fc_effect.b * 2 - 1) - brightness; // lum = 0 -> fc_effect.b -> 0 (这里计算有可能溢出) 
     }
 
     uint32_t color = WS2812FX_color_blend(cur_colors, dest_colors, (u8)brightness);
@@ -662,8 +670,16 @@ u16 colorful_lights_gradual(void)
     temp_step += step;
     if (temp_step >= 1000)
     {
-        _seg_rt->counter_mode_step += temp_step / 1000;
-        temp_step /= 1000;
+        // 如果累加的步长大于1，动画执行下一步骤
+        // _seg_rt->counter_mode_step += (temp_step - 1000);
+        // temp_step -= 1000;
+
+        // _seg_rt->counter_mode_step += (temp_step / 1000);
+        // temp_step %= 1000;
+
+        _seg_rt->counter_mode_step += (temp_step - 1000); // 累加超过1000的部分
+        // _seg_rt->counter_mode_step += (temp_step / 1000); //
+        temp_step %= 1000;                                // 不满1000的部分，留到下一次累加
     }
 
     // if (_seg_rt->counter_mode_step > 255)
@@ -672,7 +688,7 @@ u16 colorful_lights_gradual(void)
         _seg_rt->counter_mode_step = 0;
         temp_step = 0;
 
-#if 0
+#if 0  // 旧版的、由外部传入的颜色来作为渐变的颜色
         _seg_rt->aux_param += 1;
         if (_seg_rt->aux_param > _seg->c_n - 1)
         {
@@ -691,10 +707,9 @@ u16 colorful_lights_gradual(void)
             // dest_colors = _seg->colors[_seg_rt->aux_param + 1]; // 目标颜色
             dest_colors = WS2812FX_color_blend(BLACK, _seg->colors[_seg_rt->aux_param + 1], (u8)fc_effect.b);
         }
-#endif
+#endif // 旧版的、由外部传入的颜色来作为渐变的颜色
 
-        _seg_rt->aux_param += 1; // USER_TO_DO 应该是亮度越大，这里的步长越大，亮度约小，这里的步长越小
-        // _seg_rt->aux_param += 255 / step;
+        _seg_rt->aux_param += 1; //
         if ((u16)_seg_rt->aux_param + 1 > 255)
         {
             _seg_rt->aux_param = 0;
@@ -712,15 +727,51 @@ u16 colorful_lights_gradual(void)
         // last_sys_time = sys_time_get();
     }
 
-    // return (_seg->speed / 128); // 如果_seg->speed==2000，刚开始是红色，下一个颜色是绿色，颜色从红色检变道绿色约2000ms左右
-    return 1; //
+    return (_seg->speed / 128); // 控制亮度和颜色变化的速度
+#endif
+
+#if 1
+
+    // static u32 last_sys_time = 0;
+    // extern u32 sys_time_get(void);
+
+    static u32 cur_colors = BLACK;
+    static u32 dest_colors = BLACK; // 目标颜色
+
+    u16 brightness = fc_effect.b;
+
+    // 生成对应的颜色：
+    cur_colors = WS2812FX_color_wheel(_seg_rt->counter_mode_step % 256);
+    dest_colors = WS2812FX_color_wheel((_seg_rt->counter_mode_step + 1) % 256);
+    // 生成指定亮度的颜色：
+    cur_colors = WS2812FX_color_blend(BLACK, cur_colors, (u8)brightness);
+    dest_colors = WS2812FX_color_blend(BLACK, dest_colors, (u8)brightness);
+
+    uint32_t color = WS2812FX_color_blend(cur_colors, dest_colors, (u8)brightness);
+    Adafruit_NeoPixel_fill(color, _seg->start, _seg_len);
+
+    _seg_rt->counter_mode_step++;
+    if (_seg_rt->counter_mode_step > 255 - 1)
+    {
+        _seg_rt->counter_mode_step = 0;
+        SET_CYCLE;
+
+        // printf("sys time %lu\n", sys_time_get() - last_sys_time);
+        // last_sys_time = sys_time_get();
+    }
+
+    // printf("_seg->speed %u\n", (u16)_seg->speed);
+
+    return ((u32)_seg->speed * 2 / 128); // 控制 变化的速度
+
+#endif
 }
 
 /**
  * @brief 七彩灯的呼吸效果
  *
  *      前提条件：ws2812fx_service() 10ms调用一次
- *      那么一轮颜色呼吸的时间 约为 _seg->speed，单位：ms
+ *
  */
 u16 colorful_lights_breathing(void)
 {
@@ -740,12 +791,30 @@ u16 colorful_lights_breathing(void)
         一次循环的时间 == 512 / 步长 * 10ms
         速度值 == 512 / 步长 * 10ms
         步长 == 512 * 10ms / 速度值
+
+
+        如果是从 0 到 指定亮度(brightness)
+        步长为1，共 brightness + 1 步，至少 brightness * 10 ms 完成一次循环
+        步长为2，共 (brightness + 1) / 2 步，至少 brightness * 10 ms / 2 完成一次循环
+
+        速度值与亮度值的关系
+        一次循环的时间 == (brightness + 1) / 步长 * 10ms
+        速度值 == (brightness + 1) / 步长 * 10ms
+        (brightness + 1) / 步长 == 速度值 / 10ms
+        (brightness + 1) == 速度值 / 10ms * 步长
+        步长 == (brightness + 1) * 10ms / 速度值
     */
-    u16 step = 0; // 步长
-    step = 512 * 10 / _seg->speed;
+    // u16 step = 0; // 步长
+    // step = 512 * 10 / _seg->speed;
+
+#if 0
+    static volatile u32 temp_step = 0; // 累计放大了1000倍的步长，超过1000后，才执行动画的下一步骤
+    u32 step = 0;                      // 步长（放大了1000倍）
+    step = ((u32)fc_effect.b * 2 - 1) * 10 * 1000 / _seg->speed;
 
     if (0 == _seg_rt->counter_mode_step &&
-        0 == _seg_rt->aux_param)
+        0 == _seg_rt->aux_param &&
+        0 == _seg_rt->counter_mode_call)
     {
         /*
             如果是第一次进入，设置默认颜色
@@ -753,39 +822,125 @@ u16 colorful_lights_breathing(void)
         */
         // dest_color = _seg->colors[_seg_rt->aux_param];
         dest_color = WS2812FX_color_blend(BLACK, _seg->colors[_seg_rt->aux_param], (u8)fc_effect.b);
-
+        temp_step = 0;
         // printf("sys time %lu\n", sys_time_get() - last_sys_time);
         // last_sys_time = sys_time_get();
     }
 
-    u16 brightness = 0; // 亮度值
-    brightness = _seg_rt->counter_mode_step;
-    if (brightness > 255)
+    u16 brightness = _seg_rt->counter_mode_step; // 亮度值
+    // 固定最大亮度的呼吸：
+    // if (brightness > 255)
+    // {
+    //     brightness = 511 - brightness; // lum = 0 -> 255 -> 0
+    // }
+    // 没有固定最大亮度的呼吸：
+    if (brightness > (u16)fc_effect.b)
     {
-        brightness = 511 - brightness; // lum = 0 -> 255 -> 0
+        brightness = ((u16)fc_effect.b * 2 - 1) - brightness; // lum = 0 -> fc_effect.b -> 0
     }
 
     u32 color = WS2812FX_color_blend(BLACK, dest_color, (u8)brightness);
     Adafruit_NeoPixel_fill(color, _seg->start, _seg_len);
 
-    _seg_rt->counter_mode_step += step; // 步长
-    if (_seg_rt->counter_mode_step > 511)
+    temp_step += step;
+    if (temp_step >= 1000)
+    {
+        _seg_rt->counter_mode_step += (temp_step / 1000);
+        temp_step %= 1000;
+    }
+
+    // printf("brightness %u\n", (u16)brightness); // 打印为0
+    // printf("temp_step %lu\n", (u32)temp_step);  // 打印为0
+    // printf("step %lu\n", (u32)step);
+    // printf("_seg_rt->counter_mode_step %lu\n", (u32)_seg_rt->counter_mode_step);
+
+    if (_seg_rt->counter_mode_step > fc_effect.b)
     {
         _seg_rt->counter_mode_step = 0;
+        temp_step = 0;
         _seg_rt->aux_param += 1; // 切换颜色数组 _seg->colors[] 中的下一个颜色
         if (_seg_rt->aux_param >= _seg->c_n - 1)
         {
             _seg_rt->aux_param = 0;
         }
 
-        dest_color = _seg->colors[_seg_rt->aux_param];
+        // dest_color = _seg->colors[_seg_rt->aux_param];
+        dest_color = WS2812FX_color_blend(BLACK, _seg->colors[_seg_rt->aux_param], (u8)fc_effect.b);
         SET_CYCLE;
 
         // printf("sys time %lu\n", sys_time_get() - last_sys_time);
         // last_sys_time = sys_time_get();
     }
+        
+    return 1; // ws2812fx_service() 10ms调用一次，这个值只需要小于10
+#endif
+
+#if 1
+
+    static volatile u32 temp_step = 0; // 累计放大了1000倍的步长，超过1000后，才执行动画的下一步骤
+    u16 brightness = 0;                // 亮度值
+    u32 step = 0;                      // 步长（放大了1000倍）
+    step = ((u32)fc_effect.b + 1) * 10 * 1000 / _seg->speed;
+
+    if (0 == _seg_rt->counter_mode_step &&
+        0 == _seg_rt->aux_param &&
+        0 == _seg_rt->counter_mode_call)
+    {
+        /*
+            如果是第一次进入，设置默认颜色
+            当前颜色为黑色，向目标颜色渐变（看起来像呼吸渐亮）
+        */
+        dest_color = _seg->colors[_seg_rt->aux_param];
+        // dest_color = WS2812FX_color_blend(BLACK, _seg->colors[_seg_rt->aux_param], (u8)fc_effect.b);
+        temp_step = 0;
+    }
+
+    temp_step += step;
+    if (temp_step >= 1000)
+    {
+        _seg_rt->counter_mode_step++;
+        temp_step %= 1000;
+
+        // 没有固定最大亮度的呼吸：
+        brightness = _seg_rt->counter_mode_step;
+        if (brightness > (u16)fc_effect.b)
+        {
+            brightness = ((u16)fc_effect.b * 2) - brightness; // lum = 0 -> fc_effect.b -> 0
+        }
+        // if (brightness > (u16)fc_effect.b)
+        // {
+        //     brightness = fc_effect.b - brightness;
+        // }
+    }
+
+    u32 color = WS2812FX_color_blend(BLACK, dest_color, (u8)brightness);
+    Adafruit_NeoPixel_fill(color, _seg->start, _seg_len);
+
+    printf("brightness %u\n", (u16)brightness); //
+    // printf("temp_step %lu\n", (u32)temp_step);  // 打印为0
+    // printf("step %lu\n", (u32)step);
+    printf("_seg_rt->counter_mode_step %lu\n", (u32)_seg_rt->counter_mode_step);
+
+    if (_seg_rt->counter_mode_step > (u16)fc_effect.b * 2 - 2)
+    {
+        _seg_rt->counter_mode_step = 0;
+        temp_step = 0;
+        // brightness = 0;
+
+        _seg_rt->aux_param += 1; // 切换颜色数组 _seg->colors[] 中的下一个颜色
+        if (_seg_rt->aux_param >= _seg->c_n - 1)
+        {
+            _seg_rt->aux_param = 0;
+        }
+
+        // dest_color = _seg->colors[_seg_rt->aux_param];
+        // dest_color = WS2812FX_color_blend(BLACK, _seg->colors[_seg_rt->aux_param], (u8)fc_effect.b);
+        SET_CYCLE;
+    }
 
     return 1; // ws2812fx_service() 10ms调用一次，这个值只需要小于10
+
+#endif
 }
 
 /**

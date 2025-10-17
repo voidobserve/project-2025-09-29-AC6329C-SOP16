@@ -2294,6 +2294,7 @@ obj/Release/apps/user_app/led_strip/led_strip_sys.o
 -r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,get_ir_timer,pl
 -r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,full_color_init,pl
 -r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,fc_effect,l
+-r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,colorful_lights_speed_array,pl
 -r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,led_b_array,pl
 -r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,led_speed_array,pl
 -r=obj/Release/apps/user_app/led_strip/led_strip_sys.o,RGBsequence_map,pl
@@ -2431,10 +2432,11 @@ obj/Release/apps/user_app/rf24g_key/rf24g_key.o
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,rf24g_convert_key_event,pl
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,rf24_key_handle,pl
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,fb_bright,l
+-r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,fb_speed,l
+-r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,set_fc_effect,l
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,colorful_lights_set_static_mode,l
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,ls_set_color,l
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,WS2812FX_resetSegmentRuntime,l
--r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,set_fc_effect,l
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,ls_set_music_mode,l
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,printf,l
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,meteor_effect_slow,l
@@ -2449,6 +2451,7 @@ obj/Release/apps/user_app/rf24g_key/rf24g_key.o
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,rf24g_scan_para,pl
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,fc_effect,l
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,led_b_array,l
+-r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,colorful_lights_speed_array,l
 -r=obj/Release/apps/user_app/rf24g_key/rf24g_key.o,zd_countdown,l
 obj/Release/apps/user_app/save_flash/save_flash.o
 -r=obj/Release/apps/user_app/save_flash/save_flash.o,read_flash_device_status_init,pl
@@ -2617,6 +2620,7 @@ obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,colorful_lights_gradual,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_color_wheel,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,colorful_lights_breathing,pl
+-r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,printf,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,colorful_lights_auto,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_setColors,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_set_coloQty,l
@@ -2635,7 +2639,6 @@ obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,meteor,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_copyPixels,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,meteor1,pl
--r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,printf,l
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,music_meteor3,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,music_mode2,pl
 -r=obj/Release/apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.o,WS2812FX_setBrightness,l

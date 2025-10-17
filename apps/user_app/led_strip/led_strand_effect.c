@@ -747,8 +747,8 @@ static void ls_scene_effect(void)
             NO_OPTIONS                   // 选项
         );
 
-        WS2812FX_set_coloQty(0, fc_effect.dream_scene.c_n);
-        ls_set_colors(fc_effect.dream_scene.c_n, &fc_effect.dream_scene.rgb);
+        // WS2812FX_set_coloQty(0, fc_effect.dream_scene.c_n);
+        // ls_set_colors(fc_effect.dream_scene.c_n, &fc_effect.dream_scene.rgb);
         WS2812FX_running_flag_set();
         break;
 

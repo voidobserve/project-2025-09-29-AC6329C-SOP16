@@ -41,8 +41,8 @@
 
 /******************************************************************common*****************************************************************/
 
-#define MAX_BRIGHT_RANK 10
-
+#define MAX_BRIGHT_RANK 10 // 七彩灯的最大亮度等级
+#define MAX_SPEED_RANK 10  // 七彩灯的最大速度等级
 
 typedef struct _HSV_COLOUR_DAT
 {
@@ -115,10 +115,10 @@ typedef enum
 } AUTO_TIME_T;
 
 extern const u8 led_b_array[MAX_BRIGHT_RANK];
+extern const u16 colorful_lights_speed_array[MAX_SPEED_RANK]; // 存放七彩灯动态模式下的所有速度值
 
 void ls_add_bright(void); // 增加亮度
 void ls_sub_bright(void); // 减少亮度
-
 
 void set_static_mode(u8 r, u8 g, u8 b);
 void colorful_lights_set_static_mode(color_t colors_structure); // 七彩灯设置为静态模式，颜色值由传参设定

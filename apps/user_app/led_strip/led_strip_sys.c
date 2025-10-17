@@ -4,8 +4,6 @@
 #include "Adafruit_NeoPixel.H"
 #include "led_strand_effect.h"
 
-
-#define MAX_SPEED_RANK 10
 #define MIN_BRIGHT_VALUE 10
 #define MIN_SLOW_SPEED 500
 #define MAX_FAST_SPEED 10
@@ -34,7 +32,7 @@ void fc_data_init(void)
     fc_effect.app_b = 100;
     fc_effect.ls_b = (MAX_BRIGHT_RANK - 1);
     fc_effect.app_speed = 80;
-    fc_effect.dream_scene.speed = 100;
+    fc_effect.dream_scene.speed = colorful_lights_speed_array[MAX_SPEED_RANK - 1];
     fc_effect.ls_speed = 3;
     fc_effect.sequence = NEO_RGBW;
     // fc_effect.auto_f = IS_PAUSE;
@@ -137,6 +135,18 @@ const u8 led_b_array[MAX_BRIGHT_RANK] = {
 const u16 led_speed_array[MAX_SPEED_RANK] = {
     MAX_FAST_SPEED, 100, 150, 200, 250,
     300, 350, 400, 450, MIN_SLOW_SPEED}; // 0-500
+
+const u16 colorful_lights_speed_array[MAX_SPEED_RANK] = {
+    200 * 1,
+    200 * 2,
+    200 * 3,
+    200 * 4,
+    200 * 5,
+    200 * 6,
+    200 * 7,
+    200 * 8,
+    200 * 9,
+    200 * 10};
 
 /**
  * @brief  APP设置亮度
@@ -908,36 +918,7 @@ void set_static_mode(u8 r, u8 g, u8 b)
 void colorful_lights_set_static_mode(color_t colors_structure)
 {
     fc_effect.Now_state = IS_STATIC;
-
-    // if (colors_structure.r == 0x00 &&
-    //     colors_structure.g == 0x00 &&
-    //     colors_structure.b == 0x00 &&
-    //     colors_structure.w == 0xFF) // 只点亮白光 W
-    // {
-
-    //     fc_effect.rgb.r = 0;
-    //     fc_effect.rgb.g = 0;
-    //     fc_effect.rgb.b = 0;
-    //     fc_effect.rgb.w = 255;
-    // }
-    // else if (colors_structure.r == 0xFF &&
-    //          colors_structure.g == 0xFF &&
-    //          colors_structure.b == 0xFF &&
-    //          colors_structure.w == 0xFF) // RGBW都要点亮
-    // {
-    //     fc_effect.rgb.r = 255;
-    //     fc_effect.rgb.g = 255;
-    //     fc_effect.rgb.b = 255;
-    //     fc_effect.rgb.w = 255;
-    // }
-    // else
-    // {
-    //     fc_effect.rgb.r = colors_structure.r;
-    //     fc_effect.rgb.g = colors_structure.g;
-    //     fc_effect.rgb.b = colors_structure.b;
-    //     fc_effect.rgb.w = 0;
-    // }
-
+ 
     fc_effect.rgb.r = colors_structure.r;
     fc_effect.rgb.g = colors_structure.g;
     fc_effect.rgb.b = colors_structure.b;
