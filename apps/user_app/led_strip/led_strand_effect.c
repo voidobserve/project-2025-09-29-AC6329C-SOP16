@@ -86,16 +86,15 @@ static void static_mode(void)
 {
     extern uint16_t WS2812FX_mode_static(void);
 
-
     WS2812FX_setSegment_colorOptions( // 设置一段颜色的效果
         0,                            // 第0段
         0,                            // 起始位置
         0,                            // 结束位置
         // &WS2812FX_mode_static,                          // 效果
         &colorful_lights_static,
-        0,   // 颜色，WS2812FX_setColors设置
-        100, // 速度
-        0);  // 选项，这里像素点大小：1
+        0,                                              // 颜色，WS2812FX_setColors设置
+        100,                                            // 速度
+        0);                                             // 选项，这里像素点大小：1
     WS2812FX_set_coloQty(0, fc_effect.dream_scene.c_n); // 设置颜色数量  0：第0段   fc_effect.dream_scene.c_n  颜色数量，一个颜色包含（RGB）
     ls_set_colors(1, &fc_effect.rgb);                   // 1:1个颜色    &fc_effect.rgb 这个颜色是什么色
     // WS2812FX_start(); // 同时有七彩灯和流星灯时，不能调用这个函数，会导致流星灯闪烁一次
@@ -780,6 +779,9 @@ static void ls_scene_effect(void)
             fc_effect.dream_scene.speed, // 速 度
             NO_OPTIONS                   // 选项
         );
+        
+        // WS2812FX_set_coloQty(0, fc_effect.dream_scene.c_n); // 设置颜色数量
+        // ls_set_colors(fc_effect.dream_scene.c_n, &fc_effect.dream_scene.rgb);
         WS2812FX_running_flag_set();
         break;
 
@@ -1111,7 +1113,8 @@ static void ls_music_effect(void)
     extern uint16_t fc_music_twinkle(void);
 
     void *music_effect_addr = &fc_music_gradual; // 避免出现地址空，导致不断复位
-    app_set_bright(100);
+    // app_set_bright(100); // 设置为最大亮度
+    WS2812FX_setBrightness(255); // 设置为最大亮度，但不改变 fc_effect.b 的值
 #if (LED_STRIP_TYPE == TYPE_Fiber_optic_lights)
     switch (fc_effect.music.m)
     {

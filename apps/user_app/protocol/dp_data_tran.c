@@ -400,7 +400,6 @@ void fb_motor_speed(void)
 
 void fb_motor_mode(void)
 {
-
     uint8_t tp_buffer[6];
     tp_buffer[0] = 0x2F;
     tp_buffer[1] = 0x06;

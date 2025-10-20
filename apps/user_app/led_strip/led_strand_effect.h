@@ -172,7 +172,7 @@ typedef struct
     music_t music; // 音乐效果
 
     unsigned char auto_f;
-    base_ins_t base_ins;        // 电机
+    base_ins_t base_ins;        // 电机 ( base instruction ) 
     unsigned char motor_on_off; // 电机开关状态
 
     // =========================================================

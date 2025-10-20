@@ -4,6 +4,8 @@
 #include "Adafruit_NeoPixel.H"
 #include "led_strand_effect.h"
 
+#include "../../../apps/user_app/one_wire/one_wire.h" // 包含电机驱动的相关定义
+
 #define MIN_BRIGHT_VALUE 10
 #define MIN_SLOW_SPEED 500
 #define MAX_FAST_SPEED 10
@@ -742,7 +744,7 @@ void ls_set_star_tail(void)
  *      电机效果设置 API
  *
  *********************************************************/
-extern u8 motor_period[6];
+// extern u8 motor_period[6];
 void ls_set_motor_speed(void)
 {
     static u8 start = 1;

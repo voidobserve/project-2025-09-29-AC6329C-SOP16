@@ -5,7 +5,7 @@
 #include "led_strand_effect.h"
 
 u16 send_base_ins = 0;
-u8 motor_period[6] = {8, 13, 18, 21, 26, 35}; // 转速  app指令，需要将8 13 18 21 26 转换成相应的16进制
+const u8 motor_period[6] = {8, 13, 18, 21, 26, 35}; // 转速  app指令，需要将8 13 18 21 26 转换成相应的16进制
 
 /**
  * @brief  mcu通讯接口
@@ -36,8 +36,10 @@ void pack_base(void)
             break;
         }
     }
+
     if (p > 5)
         p = 0;
+
     send_base_ins |= p << 3;
 
     if (fc_effect.base_ins.dir)
@@ -220,7 +222,7 @@ void one_wire_send(void)
 void one_wire_set_mode(u8 m)
 {
     fc_effect.base_ins.mode = m;
-    printf("base_ins.mode = %d", fc_effect.base_ins.mode);
+    // printf("base_ins.mode = %d", fc_effect.base_ins.mode);
 }
 
 /**
@@ -244,7 +246,7 @@ void one_wire_set_period(u8 p)
 
     fc_effect.base_ins.period = p;
     
-    printf("base_ins.period = %d", fc_effect.base_ins.period);
+    // printf("base_ins.period = %d", fc_effect.base_ins.period);
 }
 
 /**

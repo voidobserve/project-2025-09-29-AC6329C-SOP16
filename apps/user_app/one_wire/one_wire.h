@@ -27,8 +27,8 @@ typedef struct
 }base_ins_t;
 
 
-// extern u8 period[6];
-
+extern const u8 motor_period[6]; // u8 motor_period[6] = {8, 13, 18, 21, 26, 35}; // 转速  app指令，需要将8 13 18 21 26 转换成相应的16进制
+void one_wire_set_mode(u8 m); // 设置电机模式
 void one_wire_set_period(u8 p); // 设置电机转速 
 
 #endif
