@@ -815,19 +815,20 @@ void parse_zd_data(unsigned char *LedCommand)
             {
 
                 extern void one_wire_set_mode(u8 m);
-                extern void enable_one_wire(void);
 
                 one_wire_set_mode(LedCommand[2]); // 配置模式
-                os_time_dly(1);
-                enable_one_wire(); // 使用发送数据
+                os_taskq_post("msg_task", 1, MSG_SEQUENCER_ONE_WIRE_SEND_INFO);
+
                 extern u8 counting_flag;
                 extern u8 set_time;
                 extern u8 stop_cnt;
                 if (LedCommand[2] == 0 && counting_flag == 0)
                 {
                     fc_effect.motor_on_off = DEVICE_OFF;
-                    counting_flag = 1; // 开始计时
-                    set_time = 1;      // 允许修改时间
+                    // fc_effect.motor_speed_index = ARRAY_SIZE(motor_period) + 1; // 让索引值超出数组的索引范围，表示关闭电机
+                    fc_effect.motor_speed_index = ARRAY_SIZE(motor_period); // 让索引值超出数组的索引范围，表示关闭电机
+                    counting_flag = 1;                                      // 开始计时
+                    set_time = 1;                                           // 允许修改时间
                 }
                 else
                 {
@@ -842,8 +843,27 @@ void parse_zd_data(unsigned char *LedCommand)
             {
                 extern void one_wire_set_period(u8 p);
                 one_wire_set_period(LedCommand[2]);
-                os_time_dly(1);
-                enable_one_wire();
+
+                // 如果app传过来的数值不在motor_period数组中，下面的代码会出问题
+                // 更新 fc_effect.star_speed_index 索引值，后续重新上电要根据这个索引值来找到对应的电机转速
+                for (u8 i = 0; i < ARRAY_SIZE(motor_period); i++)
+                {
+                    if (motor_period[i] == fc_effect.base_ins.period)
+                    {
+                        fc_effect.motor_speed_index = i;
+                        break;
+                    }
+
+                    if (i == ARRAY_SIZE(motor_period) - 1)
+                    {
+                        // 如果到最后一个元素，都没有找到对应的索引值
+                        // 让索引值超出数组的索引范围，表示关闭电机
+                        // fc_effect.motor_speed_index = ARRAY_SIZE(motor_period) + 1;
+                        fc_effect.motor_speed_index = ARRAY_SIZE(motor_period);
+                    }
+                }
+
+                os_taskq_post("msg_task", 1, MSG_SEQUENCER_ONE_WIRE_SEND_INFO);
                 fb_motor_speed();
             }
         }

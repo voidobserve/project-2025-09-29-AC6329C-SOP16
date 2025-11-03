@@ -112,6 +112,7 @@
                 "${workspaceFolder}/apps/common/device/usb",
                 "${workspaceFolder}/apps/common/device/usb/device",
                 "${workspaceFolder}/apps/common/device/usb/host",
+                "${workspaceFolder}/**", // 递归搜索所有子文件夹
                 "C:/JL/pi32/q32s-include"
             ],
             "intelliSenseMode": "clang-x86",

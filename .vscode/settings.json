@@ -5,6 +5,7 @@
         "led_strand_effect.h": "c",
         "led_strip_drive.h": "c",
         "one_wire.h": "c",
-        "led_strip_sys.h": "c"
+        "led_strip_sys.h": "c",
+        "adafruit_neopixel.h": "c"
     }
 }

@@ -182,7 +182,7 @@ typedef struct
     unsigned short star_speed;
     unsigned char app_star_speed; // 反馈给APP流星速度
 
-    unsigned char star_speed_index; // 电机速度索引
+    unsigned char motor_speed_index; // 电机速度索引
 
     unsigned char app_rgb_mode;
 

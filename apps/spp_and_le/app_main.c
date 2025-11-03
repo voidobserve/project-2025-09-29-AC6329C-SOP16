@@ -30,7 +30,7 @@
 
 #include "../../../apps/user_app/rf24g_key/rf24g_key.h"
 
-OS_SEM LED_TASK_SEM;
+// OS_SEM LED_TASK_SEM;
 
 /*任务列表   */
 const struct task_info task_info_table[] = {
@@ -72,7 +72,7 @@ const struct task_info task_info_table[] = {
 #endif
 
     {"led_task", 2, 0, 512, 512}, // 灯光
-    // {"led_task", 3, 0, 512, 512}, // 灯光
+    {"msg_task", 3, 0, 128, 128}, // 用户消息处理线程
     {0, 0},
 };
 
@@ -308,7 +308,8 @@ static const u16 timer_div[] = {
     /*1110*/ 32 * 256,
     /*1111*/ 128 * 256,
 };
-#define APP_TIMER_CLK (CONFIG_BT_NORMAL_HZ / 2) // clk_get("timer")
+// #define APP_TIMER_CLK (CONFIG_BT_NORMAL_HZ / 2) // clk_get("timer")
+#define APP_TIMER_CLK (24000000) // clk_get("timer")
 #define MAX_TIME_CNT 0x7fff
 #define MIN_TIME_CNT 0x100
 #define TIMER_UNIT 1
@@ -346,8 +347,8 @@ void user_timer_init(void)
 
     TIMER_CNT = 0;
     TIMER_PRD = prd_cnt;
-    request_irq(TIMER_VETOR, 0, user_timer_isr, 0);
-    TIMER_CON = (index << 4) | BIT(0) | BIT(3);
+    request_irq(TIMER_VETOR, 3, user_timer_isr, 0);
+    TIMER_CON = (0b0001 << 10) | (index << 4) | (0x01 << 0); // 选择晶振作为时钟源，分频系数，定时器计数模式
 }
 __initcall(user_timer_init);
 
@@ -357,23 +358,74 @@ __initcall(user_timer_init);
 #include "../../apps/user_app/led_strip/led_strand_effect.h"
 #include "hardware.h"
 
-void main_while(void)
+/*
+    处理用户消息的线程 user_msg_handle_task
+
+    给该线程发送消息，例如：
+    os_taskq_post("msg_task", 1, MSG_SEQUENCER_ONE_WIRE_SEND_INFO);
+*/
+void user_msg_handle_task(void)
 {
+    int msg[32] = {0};
 
     while (1)
     {
-        // effect_stepmotor(); // 声控，电机的音乐效果
-        // stepmotor();        // 无霍尔时，电机停止指令计时
+#if 1
+        // os_sem_pend(msg, 0); // 一直阻塞等待信号量
+        int ret = os_taskq_pend("msg_task", msg, 1);
+        // printf("recv msg\n");
+        // printf("ret %d\n", ret);
+        if (OS_TASKQ != ret) // 类型不对
+        {
+            continue;
+        }
 
-        // power_motor_Init();  // 电机
+        if (msg[0] != Q_USER) // 不是用户消息
+        {
+            continue;
+        }
 
-        // meteor_period_sub(); // 流星周期控制
+        // 打印接收到的消息
+        // for (u8 i =0; i < ARRAY_SIZE(msg); i++)
+        // {
+        //     printf("msg [%u]: %d\n", (u16)i, msg[i]);
+        // }
 
-        
+        switch (msg[1])
+        {
+        case MSG_SEQUENCER_ONE_WIRE_SEND_INFO: // 使能单线发送
+        {
+            // printf("recv one wire send info\n");
+            for (u8 i = 0; i < 5; i++) // 控制重复发送次数
+            {
+                while (is_one_wire_send_end()) // 如果还未发送完，继续等待
+                {
+                    // printf("one wire send wait\n");
+                    os_time_dly(1);
+                }
 
+                enable_one_wire();
+            }
+        }
+        break;
+        }
+#endif
+
+        // os_time_dly(1); // 前面已经有阻塞等待，可以不加这一句
+    } // while (1)
+}
+
+void main_while(void)
+{
+    read_flash_device_status_init();
+    full_color_init();
+
+    while (1)
+    {
+        effect_stepmotor(); // 声控，电机的音乐效果
+        stepmotor();        // 无霍尔时，电机停止指令计时
         rf24_key_handle();
         // printf("main circle\n"); // 主循环约10ms
-
         // printf("sizeof  fc_effect_t %d\n", sizeof(fc_effect_t)); // 打印是 276，存放到flash中会有问题
 
         os_time_dly(1);
@@ -394,16 +446,18 @@ void my_main(void)
     led_gpio_init(); // 七彩灯控制引脚初始化
     led_pwm_init();  // 七彩灯控制引脚对应的PWM初始化
     mic_gpio_init();
-    // fan_gpio_init();
-    led_state_init(); // 
-    mcu_com_init(); // 电机一线通信
-
-    read_flash_device_status_init();
-    full_color_init();
+    led_state_init(); // 流星灯
+    mcu_com_init();   // 电机一线通信
 
     // os_sem_create(&LED_TASK_SEM, 0);
 
     sys_s_hi_timer_add(NULL, WS2812_circle_task, 10); // 10ms
 
+    task_create(user_msg_handle_task, NULL, "msg_task");
+
+    /*
+        这里要放到最后，防止调用 soft_turn_on_the_light() 给线程发送消息时，
+        接收消息的线程没有创建，导致收不到消息，最后一上电电机会不工作
+    */
     task_create(main_while, NULL, "led_task");
 }

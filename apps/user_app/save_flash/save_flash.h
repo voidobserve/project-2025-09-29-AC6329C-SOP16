@@ -23,6 +23,7 @@ typedef struct
 
 #pragma pack ()
 
+void read_flash_device_status_init(void);
 void save_user_data_area3(void);
 
 #endif

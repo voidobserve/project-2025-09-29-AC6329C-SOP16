@@ -4118,7 +4118,7 @@ uint16_t WS2812FX_mutil_strobe(void)
     return _seg->speed / 2;
 }
 
-// 森木客户
+// xx客户
 //  rgb通道呼吸
 //  按照用户需求，亮5秒，灭3秒。这个时间为最小时间单位，进行调节
 //  整体呼吸，亮-》灭-》亮
@@ -4159,7 +4159,7 @@ uint16_t fc_music_gradual(void)
     if (get_sound_result())
     {
         _seg_rt->counter_mode_step += 20;
-        WS2812FX_trigger();
+        // WS2812FX_trigger();
     }
 
     _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) & 0xFF;
@@ -4181,7 +4181,7 @@ uint16_t fc_music_breath(void)
         _seg_rt->aux_param += 5;
 
         _seg_rt->counter_mode_step = 1;
-        WS2812FX_trigger();
+        // WS2812FX_trigger();
     }
 
     int lum = _seg_rt->counter_mode_step;
@@ -4214,7 +4214,7 @@ uint16_t fc_music_static(void)
         _seg_rt->aux_param += 20;
 
         Adafruit_NeoPixel_fill(color1, _seg->start, _seg_len);
-        WS2812FX_trigger();
+        // WS2812FX_trigger();
     }
     return 100;
 }
@@ -4229,7 +4229,7 @@ uint16_t fc_music_twinkle(void)
         color1 = WS2812FX_color_wheel(_seg_rt->aux_param);
         _seg_rt->aux_param += 20;
         Adafruit_NeoPixel_fill(color1, _seg->start, _seg_len);
-        WS2812FX_trigger();
+        // WS2812FX_trigger();
     }
     else
     {

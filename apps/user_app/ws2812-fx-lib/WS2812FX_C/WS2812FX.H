@@ -263,4 +263,7 @@ Segment_runtime *getSegmentRuntime_seg(uint8_t);
 
 Segment_runtime *getSegmentRuntimes(void);
 
+void WS2812FX_triggered_by_colorful_lights(void);
+void WS2812FX_triggered_by_meteor_lights(void);
+
 #endif /* __BSP_WS2812FX_H */
