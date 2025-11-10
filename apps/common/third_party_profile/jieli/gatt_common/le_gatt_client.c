@@ -1152,11 +1152,22 @@ static bool __resolve_adv_report(adv_report_t *report_pt, u16 len)
         // printf_buf(adv_data_pt,length);
         // printf("===============^\n");
 
-        // if (report_pt->rssi > -30)
-        // {
-        //     printf("%s %d\n", __func__, __LINE__);
-        //     put_buf(report_pt->data, report_pt->length);
-        // }
+#if 0  // 打印信号较强的数据包：
+        if (report_pt->rssi > -30)
+        {
+            printf("%s %d\n", __func__, __LINE__);
+            printf("report_pt->event_type %u \n", (u16)report_pt->event_type);
+            printf("report_pt->address_type %u \n", (u16)report_pt->address_type);
+            printf("report_pt->address %02x %02x %02x %02x %02x %02x \n", 
+                report_pt->address[0], 
+                report_pt->address[1], 
+                report_pt->address[2], 
+                report_pt->address[3], 
+                report_pt->address[4], 
+                report_pt->address[5]);
+            put_buf(report_pt->data, report_pt->length);
+        }
+#endif // 打印信号较强的数据包
 
 #if TCFG_RF24GKEY_ENABLE
         rf24g_scan(adv_data_pt);
@@ -1447,8 +1458,6 @@ static void __gatt_client_report_adv_data(adv_report_t *report_pt, u16 len)
     find_tag = __resolve_ext_adv_report(evt, len);
 
 #else
-
-
 
     // if (report_pt->rssi > -60)
     // {

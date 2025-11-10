@@ -29,6 +29,8 @@
 #include "debug.h"
 
 #include "../../../apps/user_app/rf24g_key/rf24g_key.h"
+#include "../../../apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.h"
+
 
 // OS_SEM LED_TASK_SEM;
 
@@ -72,7 +74,7 @@ const struct task_info task_info_table[] = {
 #endif
 
     {"led_task", 2, 0, 512, 512}, // 灯光
-    {"msg_task", 3, 0, 128, 128}, // 用户消息处理线程
+    {"msg_task", 3, 0, 256, 256}, // 用户消息处理线程
     {0, 0},
 };
 
@@ -406,6 +408,52 @@ void user_msg_handle_task(void)
 
                 enable_one_wire();
             }
+        }
+        break;
+        case MSG_METEOR_LIGHTS_ON:
+        {
+            mode_ptr *animation_ptr = NULL;
+            switch (fc_effect.star_index)
+            {
+            case STAR_INDEX_METEOR_NORMAL_SLOW:
+                animation_ptr = meteor_effect_slow;
+                break;
+
+            case STAR_INDEX_METEOR_NORMAL_MIDDLE:
+                animation_ptr = meteor_effect_middle;
+                break;
+
+            case STAR_INDEX_METEOR_NORMAL_FAST:
+                animation_ptr = meteor_effect_fast;
+                break;
+
+            case STAR_INDEX_METEOR_RANDOM_BREATH:
+                animation_ptr = meteor_effect_random_breath;
+                break;
+
+            case STAR_INDEX_METEOR_RANDOM_BREATH_2:
+                break;
+
+            case STAR_INDEX_METEOR_MUSIC_CONTROL: // 带声控的流星灯模式
+
+                break;
+
+            default:
+                return; // 出错，直接返回
+            }
+
+            // WS2812FX_stop();
+            WS2812FX_setSegment_colorOptions(
+                1,                     // 第0段
+                1,                     // 起始位置
+                fc_effect.led_num - 1, // 结束位置
+                animation_ptr,         // 动画效果
+                WHITE,                 // 颜色，WS2812FX_setColors设置
+                0,                     // 速度，对于样机的正常流星模式，速度这一属性无效
+                NO_OPTIONS);           // 选项
+            // WS2812FX_start();
+            WS2812FX_resetSegmentRuntime(1); //
+            WS2812FX_running_flag_set();
         }
         break;
         }

@@ -8,6 +8,8 @@
 #include "../../../apps/user_app/one_wire/one_wire.h"                        // 包含电机的驱动程序
 #include "../../../apps/user_app/save_flash/save_flash.h"                    // 包含读写flash的接口
 
+#include "../../../apps/user_app/rf24g_key/rf24g_key_event_handle.h"
+
 #if 1
 
 static volatile u8 rf24g_rx_flag = 0;               // 是否收到了新的数据
@@ -15,6 +17,10 @@ static volatile u8 rf24g_recved_key_val = 0;        // 存放接收到的按键�
 static volatile u8 rf24g_dynamic_code_last = 0;     // 存放动态码，长按--动态码会一直变化，短按--动态码不变
 static volatile u8 rf24g_dynamic_code_cur = 0;      // 存放动态码，长按--动态码会一直变化，短按--动态码不变
 static volatile u8 rf24g_dynamic_code_same_cnt = 0; // 存放动态码连续相同次数
+static volatile u8 rf24g_remote_type = RF24G_REMOTE_TYPE_NONE;
+
+volatile u8 rf24g_key_driver_event = 0; // 由key_driver_scan() 更新
+volatile u8 rf24g_key_driver_value = 0; // 由key_driver_scan() 更新
 
 // volatile rf24g_recv_info_t rf24g_recv_info;  // 存放接收到的数据包
 // volatile u8 chromatic_circle_val = 0;        // 存放色环按键对应的数值，范围：0x00~0xFF
@@ -22,81 +28,80 @@ static volatile u8 rf24g_dynamic_code_same_cnt = 0; // 存放动态码连续相�
 const u8 rf24g_key_event_table[][RF34G_KEY_EVENT_MAX + 1] = {
     // ==============================
     // 白色面板1，2.4G遥控器按键：
-    {RF24G_WHITE_KEY_1_VAL_R1C1, RF24G_WHITE_KEY_1_EVENT_R1C1_CLICK, RF24G_WHITE_KEY_1_EVENT_R1C1_HOLD, RF24G_WHITE_KEY_1_EVENT_R1C1_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R1C2, RF24G_WHITE_KEY_1_EVENT_R1C2_CLICK, RF24G_WHITE_KEY_1_EVENT_R1C2_HOLD, RF24G_WHITE_KEY_1_EVENT_R1C2_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R1C3, RF24G_WHITE_KEY_1_EVENT_R1C3_CLICK, RF24G_WHITE_KEY_1_EVENT_R1C3_HOLD, RF24G_WHITE_KEY_1_EVENT_R1C3_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R1C4, RF24G_WHITE_KEY_1_EVENT_R1C4_CLICK, RF24G_WHITE_KEY_1_EVENT_R1C4_HOLD, RF24G_WHITE_KEY_1_EVENT_R1C4_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R1C1, RF24G_WHITE_KEY_1_EVENT_R1C1_CLICK, RF24G_WHITE_KEY_1_EVENT_R1C1_LONG, RF24G_WHITE_KEY_1_EVENT_R1C1_HOLD, RF24G_WHITE_KEY_1_EVENT_R1C1_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R1C2, RF24G_WHITE_KEY_1_EVENT_R1C2_CLICK, RF24G_WHITE_KEY_1_EVENT_R1C2_LONG, RF24G_WHITE_KEY_1_EVENT_R1C2_HOLD, RF24G_WHITE_KEY_1_EVENT_R1C2_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R1C3, RF24G_WHITE_KEY_1_EVENT_R1C3_CLICK, RF24G_WHITE_KEY_1_EVENT_R1C3_LONG, RF24G_WHITE_KEY_1_EVENT_R1C3_HOLD, RF24G_WHITE_KEY_1_EVENT_R1C3_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R1C4, RF24G_WHITE_KEY_1_EVENT_R1C4_CLICK, RF24G_WHITE_KEY_1_EVENT_R1C4_LONG, RF24G_WHITE_KEY_1_EVENT_R1C4_HOLD, RF24G_WHITE_KEY_1_EVENT_R1C4_LOOSE},
 
-    {RF24G_WHITE_KEY_1_VAL_R2C1, RF24G_WHITE_KEY_1_EVENT_R2C1_CLICK, RF24G_WHITE_KEY_1_EVENT_R2C1_HOLD, RF24G_WHITE_KEY_1_EVENT_R2C1_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R2C2, RF24G_WHITE_KEY_1_EVENT_R2C2_CLICK, RF24G_WHITE_KEY_1_EVENT_R2C2_HOLD, RF24G_WHITE_KEY_1_EVENT_R2C2_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R2C3, RF24G_WHITE_KEY_1_EVENT_R2C3_CLICK, RF24G_WHITE_KEY_1_EVENT_R2C3_HOLD, RF24G_WHITE_KEY_1_EVENT_R2C3_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R2C4, RF24G_WHITE_KEY_1_EVENT_R2C4_CLICK, RF24G_WHITE_KEY_1_EVENT_R2C4_HOLD, RF24G_WHITE_KEY_1_EVENT_R2C4_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R2C1, RF24G_WHITE_KEY_1_EVENT_R2C1_CLICK, RF24G_WHITE_KEY_1_EVENT_R2C1_LONG, RF24G_WHITE_KEY_1_EVENT_R2C1_HOLD, RF24G_WHITE_KEY_1_EVENT_R2C1_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R2C2, RF24G_WHITE_KEY_1_EVENT_R2C2_CLICK, RF24G_WHITE_KEY_1_EVENT_R2C2_LONG, RF24G_WHITE_KEY_1_EVENT_R2C2_HOLD, RF24G_WHITE_KEY_1_EVENT_R2C2_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R2C3, RF24G_WHITE_KEY_1_EVENT_R2C3_CLICK, RF24G_WHITE_KEY_1_EVENT_R2C3_LONG, RF24G_WHITE_KEY_1_EVENT_R2C3_HOLD, RF24G_WHITE_KEY_1_EVENT_R2C3_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R2C4, RF24G_WHITE_KEY_1_EVENT_R2C4_CLICK, RF24G_WHITE_KEY_1_EVENT_R2C4_LONG, RF24G_WHITE_KEY_1_EVENT_R2C4_HOLD, RF24G_WHITE_KEY_1_EVENT_R2C4_LOOSE},
 
-    {RF24G_WHITE_KEY_1_VAL_R3C1, RF24G_WHITE_KEY_1_EVENT_R3C1_CLICK, RF24G_WHITE_KEY_1_EVENT_R3C1_HOLD, RF24G_WHITE_KEY_1_EVENT_R3C1_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R3C2, RF24G_WHITE_KEY_1_EVENT_R3C2_CLICK, RF24G_WHITE_KEY_1_EVENT_R3C2_HOLD, RF24G_WHITE_KEY_1_EVENT_R3C2_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R3C3, RF24G_WHITE_KEY_1_EVENT_R3C3_CLICK, RF24G_WHITE_KEY_1_EVENT_R3C3_HOLD, RF24G_WHITE_KEY_1_EVENT_R3C3_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R3C4, RF24G_WHITE_KEY_1_EVENT_R3C4_CLICK, RF24G_WHITE_KEY_1_EVENT_R3C4_HOLD, RF24G_WHITE_KEY_1_EVENT_R3C4_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R3C1, RF24G_WHITE_KEY_1_EVENT_R3C1_CLICK, RF24G_WHITE_KEY_1_EVENT_R3C1_LONG, RF24G_WHITE_KEY_1_EVENT_R3C1_HOLD, RF24G_WHITE_KEY_1_EVENT_R3C1_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R3C2, RF24G_WHITE_KEY_1_EVENT_R3C2_CLICK, RF24G_WHITE_KEY_1_EVENT_R3C2_LONG, RF24G_WHITE_KEY_1_EVENT_R3C2_HOLD, RF24G_WHITE_KEY_1_EVENT_R3C2_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R3C3, RF24G_WHITE_KEY_1_EVENT_R3C3_CLICK, RF24G_WHITE_KEY_1_EVENT_R3C3_LONG, RF24G_WHITE_KEY_1_EVENT_R3C3_HOLD, RF24G_WHITE_KEY_1_EVENT_R3C3_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R3C4, RF24G_WHITE_KEY_1_EVENT_R3C4_CLICK, RF24G_WHITE_KEY_1_EVENT_R3C4_LONG, RF24G_WHITE_KEY_1_EVENT_R3C4_HOLD, RF24G_WHITE_KEY_1_EVENT_R3C4_LOOSE},
 
-    {RF24G_WHITE_KEY_1_VAL_R4C1, RF24G_WHITE_KEY_1_EVENT_R4C1_CLICK, RF24G_WHITE_KEY_1_EVENT_R4C1_HOLD, RF24G_WHITE_KEY_1_EVENT_R4C1_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R4C2, RF24G_WHITE_KEY_1_EVENT_R4C2_CLICK, RF24G_WHITE_KEY_1_EVENT_R4C2_HOLD, RF24G_WHITE_KEY_1_EVENT_R4C2_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R4C3, RF24G_WHITE_KEY_1_EVENT_R4C3_CLICK, RF24G_WHITE_KEY_1_EVENT_R4C3_HOLD, RF24G_WHITE_KEY_1_EVENT_R4C3_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R4C4, RF24G_WHITE_KEY_1_EVENT_R4C4_CLICK, RF24G_WHITE_KEY_1_EVENT_R4C4_HOLD, RF24G_WHITE_KEY_1_EVENT_R4C4_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R4C1, RF24G_WHITE_KEY_1_EVENT_R4C1_CLICK, RF24G_WHITE_KEY_1_EVENT_R4C1_LONG, RF24G_WHITE_KEY_1_EVENT_R4C1_HOLD, RF24G_WHITE_KEY_1_EVENT_R4C1_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R4C2, RF24G_WHITE_KEY_1_EVENT_R4C2_CLICK, RF24G_WHITE_KEY_1_EVENT_R4C2_LONG, RF24G_WHITE_KEY_1_EVENT_R4C2_HOLD, RF24G_WHITE_KEY_1_EVENT_R4C2_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R4C3, RF24G_WHITE_KEY_1_EVENT_R4C3_CLICK, RF24G_WHITE_KEY_1_EVENT_R4C3_LONG, RF24G_WHITE_KEY_1_EVENT_R4C3_HOLD, RF24G_WHITE_KEY_1_EVENT_R4C3_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R4C4, RF24G_WHITE_KEY_1_EVENT_R4C4_CLICK, RF24G_WHITE_KEY_1_EVENT_R4C4_LONG, RF24G_WHITE_KEY_1_EVENT_R4C4_HOLD, RF24G_WHITE_KEY_1_EVENT_R4C4_LOOSE},
 
-    {RF24G_WHITE_KEY_1_VAL_R5C1, RF24G_WHITE_KEY_1_EVENT_R5C1_CLICK, RF24G_WHITE_KEY_1_EVENT_R5C1_HOLD, RF24G_WHITE_KEY_1_EVENT_R5C1_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R5C2, RF24G_WHITE_KEY_1_EVENT_R5C2_CLICK, RF24G_WHITE_KEY_1_EVENT_R5C2_HOLD, RF24G_WHITE_KEY_1_EVENT_R5C2_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R5C3, RF24G_WHITE_KEY_1_EVENT_R5C3_CLICK, RF24G_WHITE_KEY_1_EVENT_R5C3_HOLD, RF24G_WHITE_KEY_1_EVENT_R5C3_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R5C4, RF24G_WHITE_KEY_1_EVENT_R5C4_CLICK, RF24G_WHITE_KEY_1_EVENT_R5C4_HOLD, RF24G_WHITE_KEY_1_EVENT_R5C4_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R5C1, RF24G_WHITE_KEY_1_EVENT_R5C1_CLICK, RF24G_WHITE_KEY_1_EVENT_R5C1_LONG, RF24G_WHITE_KEY_1_EVENT_R5C1_HOLD, RF24G_WHITE_KEY_1_EVENT_R5C1_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R5C2, RF24G_WHITE_KEY_1_EVENT_R5C2_CLICK, RF24G_WHITE_KEY_1_EVENT_R5C2_LONG, RF24G_WHITE_KEY_1_EVENT_R5C2_HOLD, RF24G_WHITE_KEY_1_EVENT_R5C2_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R5C3, RF24G_WHITE_KEY_1_EVENT_R5C3_CLICK, RF24G_WHITE_KEY_1_EVENT_R5C3_LONG, RF24G_WHITE_KEY_1_EVENT_R5C3_HOLD, RF24G_WHITE_KEY_1_EVENT_R5C3_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R5C4, RF24G_WHITE_KEY_1_EVENT_R5C4_CLICK, RF24G_WHITE_KEY_1_EVENT_R5C4_LONG, RF24G_WHITE_KEY_1_EVENT_R5C4_HOLD, RF24G_WHITE_KEY_1_EVENT_R5C4_LOOSE},
 
-    {RF24G_WHITE_KEY_1_VAL_R6C1, RF24G_WHITE_KEY_1_EVENT_R6C1_CLICK, RF24G_WHITE_KEY_1_EVENT_R6C1_HOLD, RF24G_WHITE_KEY_1_EVENT_R6C1_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R6C2, RF24G_WHITE_KEY_1_EVENT_R6C2_CLICK, RF24G_WHITE_KEY_1_EVENT_R6C2_HOLD, RF24G_WHITE_KEY_1_EVENT_R6C2_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R6C3, RF24G_WHITE_KEY_1_EVENT_R6C3_CLICK, RF24G_WHITE_KEY_1_EVENT_R6C3_HOLD, RF24G_WHITE_KEY_1_EVENT_R6C3_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R6C4, RF24G_WHITE_KEY_1_EVENT_R6C4_CLICK, RF24G_WHITE_KEY_1_EVENT_R6C4_HOLD, RF24G_WHITE_KEY_1_EVENT_R6C4_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R6C1, RF24G_WHITE_KEY_1_EVENT_R6C1_CLICK, RF24G_WHITE_KEY_1_EVENT_R6C1_LONG, RF24G_WHITE_KEY_1_EVENT_R6C1_HOLD, RF24G_WHITE_KEY_1_EVENT_R6C1_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R6C2, RF24G_WHITE_KEY_1_EVENT_R6C2_CLICK, RF24G_WHITE_KEY_1_EVENT_R6C2_LONG, RF24G_WHITE_KEY_1_EVENT_R6C2_HOLD, RF24G_WHITE_KEY_1_EVENT_R6C2_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R6C3, RF24G_WHITE_KEY_1_EVENT_R6C3_CLICK, RF24G_WHITE_KEY_1_EVENT_R6C3_LONG, RF24G_WHITE_KEY_1_EVENT_R6C3_HOLD, RF24G_WHITE_KEY_1_EVENT_R6C3_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R6C4, RF24G_WHITE_KEY_1_EVENT_R6C4_CLICK, RF24G_WHITE_KEY_1_EVENT_R6C4_LONG, RF24G_WHITE_KEY_1_EVENT_R6C4_HOLD, RF24G_WHITE_KEY_1_EVENT_R6C4_LOOSE},
 
-    {RF24G_WHITE_KEY_1_VAL_R7C1, RF24G_WHITE_KEY_1_EVENT_R7C1_CLICK, RF24G_WHITE_KEY_1_EVENT_R7C1_HOLD, RF24G_WHITE_KEY_1_EVENT_R7C1_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R7C2, RF24G_WHITE_KEY_1_EVENT_R7C2_CLICK, RF24G_WHITE_KEY_1_EVENT_R7C2_HOLD, RF24G_WHITE_KEY_1_EVENT_R7C2_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R7C3, RF24G_WHITE_KEY_1_EVENT_R7C3_CLICK, RF24G_WHITE_KEY_1_EVENT_R7C3_HOLD, RF24G_WHITE_KEY_1_EVENT_R7C3_LOOSE},
-    {RF24G_WHITE_KEY_1_VAL_R7C4, RF24G_WHITE_KEY_1_EVENT_R7C4_CLICK, RF24G_WHITE_KEY_1_EVENT_R7C4_HOLD, RF24G_WHITE_KEY_1_EVENT_R7C4_LOOSE},
-
-    // ==============================
-    // 白色面板2，2.4G遥控器按键：
-    {RF24G_WHITE_KEY_2_VAL_R1C1, RF24G_WHITE_KEY_2_EVENT_R1C1_CLICK, RF24G_WHITE_KEY_2_EVENT_R1C1_HOLD, RF24G_WHITE_KEY_2_EVENT_R1C1_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R1C2, RF24G_WHITE_KEY_2_EVENT_R1C2_CLICK, RF24G_WHITE_KEY_2_EVENT_R1C2_HOLD, RF24G_WHITE_KEY_2_EVENT_R1C2_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R1C3, RF24G_WHITE_KEY_2_EVENT_R1C3_CLICK, RF24G_WHITE_KEY_2_EVENT_R1C3_HOLD, RF24G_WHITE_KEY_2_EVENT_R1C3_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R1C4, RF24G_WHITE_KEY_2_EVENT_R1C4_CLICK, RF24G_WHITE_KEY_2_EVENT_R1C4_HOLD, RF24G_WHITE_KEY_2_EVENT_R1C4_LOOSE},
-
-    {RF24G_WHITE_KEY_2_VAL_R2C1, RF24G_WHITE_KEY_2_EVENT_R2C1_CLICK, RF24G_WHITE_KEY_2_EVENT_R2C1_HOLD, RF24G_WHITE_KEY_2_EVENT_R2C1_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R2C2, RF24G_WHITE_KEY_2_EVENT_R2C2_CLICK, RF24G_WHITE_KEY_2_EVENT_R2C2_HOLD, RF24G_WHITE_KEY_2_EVENT_R2C2_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R2C3, RF24G_WHITE_KEY_2_EVENT_R2C3_CLICK, RF24G_WHITE_KEY_2_EVENT_R2C3_HOLD, RF24G_WHITE_KEY_2_EVENT_R2C3_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R2C4, RF24G_WHITE_KEY_2_EVENT_R2C4_CLICK, RF24G_WHITE_KEY_2_EVENT_R2C4_HOLD, RF24G_WHITE_KEY_2_EVENT_R2C4_LOOSE},
-
-    {RF24G_WHITE_KEY_2_VAL_R3C1, RF24G_WHITE_KEY_2_EVENT_R3C1_CLICK, RF24G_WHITE_KEY_2_EVENT_R3C1_HOLD, RF24G_WHITE_KEY_2_EVENT_R3C1_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R3C2, RF24G_WHITE_KEY_2_EVENT_R3C2_CLICK, RF24G_WHITE_KEY_2_EVENT_R3C2_HOLD, RF24G_WHITE_KEY_2_EVENT_R3C2_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R3C3, RF24G_WHITE_KEY_2_EVENT_R3C3_CLICK, RF24G_WHITE_KEY_2_EVENT_R3C3_HOLD, RF24G_WHITE_KEY_2_EVENT_R3C3_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R3C4, RF24G_WHITE_KEY_2_EVENT_R3C4_CLICK, RF24G_WHITE_KEY_2_EVENT_R3C4_HOLD, RF24G_WHITE_KEY_2_EVENT_R3C4_LOOSE},
-
-    {RF24G_WHITE_KEY_2_VAL_R4C1, RF24G_WHITE_KEY_2_EVENT_R4C1_CLICK, RF24G_WHITE_KEY_2_EVENT_R4C1_HOLD, RF24G_WHITE_KEY_2_EVENT_R4C1_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R4C2, RF24G_WHITE_KEY_2_EVENT_R4C2_CLICK, RF24G_WHITE_KEY_2_EVENT_R4C2_HOLD, RF24G_WHITE_KEY_2_EVENT_R4C2_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R4C3, RF24G_WHITE_KEY_2_EVENT_R4C3_CLICK, RF24G_WHITE_KEY_2_EVENT_R4C3_HOLD, RF24G_WHITE_KEY_2_EVENT_R4C3_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R4C4, RF24G_WHITE_KEY_2_EVENT_R4C4_CLICK, RF24G_WHITE_KEY_2_EVENT_R4C4_HOLD, RF24G_WHITE_KEY_2_EVENT_R4C4_LOOSE},
-
-    {RF24G_WHITE_KEY_2_VAL_R5C1, RF24G_WHITE_KEY_2_EVENT_R5C1_CLICK, RF24G_WHITE_KEY_2_EVENT_R5C1_HOLD, RF24G_WHITE_KEY_2_EVENT_R5C1_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R5C2, RF24G_WHITE_KEY_2_EVENT_R5C2_CLICK, RF24G_WHITE_KEY_2_EVENT_R5C2_HOLD, RF24G_WHITE_KEY_2_EVENT_R5C2_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R5C3, RF24G_WHITE_KEY_2_EVENT_R5C3_CLICK, RF24G_WHITE_KEY_2_EVENT_R5C3_HOLD, RF24G_WHITE_KEY_2_EVENT_R5C3_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R5C4, RF24G_WHITE_KEY_2_EVENT_R5C4_CLICK, RF24G_WHITE_KEY_2_EVENT_R5C4_HOLD, RF24G_WHITE_KEY_2_EVENT_R5C4_LOOSE},
-
-    {RF24G_WHITE_KEY_2_VAL_R6C1, RF24G_WHITE_KEY_2_EVENT_R6C1_CLICK, RF24G_WHITE_KEY_2_EVENT_R6C1_HOLD, RF24G_WHITE_KEY_2_EVENT_R6C1_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R6C2, RF24G_WHITE_KEY_2_EVENT_R6C2_CLICK, RF24G_WHITE_KEY_2_EVENT_R6C2_HOLD, RF24G_WHITE_KEY_2_EVENT_R6C2_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R6C3, RF24G_WHITE_KEY_2_EVENT_R6C3_CLICK, RF24G_WHITE_KEY_2_EVENT_R6C3_HOLD, RF24G_WHITE_KEY_2_EVENT_R6C3_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R6C4, RF24G_WHITE_KEY_2_EVENT_R6C4_CLICK, RF24G_WHITE_KEY_2_EVENT_R6C4_HOLD, RF24G_WHITE_KEY_2_EVENT_R6C4_LOOSE},
-
-    {RF24G_WHITE_KEY_2_VAL_R7C1, RF24G_WHITE_KEY_2_EVENT_R7C1_CLICK, RF24G_WHITE_KEY_2_EVENT_R7C1_HOLD, RF24G_WHITE_KEY_2_EVENT_R7C1_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R7C2, RF24G_WHITE_KEY_2_EVENT_R7C2_CLICK, RF24G_WHITE_KEY_2_EVENT_R7C2_HOLD, RF24G_WHITE_KEY_2_EVENT_R7C2_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R7C3, RF24G_WHITE_KEY_2_EVENT_R7C3_CLICK, RF24G_WHITE_KEY_2_EVENT_R7C3_HOLD, RF24G_WHITE_KEY_2_EVENT_R7C3_LOOSE},
-    {RF24G_WHITE_KEY_2_VAL_R7C4, RF24G_WHITE_KEY_2_EVENT_R7C4_CLICK, RF24G_WHITE_KEY_2_EVENT_R7C4_HOLD, RF24G_WHITE_KEY_2_EVENT_R7C4_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R7C1, RF24G_WHITE_KEY_1_EVENT_R7C1_CLICK, RF24G_WHITE_KEY_1_EVENT_R7C1_LONG, RF24G_WHITE_KEY_1_EVENT_R7C1_HOLD, RF24G_WHITE_KEY_1_EVENT_R7C1_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R7C2, RF24G_WHITE_KEY_1_EVENT_R7C2_CLICK, RF24G_WHITE_KEY_1_EVENT_R7C2_LONG, RF24G_WHITE_KEY_1_EVENT_R7C2_HOLD, RF24G_WHITE_KEY_1_EVENT_R7C2_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R7C3, RF24G_WHITE_KEY_1_EVENT_R7C3_CLICK, RF24G_WHITE_KEY_1_EVENT_R7C3_LONG, RF24G_WHITE_KEY_1_EVENT_R7C3_HOLD, RF24G_WHITE_KEY_1_EVENT_R7C3_LOOSE},
+    {RF24G_WHITE_KEY_1_VAL_R7C4, RF24G_WHITE_KEY_1_EVENT_R7C4_CLICK, RF24G_WHITE_KEY_1_EVENT_R7C4_LONG, RF24G_WHITE_KEY_1_EVENT_R7C4_HOLD, RF24G_WHITE_KEY_1_EVENT_R7C4_LOOSE},
 };
 
-volatile u8 rf24g_key_driver_event = 0; // 由key_driver_scan() 更新
-volatile u8 rf24g_key_driver_value = 0; // 由key_driver_scan() 更新
+const u8 rf24g_key_2_event_table[][RF34G_KEY_EVENT_MAX + 1] = {
+    // ==============================
+    // 白色面板2，2.4G遥控器按键：
+    {RF24G_WHITE_KEY_2_VAL_R1C1, RF24G_WHITE_KEY_2_EVENT_R1C1_CLICK, RF24G_WHITE_KEY_2_EVENT_R1C1_LONG, RF24G_WHITE_KEY_2_EVENT_R1C1_HOLD, RF24G_WHITE_KEY_2_EVENT_R1C1_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R1C2, RF24G_WHITE_KEY_2_EVENT_R1C2_CLICK, RF24G_WHITE_KEY_2_EVENT_R1C2_LONG, RF24G_WHITE_KEY_2_EVENT_R1C2_HOLD, RF24G_WHITE_KEY_2_EVENT_R1C2_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R1C3, RF24G_WHITE_KEY_2_EVENT_R1C3_CLICK, RF24G_WHITE_KEY_2_EVENT_R1C3_LONG, RF24G_WHITE_KEY_2_EVENT_R1C3_HOLD, RF24G_WHITE_KEY_2_EVENT_R1C3_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R1C4, RF24G_WHITE_KEY_2_EVENT_R1C4_CLICK, RF24G_WHITE_KEY_2_EVENT_R1C4_LONG, RF24G_WHITE_KEY_2_EVENT_R1C4_HOLD, RF24G_WHITE_KEY_2_EVENT_R1C4_LOOSE},
+
+    {RF24G_WHITE_KEY_2_VAL_R2C1, RF24G_WHITE_KEY_2_EVENT_R2C1_CLICK, RF24G_WHITE_KEY_2_EVENT_R2C1_LONG, RF24G_WHITE_KEY_2_EVENT_R2C1_HOLD, RF24G_WHITE_KEY_2_EVENT_R2C1_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R2C2, RF24G_WHITE_KEY_2_EVENT_R2C2_CLICK, RF24G_WHITE_KEY_2_EVENT_R2C2_LONG, RF24G_WHITE_KEY_2_EVENT_R2C2_HOLD, RF24G_WHITE_KEY_2_EVENT_R2C2_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R2C3, RF24G_WHITE_KEY_2_EVENT_R2C3_CLICK, RF24G_WHITE_KEY_2_EVENT_R2C3_LONG, RF24G_WHITE_KEY_2_EVENT_R2C3_HOLD, RF24G_WHITE_KEY_2_EVENT_R2C3_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R2C4, RF24G_WHITE_KEY_2_EVENT_R2C4_CLICK, RF24G_WHITE_KEY_2_EVENT_R2C4_LONG, RF24G_WHITE_KEY_2_EVENT_R2C4_HOLD, RF24G_WHITE_KEY_2_EVENT_R2C4_LOOSE},
+
+    {RF24G_WHITE_KEY_2_VAL_R3C1, RF24G_WHITE_KEY_2_EVENT_R3C1_CLICK, RF24G_WHITE_KEY_2_EVENT_R3C1_LONG, RF24G_WHITE_KEY_2_EVENT_R3C1_HOLD, RF24G_WHITE_KEY_2_EVENT_R3C1_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R3C2, RF24G_WHITE_KEY_2_EVENT_R3C2_CLICK, RF24G_WHITE_KEY_2_EVENT_R3C2_LONG, RF24G_WHITE_KEY_2_EVENT_R3C2_HOLD, RF24G_WHITE_KEY_2_EVENT_R3C2_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R3C3, RF24G_WHITE_KEY_2_EVENT_R3C3_CLICK, RF24G_WHITE_KEY_2_EVENT_R3C3_LONG, RF24G_WHITE_KEY_2_EVENT_R3C3_HOLD, RF24G_WHITE_KEY_2_EVENT_R3C3_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R3C4, RF24G_WHITE_KEY_2_EVENT_R3C4_CLICK, RF24G_WHITE_KEY_2_EVENT_R3C4_LONG, RF24G_WHITE_KEY_2_EVENT_R3C4_HOLD, RF24G_WHITE_KEY_2_EVENT_R3C4_LOOSE},
+
+    {RF24G_WHITE_KEY_2_VAL_R4C1, RF24G_WHITE_KEY_2_EVENT_R4C1_CLICK, RF24G_WHITE_KEY_2_EVENT_R4C1_LONG, RF24G_WHITE_KEY_2_EVENT_R4C1_HOLD, RF24G_WHITE_KEY_2_EVENT_R4C1_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R4C2, RF24G_WHITE_KEY_2_EVENT_R4C2_CLICK, RF24G_WHITE_KEY_2_EVENT_R4C2_LONG, RF24G_WHITE_KEY_2_EVENT_R4C2_HOLD, RF24G_WHITE_KEY_2_EVENT_R4C2_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R4C3, RF24G_WHITE_KEY_2_EVENT_R4C3_CLICK, RF24G_WHITE_KEY_2_EVENT_R4C3_LONG, RF24G_WHITE_KEY_2_EVENT_R4C3_HOLD, RF24G_WHITE_KEY_2_EVENT_R4C3_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R4C4, RF24G_WHITE_KEY_2_EVENT_R4C4_CLICK, RF24G_WHITE_KEY_2_EVENT_R4C4_LONG, RF24G_WHITE_KEY_2_EVENT_R4C4_HOLD, RF24G_WHITE_KEY_2_EVENT_R4C4_LOOSE},
+
+    {RF24G_WHITE_KEY_2_VAL_R5C1, RF24G_WHITE_KEY_2_EVENT_R5C1_CLICK, RF24G_WHITE_KEY_2_EVENT_R5C1_LONG, RF24G_WHITE_KEY_2_EVENT_R5C1_HOLD, RF24G_WHITE_KEY_2_EVENT_R5C1_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R5C2, RF24G_WHITE_KEY_2_EVENT_R5C2_CLICK, RF24G_WHITE_KEY_2_EVENT_R5C2_LONG, RF24G_WHITE_KEY_2_EVENT_R5C2_HOLD, RF24G_WHITE_KEY_2_EVENT_R5C2_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R5C3, RF24G_WHITE_KEY_2_EVENT_R5C3_CLICK, RF24G_WHITE_KEY_2_EVENT_R5C3_LONG, RF24G_WHITE_KEY_2_EVENT_R5C3_HOLD, RF24G_WHITE_KEY_2_EVENT_R5C3_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R5C4, RF24G_WHITE_KEY_2_EVENT_R5C4_CLICK, RF24G_WHITE_KEY_2_EVENT_R5C4_LONG, RF24G_WHITE_KEY_2_EVENT_R5C4_HOLD, RF24G_WHITE_KEY_2_EVENT_R5C4_LOOSE},
+
+    {RF24G_WHITE_KEY_2_VAL_R6C1, RF24G_WHITE_KEY_2_EVENT_R6C1_CLICK, RF24G_WHITE_KEY_2_EVENT_R6C1_LONG, RF24G_WHITE_KEY_2_EVENT_R6C1_HOLD, RF24G_WHITE_KEY_2_EVENT_R6C1_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R6C2, RF24G_WHITE_KEY_2_EVENT_R6C2_CLICK, RF24G_WHITE_KEY_2_EVENT_R6C2_LONG, RF24G_WHITE_KEY_2_EVENT_R6C2_HOLD, RF24G_WHITE_KEY_2_EVENT_R6C2_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R6C3, RF24G_WHITE_KEY_2_EVENT_R6C3_CLICK, RF24G_WHITE_KEY_2_EVENT_R6C3_LONG, RF24G_WHITE_KEY_2_EVENT_R6C3_HOLD, RF24G_WHITE_KEY_2_EVENT_R6C3_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R6C4, RF24G_WHITE_KEY_2_EVENT_R6C4_CLICK, RF24G_WHITE_KEY_2_EVENT_R6C4_LONG, RF24G_WHITE_KEY_2_EVENT_R6C4_HOLD, RF24G_WHITE_KEY_2_EVENT_R6C4_LOOSE},
+
+    {RF24G_WHITE_KEY_2_VAL_R7C1, RF24G_WHITE_KEY_2_EVENT_R7C1_CLICK, RF24G_WHITE_KEY_2_EVENT_R7C1_LONG, RF24G_WHITE_KEY_2_EVENT_R7C1_HOLD, RF24G_WHITE_KEY_2_EVENT_R7C1_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R7C2, RF24G_WHITE_KEY_2_EVENT_R7C2_CLICK, RF24G_WHITE_KEY_2_EVENT_R7C2_LONG, RF24G_WHITE_KEY_2_EVENT_R7C2_HOLD, RF24G_WHITE_KEY_2_EVENT_R7C2_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R7C3, RF24G_WHITE_KEY_2_EVENT_R7C3_CLICK, RF24G_WHITE_KEY_2_EVENT_R7C3_LONG, RF24G_WHITE_KEY_2_EVENT_R7C3_HOLD, RF24G_WHITE_KEY_2_EVENT_R7C3_LOOSE},
+    {RF24G_WHITE_KEY_2_VAL_R7C4, RF24G_WHITE_KEY_2_EVENT_R7C4_CLICK, RF24G_WHITE_KEY_2_EVENT_R7C4_LONG, RF24G_WHITE_KEY_2_EVENT_R7C4_HOLD, RF24G_WHITE_KEY_2_EVENT_R7C4_LOOSE},
+};
 
 static u8 rf24g_get_key_value(void); // 获取按键键值的函数声明
 volatile struct key_driver_para rf24g_scan_para = {
@@ -115,9 +120,20 @@ void rf24g_scan(void *recv_buff)
 {
     volatile rf24g_recv_info_t *p = (rf24g_recv_info_t *)recv_buff;
     if (p->header1 == RF24G_HEADER_1 && p->header2 == RF24G_HEADER_2)
+    // if (p->header1 == 0xFF && p->header2 == 0xFF)
     {
         // printf("recv: \n");
         // printf_buf(p, sizeof(rf24g_recv_info_t)); // 打印接收到的数据包
+
+        if (0x54 == p->fixed_val_6)
+        {
+            rf24g_remote_type = RF24G_REMOTE_TYPE_WITH_METEOR_REMOTE;
+        }
+        // else if (0x55 == p->fixed_val_6)
+        else
+        {
+            rf24g_remote_type = RF24G_REMOTE_TYPE_WITHOUT_METEOR_REMOTE;
+        }
 
         // 直接接收键值
         // rf24g_recv_info = *p; // 结构体变量赋值
@@ -126,6 +142,8 @@ void rf24g_scan(void *recv_buff)
 
         // 打印键值：
         // printf("key 0x %x\n", (u16)rf24g_recved_key_val);
+
+        // 根据类型，判断是控制带流星灯的遥控器还是不带流星灯的遥控器
 
         rf24g_rx_flag = 1;
     }
@@ -192,15 +210,20 @@ u8 rf24g_convert_key_event(u8 key_value, u8 key_driver_event)
     {
         key_event_index = 1;
     }
-    else if (KEY_EVENT_LONG == key_driver_event || KEY_EVENT_HOLD == key_driver_event)
+    else if (KEY_EVENT_LONG == key_driver_event)
     {
-        // long和hold都当作hold处理
+        // long
         key_event_index = 2;
+    }
+    else if (KEY_EVENT_HOLD == key_driver_event)
+    {
+        // hold
+        key_event_index = 3;
     }
     else if (KEY_EVENT_UP == key_driver_event)
     {
         // 长按后松手
-        key_event_index = 3;
+        key_event_index = 4;
     }
 
     if (0 == key_event_index || NO_KEY == key_value)
@@ -210,11 +233,27 @@ u8 rf24g_convert_key_event(u8 key_value, u8 key_driver_event)
         return RF24G_KEY_EVENT_NONE;
     }
 
-    for (u8 i = 0; i < sizeof(rf24g_key_event_table) / sizeof(rf24g_key_event_table[0]); i++)
+    if (RF24G_REMOTE_TYPE_WITH_METEOR_REMOTE == rf24g_remote_type)
     {
-        if (key_value == rf24g_key_event_table[i][0])
+        // printf("key type with meteor\n");
+        for (u8 i = 0; i < ARRAY_SIZE(rf24g_key_event_table); i++)
         {
-            return rf24g_key_event_table[i][key_event_index];
+            if (key_value == rf24g_key_event_table[i][0])
+            {
+                return rf24g_key_event_table[i][key_event_index];
+            }
+        }
+    }
+    // else if (RF24G_REMOTE_TYPE_WITHOUT_METEOR_REMOTE == rf24g_remote_type)
+    else
+    {
+        // printf("key type without meteor\n");
+        for (u8 i = 0; i < ARRAY_SIZE(rf24g_key_2_event_table); i++)
+        {
+            if (key_value == rf24g_key_2_event_table[i][0])
+            {
+                return rf24g_key_2_event_table[i][key_event_index];
+            }
         }
     }
 
@@ -224,14 +263,15 @@ u8 rf24g_convert_key_event(u8 key_value, u8 key_driver_event)
 
 void rf24_key_handle(void)
 {
-    u8 rf24g_key_event = 0;
-    color_t color_structure = {0};
+    u8 rf24g_key_event = 0; 
 
     if (NO_KEY == rf24g_key_driver_value)
         return;
 
     rf24g_key_event = rf24g_convert_key_event(rf24g_key_driver_value, rf24g_key_driver_event);
     rf24g_key_driver_value = NO_KEY;
+
+    // printf("rf24g_key_event: %u\n", (u16)rf24g_key_event);
 
     /*
         fc_effect.dream_scene.speed 最大应该是2000
@@ -240,9 +280,17 @@ void rf24_key_handle(void)
     // fc_effect.dream_scene.speed = 200; // 测试时使用
     // fc_effect.dream_scene.speed = 2000; // 测试时使用
 
+#if 0 // 根据 rf24g_key_event 进行按键事件处理
+    color_t color_structure = {0};
+
     if (DEVICE_OFF == get_on_off_state())
     { // 如果设备没有启动，只对开关按键做处理
-        if (RF24G_WHITE_KEY_1_EVENT_R1C4_CLICK == rf24g_key_event)
+        if (
+            // RF24G_WHITE_KEY_1_EVENT_R1C4_CLICK == rf24g_key_event ||
+            RF24G_WHITE_KEY_1_EVENT_R1C4_LONG == rf24g_key_event ||
+
+            // RF24G_WHITE_KEY_2_EVENT_R1C4_CLICK == rf24g_key_event ||
+            RF24G_WHITE_KEY_2_EVENT_R1C4_LONG == rf24g_key_event)
         {
             soft_turn_on_the_light(); // 打开设备
             save_user_data_area3();
@@ -257,7 +305,7 @@ void rf24_key_handle(void)
 
     case RF24G_WHITE_KEY_1_EVENT_R1C1_CLICK: // +
     {                                        // 亮度加、速度加、灵敏度加
-        // printf("rf24g_key_event_r1c1_click\n");
+      // printf("rf24g_key_event_r1c1_click\n");
         if (IS_STATIC == fc_effect.Now_state)
         {
             /*
@@ -298,14 +346,14 @@ void rf24_key_handle(void)
         else if (IS_light_music == fc_effect.Now_state)
         {
             // 七彩灯声控模式下，调节灵敏度
+            colorful_lights_sound_sensitivity_add();
+            fb_sensitive(); // 向app反馈灵敏度
         }
         else
         {
             // 其他模式，直接退出，不执行后续的读写flash操作
             return;
         }
-
-        // save_user_data_area3();
     }
     break;
     case RF24G_WHITE_KEY_1_EVENT_R1C2_CLICK: // -
@@ -351,19 +399,25 @@ void rf24_key_handle(void)
         else if (IS_light_music == fc_effect.Now_state)
         {
             // 七彩灯声控模式下，调节灵敏度
+            // ls_sub_sensitive();
+            colorful_lights_sound_sensitivity_sub();
+            fb_sensitive(); // 向app反馈灵敏度
         }
         else
         {
             // 其他模式，直接退出，不执行后续的读写flash操作
             return;
         }
-
-        // save_user_data_area3();
     }
     break;
-    case RF24G_WHITE_KEY_1_EVENT_R1C3_CLICK: // OFF
+    // case RF24G_WHITE_KEY_1_EVENT_R1C3_CLICK: // OFF
+    case RF24G_WHITE_KEY_1_EVENT_R1C3_LONG:
+    // case RF24G_WHITE_KEY_2_EVENT_R1C3_CLICK:
+    case RF24G_WHITE_KEY_2_EVENT_R1C3_LONG:
     {
         // 关闭设备
+
+        soft_turn_off_lights();
     }
     break;
     case RF24G_WHITE_KEY_1_EVENT_R1C4_CLICK: // ON
@@ -472,24 +526,35 @@ void rf24_key_handle(void)
         if (fc_effect.star_on_off == DEVICE_OFF)
         {
             fc_effect.star_on_off = DEVICE_ON;
-            // printf("meteor on\n");
+            printf("meteor on\n");
         }
         else
         {
             fc_effect.star_on_off = DEVICE_OFF;
-            // printf("meteor off\n");
+            printf("meteor off\n");
         }
 
         if (DEVICE_ON == fc_effect.star_on_off)
         {
-            // ls_meteor_stat_effect();
+            // 执行一次快速流星动画，在动画结束后，给处理消息的线程发送消息，让它切换流星灯动画
+            WS2812FX_setSegment_colorOptions(
+                1,                           // 第0段
+                1,                           // 起始位置
+                fc_effect.led_num - 1,       // 结束位置
+                &meteor_effect_when_pwr_on,  // 效果
+                0,                           // 颜色
+                fc_effect.star_speed,        // 速度
+                0);                          // 选项，这里像素点大小：3 REVERSE决定方向
+            WS2812FX_resetSegmentRuntime(1); // 清除指定段的显示缓存
+            WS2812FX_running_flag_set();
+
             fd_meteor_on_off(); // 向app反馈流星开关的状态
         }
         else
         {
             // 关闭流星灯，实际上是让流星灯一直熄灭
-            extern void close_metemor(void);
-            WS2812FX_stop();
+            // extern void close_metemor(void);
+            // WS2812FX_stop();
             WS2812FX_setSegment_colorOptions(
                 1,                           // 第0段
                 1,                           // 起始位置
@@ -601,14 +666,23 @@ void rf24_key_handle(void)
 
              每次按下切换模式的时候，不会跑一次快速流星模式，而是切换到下一个模式
         */
-        mode_ptr *animation_ptr = NULL;
+
+        if (DEVICE_OFF == fc_effect.star_on_off)
+        {
+            // 如果流星灯是关着的，不做响应
+            return;
+        }
+
         printf("meteor mode change\n");
+
         fc_effect.star_index++;
-        if (fc_effect.star_index >= STAR_INDEX_METEOR_MAX) // 防止溢出
+        // if (fc_effect.star_index >= STAR_INDEX_METEOR_MAX) // 防止溢出
+        if (fc_effect.star_index >= STAR_INDEX_METEOR_RANDOM_BREATH_2) // 测试时使用
         {
             fc_effect.star_index = STAR_INDEX_METEOR_NORMAL_SLOW; // 默认为正常流星（慢速）
         }
 
+        mode_ptr *animation_ptr = NULL;
         switch (fc_effect.star_index)
         {
         case STAR_INDEX_METEOR_NORMAL_SLOW:
@@ -623,15 +697,22 @@ void rf24_key_handle(void)
             animation_ptr = meteor_effect_fast;
             break;
 
-            // case STAR_INDEX_METEOR_RANDOM_BREATH:
-            // animation_ptr = meteor_light_random_breath;
-            // break;
+        case STAR_INDEX_METEOR_RANDOM_BREATH:
+            animation_ptr = meteor_effect_random_breath;
+            break;
+
+        case STAR_INDEX_METEOR_RANDOM_BREATH_2:
+            break;
+
+        case STAR_INDEX_METEOR_MUSIC_CONTROL: // 带声控的流星灯模式
+
+            break;
 
         default:
             return; // 出错，直接返回
         }
 
-        WS2812FX_stop();
+        // WS2812FX_stop();
         WS2812FX_setSegment_colorOptions(
             1,                     // 第0段
             1,                     // 起始位置
@@ -640,23 +721,14 @@ void rf24_key_handle(void)
             WHITE,                 // 颜色，WS2812FX_setColors设置
             0,                     // 速度，对于样机的正常流星模式，速度这一属性无效
             NO_OPTIONS);           // 选项
-        WS2812FX_start();
+        // WS2812FX_start();
+        WS2812FX_resetSegmentRuntime(1); //
+        WS2812FX_running_flag_set();
     }
     break;
 
     case RF24G_WHITE_KEY_1_EVENT_R6C1_CLICK: // AUTO
     {
-#if 0
-        /*
-            流星灯声控模式下，增加灵敏度
-            流星灯乱闪模式下，增加速度
-            正常流星模式下，增加尾焰长度
-
-            样机的在流星灯关闭时，也会生效，并且修改的参数作用于全部流星灯的模式
-            例如，在声控模式下增加了灵敏度，切换回正常流星模式后，尾焰也会变长
-        */
-        printf("meteor param add\n");
-#endif
 
         if ((fc_effect.dream_scene.change_type != MODE_COLORFUL_LIGHTS_AUTO) ||
             (fc_effect.Now_state != IS_light_scene))
@@ -676,20 +748,6 @@ void rf24_key_handle(void)
 
     case RF24G_WHITE_KEY_1_EVENT_R6C2_CLICK:
     {
-#if 0
-        /*
-            流星灯声控模式下，减少灵敏度
-            流星灯乱闪模式下，减少速度
-            正常流星模式下，减少尾焰长度
-
-            样机的在流星灯关闭时，也会生效，并且修改的参数作用于全部流星灯的模式
-            例如，在声控模式下增加了灵敏度，切换回正常流星模式后，尾焰也会变长
-        */
-
-        printf("meteor param sub\n");
-#endif
-
-        // fc_effect.music.s = 40; // 测试时使用，灵敏度
 
         ls_set_music_mode();
         // printf("fc_effect.music.m = %u\n", (u16)fc_effect.music.m);
@@ -758,6 +816,33 @@ void rf24_key_handle(void)
 
     case RF24G_WHITE_KEY_1_EVENT_R6C4_CLICK:
     {
+#if 0
+        /*
+            流星灯声控模式下，增加灵敏度
+            流星灯乱闪模式下，增加速度
+            正常流星模式下，增加尾焰长度
+
+            样机的在流星灯关闭时，也会生效，并且修改的参数作用于全部流星灯的模式
+            例如，在声控模式下增加了灵敏度，切换回正常流星模式后，尾焰也会变长
+        */
+        printf("meteor param add\n");
+#endif
+
+        if (DEVICE_OFF == fc_effect.star_on_off)
+        {
+            return;
+        }
+
+        // 正常流星模式下，增加尾焰长度
+        if (STAR_INDEX_METEOR_NORMAL_SLOW == fc_effect.star_index ||
+            STAR_INDEX_METEOR_NORMAL_MIDDLE == fc_effect.star_index ||
+            STAR_INDEX_METEOR_NORMAL_FAST == fc_effect.star_index)
+        {
+            // if (fc_effect.meteor_tail_len < 12)
+            // {
+            //     fc_effect.meteor_tail_len++;
+            // }
+        }
     }
     break;
 
@@ -801,7 +886,7 @@ void rf24_key_handle(void)
             fc_effect.base_ins.period = motor_period[index];
         }
 
-        one_wire_set_period(motor_period[index]); 
+        one_wire_set_period(motor_period[index]);
         fc_effect.motor_speed_index = index;
         os_taskq_post("msg_task", 1, MSG_SEQUENCER_ONE_WIRE_SEND_INFO);
         fb_motor_speed(); // 向app反馈电机的转速
@@ -828,7 +913,7 @@ void rf24_key_handle(void)
             fc_effect.base_ins.period = motor_period[index];
         }
 
-        one_wire_set_period(motor_period[index]); 
+        one_wire_set_period(motor_period[index]);
         fc_effect.motor_speed_index = index;
         os_taskq_post("msg_task", 1, MSG_SEQUENCER_ONE_WIRE_SEND_INFO);
         fb_motor_speed(); // 向app反馈电机的转速
@@ -839,6 +924,34 @@ void rf24_key_handle(void)
 
     case RF24G_WHITE_KEY_1_EVENT_R7C4_CLICK: //
     {
+#if 0
+        /*
+            流星灯声控模式下，减少灵敏度
+            流星灯乱闪模式下，减少速度
+            正常流星模式下，减少尾焰长度
+
+            样机的在流星灯关闭时，也会生效，并且修改的参数作用于全部流星灯的模式
+            例如，在声控模式下增加了灵敏度，切换回正常流星模式后，尾焰也会变长
+        */
+
+        printf("meteor param sub\n");
+#endif
+
+        if (DEVICE_OFF == fc_effect.star_on_off)
+        {
+            return;
+        }
+
+        // 正常流星模式下，增加尾焰长度
+        if (STAR_INDEX_METEOR_NORMAL_SLOW == fc_effect.star_index ||
+            STAR_INDEX_METEOR_NORMAL_MIDDLE == fc_effect.star_index ||
+            STAR_INDEX_METEOR_NORMAL_FAST == fc_effect.star_index)
+        {
+            // if (fc_effect.meteor_tail_len > 1)
+            // {
+            //     fc_effect.meteor_tail_len--;
+            // }
+        }
     }
     break;
 
@@ -850,6 +963,40 @@ void rf24_key_handle(void)
     break;
 
     } // switch (rf24g_key_event)
+
+    save_user_data_area3();
+#endif
+
+    if (RF24G_KEY_EVENT_NONE == rf24g_key_event)
+    {
+        return;
+    }
+
+    if (DEVICE_OFF == get_on_off_state())
+    { // 如果设备没有启动，只对开关按键做处理
+        if (
+            RF24G_WHITE_KEY_1_EVENT_R1C4_CLICK == rf24g_key_event ||
+            RF24G_WHITE_KEY_1_EVENT_R1C4_LONG == rf24g_key_event ||
+
+            RF24G_WHITE_KEY_2_EVENT_R1C4_CLICK == rf24g_key_event ||
+            RF24G_WHITE_KEY_2_EVENT_R1C4_LONG == rf24g_key_event)
+        {
+            soft_turn_on_the_light(); // 打开设备
+            save_user_data_area3();
+        }
+
+        return;
+    }
+
+    // 运行到这里，说明设备已经启动
+    rf24_key_handle_func_t rf24g_key_handle_func_ptr = rf24_key_handle_func_buff[rf24g_key_event];
+    if (NULL == rf24g_key_handle_func_ptr) 
+    {   
+        return;
+    }
+    rf24g_key_handle_func_ptr();
+
+
 
     save_user_data_area3();
 }

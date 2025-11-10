@@ -135,7 +135,8 @@ typedef struct
 // 定义流星灯的动画索引
 enum
 {
-    STAR_INDEX_METEOR_NORMAL_SLOW,   // 正常流星，慢速
+    STAR_INDEX_METEOR_CONTROL_BY_APP = 0, // 由app控制的流星灯模式
+    STAR_INDEX_METEOR_NORMAL_SLOW = 23,   // 正常流星，慢速
     STAR_INDEX_METEOR_NORMAL_MIDDLE, // 正常流星，中速
     STAR_INDEX_METEOR_NORMAL_FAST,   // 正常流星，快速
 
@@ -166,13 +167,16 @@ typedef struct
     unsigned char mode_cycle;    // 1:模式完成一个循环。0：正在跑，和meteor_period搭配用
     u16 period_cnt;              // ms,运行时的计数器
     Now_state_e Now_state;       // 当前运行模式
-    smear_adjust_t smear_adjust; // 涂抹功能
     dream_scene_t dream_scene;   // 幻彩情景
 
     music_t music; // 音乐效果
 
-    unsigned char auto_f;
+    u8 colorful_lights_sensitivity; // 声控模式下，七彩灯的灵敏度
+
+    // unsigned char auto_f;
     base_ins_t base_ins;        // 电机 ( base instruction ) 
+
+    
     unsigned char motor_on_off; // 电机开关状态
 
     // =========================================================
@@ -181,7 +185,15 @@ typedef struct
     unsigned char star_index;  // 流星灯动画索引
     unsigned short star_speed;
     unsigned char app_star_speed; // 反馈给APP流星速度
+    u8 meteor_speed_index; // 流星灯速度值索引
 
+    // u8 meteor_tail_len; // 流星灯尾焰长度
+
+
+    u8 meteor_lights_sensitivity; // 声控模式下，流星灯的灵敏度
+
+    // =========================================================
+    // 电机
     unsigned char motor_speed_index; // 电机速度索引
 
     unsigned char app_rgb_mode;

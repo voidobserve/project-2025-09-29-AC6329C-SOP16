@@ -134,10 +134,10 @@ typedef struct Segment_runtime
     uint16_t aux_param3; // auxilary param (usually stores a segment index)
 
     // 只在对应的动画中使用：（流星灯动画）
-    u8 cur_animation_stage; // 当前动画阶段
-    u8 led_index_enable_buff[12];
-    u8 dest_brightness; // 目标亮度
-    u32 led_index_mode_step[12];
+    u8 cur_animation_stage; // 当前动画阶段 （目前只有在流星灯乱闪模式下使用，应该换成static类型的变量独立存放）
+    u8 led_index_enable_buff[12]; // （目前只有在流星灯乱闪模式下使用，应该换成static类型的变量独立存放）
+    // u8 dest_brightness; // 目标亮度
+    u32 led_index_mode_step[12];// （目前只有在流星灯乱闪模式下使用，应该换成static类型的变量独立存放）
 
 } Segment_runtime;
 

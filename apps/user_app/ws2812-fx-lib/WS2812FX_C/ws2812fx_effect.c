@@ -7,13 +7,13 @@
 #include "led_strip_drive.h"
 #include "../../../../apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.h" // 包含部分灯光动画的接口、类型定义
 #include "../../../../apps/user_app/led_strip/led_strand_effect.h"              //
+#include "../../../../apps/user_app/led_strip/led_strip_voice.h"
 
 #define CYCLE_T 0
 extern Segment *_seg;
 extern uint16_t _seg_len;
 extern Segment_runtime *_seg_rt;
 extern u8 get_effect_p(void);
-extern u8 get_sound_result(void);
 uint8_t music_trg = 0;
 uint8_t music_step = 0;
 uint8_t step2_flag, music_dly, change_mode, cycle_t;
@@ -1222,34 +1222,39 @@ u16 meteor_effect_when_pwr_on(void)
 {
     u16 cur_led_index = _seg_rt->counter_mode_step;
     u16 animation_time_interval = 500 / _seg_len; // 动画时间间隔
-    if (cur_led_index > _seg->stop)               // 最后一个灯，防止越界
-    {
-        cur_led_index = _seg->stop;
-    }
+    // u16 animation_time_interval = 5000 / _seg_len; // 动画时间间隔 -- 测试用，观察动画效果
 
     // 从起始索引开始，填充多少个
     Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
 
-    if (0 == IS_REVERSE)
+    if (cur_led_index > _seg->stop) // 最后一个灯，防止越界
     {
-        // 如果方向是正向
-        // 第一个参数不能为0，0是RGBW灯珠(不属于流星灯)，如果传参为0，会导致灯珠闪烁
-        WS2812FX_setPixelColor(_seg->start + cur_led_index, WHITE); // 点亮单个灯
+        // cur_led_index = _seg->stop;
     }
     else
     {
-        // 如果方向是要反向
-        // 第一个参数不能为0，0是RGBW灯珠(不属于流星灯)，如果传参为0，会导致灯珠闪烁
-        WS2812FX_setPixelColor(_seg->stop - cur_led_index + _seg->start, WHITE); // 点亮单个灯
+        if (0 == IS_REVERSE)
+        {
+            // 如果方向是正向
+            // 第一个参数不能为0，0是RGBW灯珠(不属于流星灯)，如果传参为0，会导致灯珠闪烁
+            WS2812FX_setPixelColor(_seg->start + cur_led_index, WHITE); // 点亮单个灯
+        }
+        else
+        {
+            // 如果方向是要反向
+            // 第一个参数不能为0，0是RGBW灯珠(不属于流星灯)，如果传参为0，会导致灯珠闪烁
+            WS2812FX_setPixelColor(_seg->stop - cur_led_index + _seg->start, WHITE); // 点亮单个灯
+        }
     }
 
     /*
         到最后一个灯也需要点亮一段时间，所以要改成 _seg_len + 1
     */
-    _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (_seg->stop - _seg->start + 1);
+    _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (_seg->stop - _seg->start + 2);
     if (_seg_rt->counter_mode_step == 0)
     {
         // 循环完成，应该切换到其他的流星动画
+        os_taskq_post("msg_task", 1, MSG_METEOR_LIGHTS_ON);
     }
 
     return (animation_time_interval);
@@ -1276,6 +1281,7 @@ u16 meteor_effect(void)
     // 根据尾焰长度，自动划分亮度等级：
     for (u8 i = 0; i < ARRAY_SIZE(brightness_levels_buff); i++)
     {
+        // brightness_levels_buff[i] = 255 - ((u32)i * 255 / meteor_tail_len);
         brightness_levels_buff[i] = 255 - ((u32)i * 255 / meteor_tail_len);
     }
 
@@ -1288,7 +1294,8 @@ u16 meteor_effect(void)
         // 要用带符号的数据类型，可能会计算出负数 (begin_index 和 cur_index 都需要是带符号的)
         int32_t begin_index = _seg->stop - _seg_rt->counter_mode_step; // 当前流星灯的头部
         int32_t cur_index = begin_index;                               // 当前要绘制的流星灯索引
-        for (u8 i = 0; i < meteor_tail_len; i++)                       // 根据流星灯尾焰长度进行绘制
+        // for (u8 i = 0; i < meteor_tail_len; i++)                       // 根据流星灯尾焰长度进行绘制
+        for (u8 i = 0; i < meteor_tail_len; i++) // 根据流星灯尾焰长度进行绘制
         {
             if (cur_index <= (int32_t)_seg->stop)
             {
@@ -1308,7 +1315,8 @@ u16 meteor_effect(void)
     {
         u16 begin_index = _seg->start + _seg_rt->counter_mode_step; // 当前流星灯的头部
         u16 cur_index = begin_index;                                // 当前要绘制的流星灯索引
-        for (u8 i = 0; i < meteor_tail_len; i++)                    // 根据流星灯尾焰长度进行绘制
+        // for (u8 i = 0; i < meteor_tail_len; i++)                    // 根据流星灯尾焰长度进行绘制
+        for (u8 i = 0; i < meteor_tail_len; i++) // 根据流星灯尾焰长度进行绘制
         {
             if (cur_index > _seg->start)
             {
@@ -1327,6 +1335,7 @@ u16 meteor_effect(void)
 
     // 需要给流星灯的尾焰留出动画时间
     // 还需要加入动画时间间隔 USER_TO_DO
+    // _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (_seg_len + meteor_tail_len + fc_effect.meteor_period);
     _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (_seg_len + meteor_tail_len + fc_effect.meteor_period);
     if (_seg_rt->counter_mode_step == 0)
     {
@@ -1357,6 +1366,7 @@ u16 meteor_effect_slow(void)
     // 流星动画3s
     if (0 == _seg_rt->aux_param || 2 == _seg_rt->aux_param)
     {
+        // meteor_animation_step = _seg_len + meteor_tail_len; //
         meteor_animation_step = _seg_len + meteor_tail_len; //
         return_value = 3000 / meteor_animation_step;
 
@@ -1364,6 +1374,7 @@ u16 meteor_effect_slow(void)
         // 根据尾焰长度，自动划分亮度等级：
         for (u8 i = 0; i < ARRAY_SIZE(brightness_levels_buff); i++)
         {
+            // brightness_levels_buff[i] = 255 - ((u32)i * 255 / meteor_tail_len);
             brightness_levels_buff[i] = 255 - ((u32)i * 255 / meteor_tail_len);
         }
 
@@ -1372,7 +1383,8 @@ u16 meteor_effect_slow(void)
             // 要用带符号的数据类型，可能会计算出负数 (begin_index 和 cur_index 都需要是带符号的)
             int32_t begin_index = _seg->stop - _seg_rt->counter_mode_step; // 当前流星灯的头部
             int32_t cur_index = begin_index;                               // 当前要绘制的流星灯索引
-            for (u8 i = 0; i < meteor_tail_len; i++)                       // 根据流星灯尾焰长度进行绘制
+            // for (u8 i = 0; i < meteor_tail_len; i++)                       // 根据流星灯尾焰长度进行绘制
+            for (u8 i = 0; i < meteor_tail_len; i++) // 根据流星灯尾焰长度进行绘制
             {
                 if (cur_index <= (int32_t)_seg->stop)
                 {
@@ -1392,7 +1404,8 @@ u16 meteor_effect_slow(void)
         {
             u16 begin_index = _seg->start + _seg_rt->counter_mode_step; // 当前流星灯的头部
             u16 cur_index = begin_index;                                // 当前要绘制的流星灯索引
-            for (u8 i = 0; i < meteor_tail_len; i++)                    // 根据流星灯尾焰长度进行绘制
+            // for (u8 i = 0; i < meteor_tail_len; i++)                    // 根据流星灯尾焰长度进行绘制
+            for (u8 i = 0; i < meteor_tail_len; i++) // 根据流星灯尾焰长度进行绘制
             {
                 if (cur_index > _seg->start)
                 {
@@ -1458,6 +1471,7 @@ u16 meteor_effect_middle(void)
     // 流星动画1s
     if (0 == _seg_rt->aux_param || 2 == _seg_rt->aux_param)
     {
+        // meteor_animation_step = _seg_len + meteor_tail_len; //
         meteor_animation_step = _seg_len + meteor_tail_len; //
         return_value = 1000 / meteor_animation_step;
 
@@ -1465,6 +1479,7 @@ u16 meteor_effect_middle(void)
         // 根据尾焰长度，自动划分亮度等级：
         for (u8 i = 0; i < ARRAY_SIZE(brightness_levels_buff); i++)
         {
+            // brightness_levels_buff[i] = 255 - ((u32)i * 255 / meteor_tail_len);
             brightness_levels_buff[i] = 255 - ((u32)i * 255 / meteor_tail_len);
         }
 
@@ -1473,7 +1488,8 @@ u16 meteor_effect_middle(void)
             // 要用带符号的数据类型，可能会计算出负数 (begin_index 和 cur_index 都需要是带符号的)
             int32_t begin_index = _seg->stop - _seg_rt->counter_mode_step; // 当前流星灯的头部
             int32_t cur_index = begin_index;                               // 当前要绘制的流星灯索引
-            for (u8 i = 0; i < meteor_tail_len; i++)                       // 根据流星灯尾焰长度进行绘制
+            // for (u8 i = 0; i < meteor_tail_len; i++)                       // 根据流星灯尾焰长度进行绘制
+            for (u8 i = 0; i < meteor_tail_len; i++) // 根据流星灯尾焰长度进行绘制
             {
                 if (cur_index <= (int32_t)_seg->stop)
                 {
@@ -1493,7 +1509,8 @@ u16 meteor_effect_middle(void)
         {
             u16 begin_index = _seg->start + _seg_rt->counter_mode_step; // 当前流星灯的头部
             u16 cur_index = begin_index;                                // 当前要绘制的流星灯索引
-            for (u8 i = 0; i < meteor_tail_len; i++)                    // 根据流星灯尾焰长度进行绘制
+            // for (u8 i = 0; i < meteor_tail_len; i++)                    // 根据流星灯尾焰长度进行绘制
+            for (u8 i = 0; i < meteor_tail_len; i++) // 根据流星灯尾焰长度进行绘制
             {
                 if (cur_index > _seg->start)
                 {
@@ -1571,6 +1588,7 @@ u16 meteor_effect_fast(void)
         6 == _seg_rt->aux_param ||
         8 == _seg_rt->aux_param)
     {
+        // meteor_animation_step = _seg_len + meteor_tail_len; //
         meteor_animation_step = _seg_len + meteor_tail_len; //
         return_value = 200 / meteor_animation_step;
 
@@ -1578,6 +1596,7 @@ u16 meteor_effect_fast(void)
         // 根据尾焰长度，自动划分亮度等级：
         for (u8 i = 0; i < ARRAY_SIZE(brightness_levels_buff); i++)
         {
+            // brightness_levels_buff[i] = 255 - ((u32)i * 255 / meteor_tail_len);
             brightness_levels_buff[i] = 255 - ((u32)i * 255 / meteor_tail_len);
         }
 
@@ -1586,7 +1605,8 @@ u16 meteor_effect_fast(void)
             // 要用带符号的数据类型，可能会计算出负数 (begin_index 和 cur_index 都需要是带符号的)
             int32_t begin_index = _seg->stop - _seg_rt->counter_mode_step; // 当前流星灯的头部
             int32_t cur_index = begin_index;                               // 当前要绘制的流星灯索引
-            for (u8 i = 0; i < meteor_tail_len; i++)                       // 根据流星灯尾焰长度进行绘制
+            // for (u8 i = 0; i < meteor_tail_len; i++)                       // 根据流星灯尾焰长度进行绘制
+            for (u8 i = 0; i < meteor_tail_len; i++) // 根据流星灯尾焰长度进行绘制
             {
                 if (cur_index <= (int32_t)_seg->stop)
                 {
@@ -1606,7 +1626,8 @@ u16 meteor_effect_fast(void)
         {
             u16 begin_index = _seg->start + _seg_rt->counter_mode_step; // 当前流星灯的头部
             u16 cur_index = begin_index;                                // 当前要绘制的流星灯索引
-            for (u8 i = 0; i < meteor_tail_len; i++)                    // 根据流星灯尾焰长度进行绘制
+            // for (u8 i = 0; i < meteor_tail_len; i++)                    // 根据流星灯尾焰长度进行绘制
+            for (u8 i = 0; i < meteor_tail_len; i++) // 根据流星灯尾焰长度进行绘制
             {
                 if (cur_index > _seg->start)
                 {
@@ -1680,7 +1701,7 @@ uint16_t music_mode1(void)
     // 下面的 WS2812FX_setPixelColor_rgbw() 传参是 颜色值 - rate，所以这里是由亮到暗
     const u8 rate[12] = {0, 50, 75, 100, 130, 180, 200, 220, 230, 240, 250, 253};
 
-    if (get_sound_result())
+    if (get_sound_triggered_by_meteor_lights())
     {
         uint32_t color = _seg->colors[0];
         int w1 = (color >> 24) & 0xff;
@@ -1740,7 +1761,7 @@ u16 meteor_light_two_channel_equalizer_effect(void)
     // printf("_seg->stop:  %u\n", (u16)_seg->stop);
     // printf("trg_cnt:  %u\n", (u16)trg_cnt);
 
-    if (get_sound_result())
+    if (get_sound_triggered_by_meteor_lights())
     {
         uint32_t color = _seg->colors[0];
         int w1 = (color >> 24) & 0xff;
@@ -1804,7 +1825,7 @@ u16 meteor_light_single_point_flow(void)
         cur_led_index = _seg->stop;
     }
 
-    if (get_sound_result())
+    if (get_sound_triggered_by_meteor_lights())
     {
         sound_trigger_cnt = 3;
 
@@ -2054,7 +2075,9 @@ u16 meteor_effect_random_breath(void)
                                     _seg_rt->led_index_mode_step[k] = 0;
                                 }
 
-                                _seg_rt->cur_animation_stage = ANIMATION_STAGE_1_END;
+                                // USER_TO_DO 乱闪还未调节好，这里先跳过乱闪的动画
+                                // _seg_rt->cur_animation_stage = ANIMATION_STAGE_1_END;
+                                _seg_rt->cur_animation_stage = ANIMATION_STAGE_2_END;
                                 _seg_rt->counter_mode_step = 0;
                                 break;
                             }
@@ -2104,9 +2127,12 @@ u16 meteor_effect_random_breath(void)
         return ret;
     }
 
+#if 0
     // 让灯光乱闪
     if (ANIMATION_STAGE_2_BEGIN == _seg_rt->cur_animation_stage)
     {
+        // printf("random\n");
+
         for (u8 i = 0; i < (sizeof(led_lighting_sequence_buff) - 1) / 2; i++)
         {
             u8 random_index = WS2812FX_random8_lim(sizeof(led_lighting_sequence_buff)); // 随机灯光索引
@@ -2173,6 +2199,7 @@ u16 meteor_effect_random_breath(void)
 
         return 1; //
     }
+#endif
 }
 
 // 流星发射，声音触发，不支持连续发射，等上个流星发射完成再发射第二个
@@ -2188,7 +2215,7 @@ uint16_t meteor(void)
     int g = (_seg->colors[0] >> 8) & 0xff;
     int b = _seg->colors[0] & 0xff;
 
-    if (get_sound_result())
+    if (get_sound_triggered_by_meteor_lights())
     {
         trg = 1;
     }
@@ -2236,7 +2263,7 @@ uint16_t meteor1(void)
     int g = (_seg->colors[0] >> 8) & 0xff;
     int b = _seg->colors[0] & 0xff;
 
-    if (get_sound_result())
+    if (get_sound_triggered_by_meteor_lights())
     {
         if (i == MAX_RATE - 1)
         {
@@ -2276,7 +2303,7 @@ uint16_t music_meteor3(void)
     int g = (_seg->colors[0] >> 8) & 0xff;
     int b = _seg->colors[0] & 0xff;
 
-    if (get_sound_result())
+    if (get_sound_triggered_by_meteor_lights())
     {
         if (i == MAX_RATE - 1)
         {
@@ -2299,27 +2326,27 @@ uint16_t music_meteor3(void)
     return (30);
 }
 
-uint16_t music_mode2(void)
-{
-    static u8 b;
+// uint16_t music_mode2(void)
+// {
+//     static u8 b;
 
-    Adafruit_NeoPixel_fill(WHITE, _seg->start, _seg_len);
+//     Adafruit_NeoPixel_fill(WHITE, _seg->start, _seg_len);
 
-    if (get_sound_result())
-    {
-        b = 255;
-        WS2812FX_setBrightness(255);
-    }
-    else
-    {
-        // if(b>10)
-        //   b-=10;
-        // else
-        b = 0;
-        WS2812FX_setBrightness(b);
-    }
-    return 10;
-}
+//     if (get_sound_result())
+//     {
+//         b = 255;
+//         WS2812FX_setBrightness(255);
+//     }
+//     else
+//     {
+//         // if(b>10)
+//         //   b-=10;
+//         // else
+//         b = 0;
+//         WS2812FX_setBrightness(b);
+//     }
+//     return 10;
+// }
 #pragma endregion
 //----------------------------------声控流星效果 END---------------------------------
 
@@ -2597,137 +2624,137 @@ void mode9(void)
 }
 
 // 各种效果的大集合
-uint16_t music_1(void)
-{
-    music_dly = 30;
-    if (music_step == 0) // 倒序2个灯逐点流水
-    {
-        mode1();
-    }
-    else if (music_step == 1) // 顺序2个点一组，一共2组，第一组从0开始，第二组从一半开始
-    {
-        mode3();
-    }
-    else if (music_step == 2) // 倒序2个点一组，一共2组，第一组从0开始，第二组从一半开始
-    {
-        mode4();
-    }
-    else if (music_step == 3) // 两边向中间走,逐点
-    {
-        mode5();
-    }
-    else if (music_step == 4) // 2点中间向两边走，逐点
-    {
-        mode6();
-    }
-    else if (music_step == 5) // 顺序2个点一组，一共2组，第一组从0开始，第二组从一半开始
-    {
-        mode3();
-    }
-    else if (music_step == 6) // 倒序2个点一组，一共2组，第一组从0开始，第二组从一半开始
-    {
-        mode4();
-    }
-    if (music_step == 7) // 正向流水
-    {
+// uint16_t music_1(void)
+// {
+//     music_dly = 30;
+//     if (music_step == 0) // 倒序2个灯逐点流水
+//     {
+//         mode1();
+//     }
+//     else if (music_step == 1) // 顺序2个点一组，一共2组，第一组从0开始，第二组从一半开始
+//     {
+//         mode3();
+//     }
+//     else if (music_step == 2) // 倒序2个点一组，一共2组，第一组从0开始，第二组从一半开始
+//     {
+//         mode4();
+//     }
+//     else if (music_step == 3) // 两边向中间走,逐点
+//     {
+//         mode5();
+//     }
+//     else if (music_step == 4) // 2点中间向两边走，逐点
+//     {
+//         mode6();
+//     }
+//     else if (music_step == 5) // 顺序2个点一组，一共2组，第一组从0开始，第二组从一半开始
+//     {
+//         mode3();
+//     }
+//     else if (music_step == 6) // 倒序2个点一组，一共2组，第一组从0开始，第二组从一半开始
+//     {
+//         mode4();
+//     }
+//     if (music_step == 7) // 正向流水
+//     {
 
-        if (_seg_rt->counter_mode_step < _seg_len)
-        {
-            WS2812FX_setPixelColor(_seg_rt->counter_mode_step, WHITE);
-        }
-        else
-        {
-            WS2812FX_setPixelColor(_seg_rt->counter_mode_step - _seg_len, BLACK);
-        }
-        _seg_rt->counter_mode_step++;
-        _seg_rt->counter_mode_step %= _seg_len * 2;
-        if (_seg_rt->counter_mode_step == 0)
-        {
-            cycle_cnt();
-        }
-    }
-    else if (music_step == 8) // 反向流水
-    {
+//         if (_seg_rt->counter_mode_step < _seg_len)
+//         {
+//             WS2812FX_setPixelColor(_seg_rt->counter_mode_step, WHITE);
+//         }
+//         else
+//         {
+//             WS2812FX_setPixelColor(_seg_rt->counter_mode_step - _seg_len, BLACK);
+//         }
+//         _seg_rt->counter_mode_step++;
+//         _seg_rt->counter_mode_step %= _seg_len * 2;
+//         if (_seg_rt->counter_mode_step == 0)
+//         {
+//             cycle_cnt();
+//         }
+//     }
+//     else if (music_step == 8) // 反向流水
+//     {
 
-        if (_seg_rt->counter_mode_step < _seg_len)
-        {
-            WS2812FX_setPixelColor(_seg->stop - _seg_rt->counter_mode_step, WHITE);
-        }
-        else
-        {
-            WS2812FX_setPixelColor(2 * _seg_len - _seg_rt->counter_mode_step - 1, BLACK);
-        }
-        _seg_rt->counter_mode_step++;
-        _seg_rt->counter_mode_step %= _seg_len * 2;
-        if (_seg_rt->counter_mode_step == 0)
-        {
-            cycle_cnt();
-        }
-    }
-    else if (music_step == 9) // 倒序2个灯逐点流水
-    {
-        mode1();
-    }
-    else if (music_step == 10) // 顺序2个灯逐点流水
-    {
-        mode2();
-    }
-    else if (music_step == 11)
-    {
-        mode7();
-    }
-    else if (music_step == 12) // 两边向中间走,逐点
-    {
-        mode5();
-    }
-    else if (music_step == 13) // 2点中间向两边走，逐点
-    {
-        mode6();
-    }
-    else if (music_step == 14) // 假频谱
-    {
-        mode8();
-    }
-    else if (music_step == 15) // 随机闪烁
-    {
-        mode9();
-        if (change_mode)
-        {
-            change_mode = 0;
-            Adafruit_NeoPixel_fill(WHITE, _seg->start, _seg_len);
-            _seg_rt->counter_mode_step = _seg_len / 2;
-            _seg_rt->aux_param = 0;
-        }
-    }
-    else if (music_step == 16) // 假频谱
-    {
-        mode8();
-    }
-    else if (music_step == 17) // 随机闪烁
-    {
-        mode9();
-    }
-    else if (music_step == 18) // 顺序2个灯逐点流水
-    {
-        mode2();
-    }
+//         if (_seg_rt->counter_mode_step < _seg_len)
+//         {
+//             WS2812FX_setPixelColor(_seg->stop - _seg_rt->counter_mode_step, WHITE);
+//         }
+//         else
+//         {
+//             WS2812FX_setPixelColor(2 * _seg_len - _seg_rt->counter_mode_step - 1, BLACK);
+//         }
+//         _seg_rt->counter_mode_step++;
+//         _seg_rt->counter_mode_step %= _seg_len * 2;
+//         if (_seg_rt->counter_mode_step == 0)
+//         {
+//             cycle_cnt();
+//         }
+//     }
+//     else if (music_step == 9) // 倒序2个灯逐点流水
+//     {
+//         mode1();
+//     }
+//     else if (music_step == 10) // 顺序2个灯逐点流水
+//     {
+//         mode2();
+//     }
+//     else if (music_step == 11)
+//     {
+//         mode7();
+//     }
+//     else if (music_step == 12) // 两边向中间走,逐点
+//     {
+//         mode5();
+//     }
+//     else if (music_step == 13) // 2点中间向两边走，逐点
+//     {
+//         mode6();
+//     }
+//     else if (music_step == 14) // 假频谱
+//     {
+//         mode8();
+//     }
+//     else if (music_step == 15) // 随机闪烁
+//     {
+//         mode9();
+//         if (change_mode)
+//         {
+//             change_mode = 0;
+//             Adafruit_NeoPixel_fill(WHITE, _seg->start, _seg_len);
+//             _seg_rt->counter_mode_step = _seg_len / 2;
+//             _seg_rt->aux_param = 0;
+//         }
+//     }
+//     else if (music_step == 16) // 假频谱
+//     {
+//         mode8();
+//     }
+//     else if (music_step == 17) // 随机闪烁
+//     {
+//         mode9();
+//     }
+//     else if (music_step == 18) // 顺序2个灯逐点流水
+//     {
+//         mode2();
+//     }
 
-    if (get_sound_result())
-    {
-        music_trg = 0;
-    }
-    else
-    {
-        if (music_trg < 100)
-            music_trg++;
-        else
-        {
-            music_dly = 5000;
-            music_step = 0;
-        }
-    }
-    return music_dly;
-}
+//     if (get_sound_result())
+//     {
+//         music_trg = 0;
+//     }
+//     else
+//     {
+//         if (music_trg < 100)
+//             music_trg++;
+//         else
+//         {
+//             music_dly = 5000;
+//             music_step = 0;
+//         }
+//     }
+//     return music_dly;
+// }
 
 #pragma endregion
 //-----------------------------------流星效果II END ---------------------------------
@@ -4156,10 +4183,9 @@ uint16_t fc_music_gradual(void)
 {
     uint32_t color = WS2812FX_color_wheel(_seg_rt->counter_mode_step);
     Adafruit_NeoPixel_fill(color, _seg->start, _seg_len);
-    if (get_sound_result())
+    if (get_sound_triggered_by_colorful_lights())
     {
         _seg_rt->counter_mode_step += 20;
-        // WS2812FX_trigger();
     }
 
     _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) & 0xFF;
@@ -4175,13 +4201,12 @@ uint16_t fc_music_breath(void)
 {
 
     static uint32_t color1;
-    if (get_sound_result())
+    if (get_sound_triggered_by_colorful_lights())
     {
         color1 = WS2812FX_color_wheel(_seg_rt->aux_param);
         _seg_rt->aux_param += 5;
 
         _seg_rt->counter_mode_step = 1;
-        // WS2812FX_trigger();
     }
 
     int lum = _seg_rt->counter_mode_step;
@@ -4207,14 +4232,13 @@ uint16_t fc_music_static(void)
     extern u8 music_trigger;
     uint32_t color1;
 
-    if (get_sound_result())
+    if (get_sound_triggered_by_colorful_lights())
     {
 
         color1 = WS2812FX_color_wheel(_seg_rt->aux_param);
         _seg_rt->aux_param += 20;
 
         Adafruit_NeoPixel_fill(color1, _seg->start, _seg_len);
-        // WS2812FX_trigger();
     }
     return 100;
 }
@@ -4224,12 +4248,11 @@ uint16_t fc_music_twinkle(void)
 {
     extern u8 music_trigger;
     uint32_t color1;
-    if (get_sound_result())
+    if (get_sound_triggered_by_colorful_lights())
     {
         color1 = WS2812FX_color_wheel(_seg_rt->aux_param);
         _seg_rt->aux_param += 20;
         Adafruit_NeoPixel_fill(color1, _seg->start, _seg_len);
-        // WS2812FX_trigger();
     }
     else
     {

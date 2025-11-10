@@ -568,7 +568,7 @@ void WS2812FX_resetSegments() {
   _num_segments = 0;
 }
 
-/* 设置所以段无效 */
+/* 设置所有段无效 */
 void WS2812FX_setSegmentsInactive(void)
 {
   memset(_active_segments, INACTIVE_SEGMENT, _active_segments_len);

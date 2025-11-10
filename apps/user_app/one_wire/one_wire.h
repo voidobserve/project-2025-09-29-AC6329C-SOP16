@@ -30,6 +30,7 @@ enum
 {
     MSG_SEQUENCER_NONE = 0x00,
     MSG_SEQUENCER_ONE_WIRE_SEND_INFO, // 使能单线发送
+    MSG_METEOR_LIGHTS_ON , // 流星灯开启
 };
 
 

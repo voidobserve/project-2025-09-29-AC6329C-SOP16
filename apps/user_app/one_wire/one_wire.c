@@ -10,6 +10,20 @@ const u8 motor_period[6] = {8, 13, 18, 21, 26, 35}; // 转速  app指令，需�
 // 定义与驱动电机ic通信的引脚
 #define MOTOR_DATA_IO_PORT IO_PORTA_00
 
+#define INS_LEN (7) // 指令长度
+// #define INS_LEN (16 - 1) // 指令长度
+// #define INS_LEN (16) // 指令长度
+#define W_0_5MS 4 // 脉宽0.5ms
+#define W_1MS 8
+#define W_2MS 16
+static volatile u8 send_cnt = 0;
+static volatile u8 step = 0;       // 控制发送阶段的状态机
+static volatile u8 _125ms_cnt = 0; // 125us
+static volatile u8 h_l = 0;        // 0:输出低电平，1：高电平
+static volatile u8 send_en = 0;    // 0:不发送， 1：发送   使能变量
+
+static volatile u16 count_ = 0;
+
 /**
  * @brief  mcu通讯接口
  *
@@ -48,20 +62,6 @@ void pack_base(void)
     if (fc_effect.base_ins.dir)
         send_base_ins |= BIT(6);
 }
-
-#define INS_LEN (7) // 指令长度
-// #define INS_LEN (16 - 1) // 指令长度
-// #define INS_LEN (16) // 指令长度
-#define W_0_5MS 4 // 脉宽0.5ms
-#define W_1MS 8
-#define W_2MS 16
-static volatile u8 send_cnt = 0;
-static volatile u8 step = 0;       // 控制发送阶段的状态机
-static volatile u8 _125ms_cnt = 0; // 125us
-static volatile u8 h_l = 0;        // 0:输出低电平，1：高电平
-static volatile u8 send_en = 0;    // 0:不发送， 1：发送   使能变量
-
-static volatile u16 count_ = 0;
 
 u8 is_one_wire_send_end(void)
 {
@@ -421,7 +421,7 @@ void effect_stepmotor(void)
     if (fc_effect.base_ins.mode == 0x05)
     {
 
-        if (get_sound_result())
+        if (get_sound_triggered_by_colorful_lights())
         {
             set_stepmotor_fast();
             printf("1111\n");

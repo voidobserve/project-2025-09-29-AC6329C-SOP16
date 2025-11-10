@@ -4,105 +4,117 @@
 
 #include "../../../apps/user_app/ws2812-fx-lib/WS2812FX_C/WS2812FX.H"
 
-#define MAX_SOUND 10
-struct MUSIC_VOICE_T
+static volatile u8 flag_sound_triggered_in_colorful_lights = 0; // 标志位，七彩灯触发声控。0--未触发，1--触发
+static volatile u8 flag_sound_triggered_in_meteor_lights = 0;   // 标志位，流星灯触发声控。0--未触发，1--触发
+
+// 获取七彩灯的声控结果
+u8 get_sound_triggered_by_colorful_lights(void)
 {
-    u8 sound_trg;
-    u8 meteor_trg;
-    u32 adc_sum;
-    u32 adc_sum_n;
-    int sound_buf[MAX_SOUND];
-    u8 sound_cnt;
-    int c_v;
-    int v;
-    u8 valid;
-};
-
-struct MUSIC_VOICE_T music_voic = {
-
-    .sound_trg = 0,
-    .meteor_trg = 0,
-    .adc_sum = 0,
-    .adc_sum_n = 0,
-    .sound_cnt = 0,
-    .valid = 0,
-    .v = 0,
-    .c_v = 0,
-};
-
-// 获取声控结果
-// 触发条件：（（当前声音大小 - 平均值）* 100 ）/ 平均值 > 灵敏度（0~100）
-// 0:没触发
-// 1:触发
-u8 get_sound_result(void)
-{
-    u8 p_trg;
-    p_trg = music_voic.sound_trg;
-    music_voic.sound_trg = 0;
-    return p_trg;
+    u8 ret = flag_sound_triggered_in_colorful_lights;
+    flag_sound_triggered_in_colorful_lights = 0;
+    return ret;
 }
 
-u8 get_meteor_result(void)
+// 获取流星灯的声控结果
+u8 get_sound_triggered_by_meteor_lights(void)
 {
-    u8 p_metemor_trg;
-    p_metemor_trg = music_voic.meteor_trg;
-    music_voic.meteor_trg = 0;
-    return p_metemor_trg;
+    u8 ret = flag_sound_triggered_in_meteor_lights;
+    flag_sound_triggered_in_meteor_lights = 0;
+    return ret;
+}
+
+/**
+ * @brief 七彩灯声控模式下的灵敏度 增加
+ *      由遥控器调节时调用
+ *
+ */
+void colorful_lights_sound_sensitivity_add(void)
+{
+    if (IS_light_music != fc_effect.Now_state)
+    {
+        return;
+    }
+
+    const u8 step = 10;
+    if (fc_effect.colorful_lights_sensitivity < 100 - step)
+    {
+        fc_effect.colorful_lights_sensitivity += step;
+    }
+    else
+    {
+        fc_effect.colorful_lights_sensitivity = 100;
+    }
+
+    printf("fc_effect.colorful_lights_sensitivity %u\n", (u16)fc_effect.colorful_lights_sensitivity);
+}
+
+/**
+ * @brief 七彩灯声控模式下的灵敏度 减少
+ *      由遥控器调节时调用
+ *
+ */
+void colorful_lights_sound_sensitivity_sub(void)
+{
+    if (IS_light_music != fc_effect.Now_state)
+    {
+        return;
+    }
+
+    const u8 step = 10;
+    if (fc_effect.colorful_lights_sensitivity > step)
+    {
+        fc_effect.colorful_lights_sensitivity -= step;
+    }
+    else
+    {
+        fc_effect.colorful_lights_sensitivity = 0;
+    }
+
+    printf("fc_effect.colorful_lights_sensitivity %u\n", (u16)fc_effect.colorful_lights_sensitivity);
+}
+
+/**
+ * @brief 流星灯声控模式下的灵敏度 增加
+ *       由遥控器调节时调用
+ *
+ */
+void meteor_lights_sound_sensitivity_add(void)
+{
+    const u8 step = 10;
+    if (fc_effect.meteor_lights_sensitivity < 100 - step)
+    {
+        fc_effect.meteor_lights_sensitivity += step;
+    }
+    else
+    {
+        fc_effect.meteor_lights_sensitivity = 100;
+    }
+
+    printf("fc_effect.meteor_lights_sensitivity %u\n", (u16)fc_effect.meteor_lights_sensitivity);
+}
+
+/**
+ * @brief 流星灯声控模式下的灵敏度 减少
+ *       由遥控器调节时调用
+ *
+ */
+void meteor_lights_sound_sensitivity_sub(void)
+{
+    const u8 step = 10;
+    if (fc_effect.meteor_lights_sensitivity > step)
+    {
+        fc_effect.meteor_lights_sensitivity -= step;
+    }
+    else
+    {
+        fc_effect.meteor_lights_sensitivity = 0;
+    }
+
+    printf("fc_effect.meteor_lights_sensitivity %u\n", (u16)fc_effect.meteor_lights_sensitivity);
 }
 
 void sound_handle(void)
 {
-#if 0 // 工程原本的声控检测程序
-    u16 adc;
-    u8 i;
-    // 记录adc值
-
-
-    // 如果是七彩灯的声控模式、如果是流星灯的声控模式
-    if ((fc_effect.on_off_flag == DEVICE_ON &&     /* 如果设备开启 */
-         fc_effect.Now_state == IS_light_music) || /* 如果是七彩灯的声控模式 */
-        (fc_effect.star_on_off == DEVICE_ON &&     /* 流星灯开启 */
-         fc_effect.star_index == 0) /* 流星灯处于声控模式 */)
-    {
-        music_voic.sound_buf[music_voic.sound_cnt] = check_mic_adc();
-        music_voic.c_v = music_voic.sound_buf[music_voic.sound_cnt]; // 记录当前值
-        music_voic.sound_cnt++;
-
-        if (music_voic.sound_cnt > (MAX_SOUND - 1))
-        {
-            music_voic.sound_cnt = 0;
-            music_voic.valid = 1;
-            music_voic.v = 0;
-            for (i = 0; i < MAX_SOUND; i++)
-            {
-                music_voic.v += music_voic.sound_buf[i];
-            }
-            music_voic.v = music_voic.v / MAX_SOUND; // 计算平均值
-        }
-
-        if (music_voic.valid)
-        {
-
-            if (music_voic.c_v > music_voic.v)
-            {
-                if ((music_voic.c_v - music_voic.v) * 100 / music_voic.v > fc_effect.music.s) // 很灵敏
-                {
-                    music_voic.sound_trg = 1;  // 七彩声控
-                    music_voic.meteor_trg = 1; // 流星声控
-
-                    // USER_TO_DO 需要再这里也加一层限制，或者让动画内部调用 WS2812FX_trigger()，而不是在这里调用 WS2812FX_trigger() 
-                    // WS2812FX_trigger(); // 让主循环扫描到立刻更新动画（注意不能在非声控模式使用，否则一检测到有声控，就会立即触发动画切换）
-                }
-            }
-        }
-    }
-    else
-    {
-        music_voic.valid = 0;
-    }
-
-#endif // 工程原本的声控检测程序
-
 #if 1 // 移植其他项目的声控程序
 
 #define SAMPLE_N 20
@@ -185,27 +197,31 @@ void sound_handle(void)
 
     if (adc_sum_n != 0)
     {
-        if (adc * fc_effect.music.s / 100 > adc_sum / adc_sum_n)
+        u32 adc_sum_avrg = adc_sum / adc_sum_n;
+        if (adc * fc_effect.colorful_lights_sensitivity / 100 > adc_sum_avrg)
         {
             if (fc_effect.Now_state == IS_light_music)
             {
                 // 如果七彩灯处于声控模式，会进入这里
-                music_voic.sound_trg = 1; // 七彩声控
+                // music_voic.sound_trg = 1; // 七彩声控
+                flag_sound_triggered_in_colorful_lights = 1;
 
                 WS2812FX_triggered_by_colorful_lights();
 
                 // printf("trigger_by_colorful_lights\n");
             }
+        }
 
+        if (adc * fc_effect.meteor_lights_sensitivity / 100 > adc_sum_avrg)
+        {
+            // 如果流星灯在声控模式，并且触发了声控
             if (0)
             {
                 // 如果流星灯处于声控模式，会进入这里
-                music_voic.meteor_trg = 1; // 流星声控
-                WS2812FX_trigger_by_meteor_lights();
-            }
+                // music_voic.meteor_trg = 1; // 流星声控
+                flag_sound_triggered_in_meteor_lights = 1;
 
-            if (0) // 如果是电机的声控模式，会进入这里
-            {
+                WS2812FX_trigger_by_meteor_lights();
             }
         }
     }

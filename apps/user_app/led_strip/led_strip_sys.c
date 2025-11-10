@@ -40,7 +40,7 @@ void fc_data_init(void)
     fc_effect.sequence = NEO_RGBW;
     // fc_effect.auto_f = IS_PAUSE;
 
-    // 声控模式的灵敏度，值越小越灵敏
+    // 声控模式的灵敏度，目前是值越大越灵敏
     fc_effect.music.s = 80;
     // fc_effect.music.s = 40;
     // fc_effect.music.s = 20;
@@ -49,22 +49,23 @@ void fc_data_init(void)
     fc_effect.music.m = 0;
     fc_effect.music.m_type = 0;
 
-    fc_effect.app_rgb_mode = 0;
-    // 闹钟
-    // zd_countdown[0].set_on_off = DEVICE_OFF;
-    // zd_countdown[1].set_on_off = DEVICE_OFF;
-    // zd_countdown[2].set_on_off = DEVICE_OFF;
+    fc_effect.app_rgb_mode = 0; 
+
+    fc_effect.colorful_lights_sensitivity = 80; // 七彩灯在声控模式下的灵敏度
 
     // 流星
     fc_effect.star_on_off = DEVICE_ON;
-    // fc_effect.star_index = 1; // 流星灯动画索引
-    fc_effect.star_index = 99; // 流星灯动画索引
+    fc_effect.star_index = 1; // 流星灯动画索引
+    // fc_effect.star_index = 99; // 流星灯动画索引
     fc_effect.star_speed = 30; // 变化速度
     fc_effect.app_star_speed = 100;
     fc_effect.meteor_period = 8;                           // 默认8秒  周期值
     fc_effect.period_cnt = fc_effect.meteor_period * 1000; // ms,运行时的计数器
     fc_effect.mode_cycle = 0;                              // 模式完成一个循环的标志
     fc_effect.motor_speed_index = 0;
+    // fc_effect.meteor_tail_len = 6; // 流星灯尾焰长度
+    fc_effect.meteor_lights_sensitivity = 80; // 流星灯在声控模式下的灵敏度
+
 
     // 电机
     fc_effect.base_ins.mode = 4;   // 360转
@@ -74,47 +75,26 @@ void fc_data_init(void)
     fc_effect.motor_on_off = DEVICE_ON;
 
     // sizeof(fc_effect_t);
-}
+} 
 
-// extern void OpenMortor(void);
-// static u8 tk = 0; // 控制电机在第一次开灯的时候不启动
-/*********************************************************
- *
- *      软件开机  关机 API
- *
- *********************************************************/
-void soft_turn_on_the_light(void) // 软开灯处理
+/**
+ * @brief 软件开启设备
+ * 
+ */
+void soft_turn_on_the_light(void) 
 {
-    fc_effect.on_off_flag = DEVICE_ON;
+    fc_effect.on_off_flag = DEVICE_ON; 
 
-    // printf("%s %d\n", __func__, __LINE__);
-    // printf("tk %u\n", tk);
-    // printf("fc_effect.star_on_off %u\n", fc_effect.star_on_off);
+    motor_Init(); 
 
-    // motor_Init();
-    // WS2812FX_start();
-    // open_fan();
-    // 测试时使用：
-    // fc_effect.b = 100;
-    // fc_effect.b = 255;
-
-    // OpenMortor();            // 打开电机
-
-    motor_Init();
-
-    // 开机前，可能关机前电机就开着，或者关机前电机就已经关了，开机后保持状态不变（开机后，恢复电机在关机前的状态）
-    if (fc_effect.motor_speed_index >= ARRAY_SIZE(motor_period) + 1)
+    if (DEVICE_ON == fc_effect.motor_on_off)
     {
-        // 如果开机前，电机的周期索引超过了电机的周期数组大小，说明电机在开机前就是关着的
-        one_wire_set_mode(6); // 关闭电机
-        fc_effect.motor_on_off = DEVICE_OFF;
-    }
-    else
-    {
-        // 如果开机前，电机的周期索引还在电机的周期数组大小内，说明电机在开机前是开着的
-        one_wire_set_period(motor_period[fc_effect.motor_speed_index]);
-        // one_wire_set_mode(4); // 360正转
-        fc_effect.motor_on_off = DEVICE_ON;
+        // 如果在开机前，电机是开着的，则恢复电机在开机前的状态
+        if (6 == fc_effect.base_ins.mode)
+        {
+            // 如果电机的模式是6（关闭），则改为4
+            fc_effect.base_ins.mode = 4;
+        }
     }
 
     os_taskq_post("msg_task", 1, MSG_SEQUENCER_ONE_WIRE_SEND_INFO);
@@ -129,18 +109,23 @@ void soft_turn_on_the_light(void) // 软开灯处理
     printf("soft_turn_on_the_light\n");
 }
 
-extern void CloseMotor(void);
-void soft_turn_off_lights(void) // 软关灯处理
+
+/**
+ * @brief 软件关闭设备
+ * 
+ * @return * void 
+ */
+void soft_turn_off_lights(void)  
 {
-    fc_effect.on_off_flag = DEVICE_OFF;
-    // fc_effect.star_on_off = DEVICE_OFF;
-    // tk = 1; //
+    fc_effect.on_off_flag = DEVICE_OFF; 
+    
+    // 改成只发送关闭电机的控制命令，不给 fc_effect.motor_on_off 赋值为 DEVICE_OFF
+    one_wire_set_period(motor_period[fc_effect.motor_speed_index]);
+    one_wire_set_mode(6); // 关闭电机
+    os_taskq_post("msg_task", 1, MSG_SEQUENCER_ONE_WIRE_SEND_INFO);
+
     WS2812FX_stop();
     WS2812FX_strip_off();
-
-    // close_fan();
-
-    CloseMotor();
 
     fb_led_on_off_state();  // 与app同步开关状态
     save_user_data_area3(); // 保存参数配置到flash
@@ -310,8 +295,7 @@ void ls_sub_speed(void)
  * @param tp_s  0-100;
  */
 void app_set_sensitive(u8 tp_s)
-{
-
+{ 
     fc_effect.music.s = tp_s;
 }
 
@@ -322,14 +306,21 @@ void app_set_sensitive(u8 tp_s)
  */
 void ls_add_sensitive(void)
 {
+    // 目前是数值越大，灵敏度越大
     u8 sen_gap = 10;
     if (fc_effect.Now_state == IS_light_music)
     {
         if (fc_effect.music.s < (100 - sen_gap))
+        {
             fc_effect.music.s += sen_gap;
+        }
+        else
+        {
+            fc_effect.music.s = 100;
+        }
     }
 
-    printf(" fc_effect.music.s= %d", fc_effect.music.s);
+    printf(" fc_effect.music.s= %u\n", (u16)fc_effect.music.s);
 }
 
 /**
@@ -339,14 +330,21 @@ void ls_add_sensitive(void)
  */
 void ls_sub_sensitive(void)
 {
-
+    // 目前是数值越大，灵敏度越大
     u8 sen_gap = 10;
     if (fc_effect.Now_state == IS_light_music)
     {
         if (fc_effect.music.s > sen_gap)
+        {
             fc_effect.music.s -= sen_gap;
+        }
+        else
+        {
+            fc_effect.music.s = 0;
+        }
     }
-    printf(" fc_effect.music.s= %d", fc_effect.music.s);
+
+    printf(" fc_effect.music.s= %u\n", (u16)fc_effect.music.s);
 }
 
 /**
@@ -479,12 +477,13 @@ void ls_set_music_mode(void)
     fc_effect.music.m++;
     fc_effect.music.m %= MAX_MUSIC_EFFECT_NUMBER;
     fc_effect.Now_state = IS_light_music;
+
+    // printf("fc_effect.music.m = %u\n", (u16)fc_effect.music.m); // 打印声控模式的索引
     set_fc_effect();
 }
 
 void ls_pause_and_play(void)
 {
-
     if (fc_effect.Now_state == IS_light_scene)
     {
         void WS2812FX_play(void);
@@ -759,53 +758,12 @@ void ls_set_star_tail(void)
         app_set_mereor_mode(19);
     }
 }
-
-/*********************************************************
- *
- *      电机效果设置 API
- *
- *********************************************************/
-// extern u8 motor_period[6];
-void ls_set_motor_speed(void)
-{
-    static u8 start = 1;
-    if (fc_effect.motor_speed_index < 6)
-    {
-        if (start)
-        {
-            start = 0;
-            one_wire_set_mode(4); // 360正转
-            // enable_one_wire();
-            os_taskq_post("msg_task", 1, MSG_SEQUENCER_ONE_WIRE_SEND_INFO);
-            fc_effect.motor_on_off = DEVICE_ON;
-        }
-        else
-        {
-
-            one_wire_set_period(motor_period[fc_effect.motor_speed_index]);
-            // enable_one_wire();
-            os_taskq_post("msg_task", 1, MSG_SEQUENCER_ONE_WIRE_SEND_INFO);
-        }
-    }
-    else
-    {
-        start = 1;
-        fc_effect.motor_on_off = DEVICE_OFF;
-        one_wire_set_period(motor_period[fc_effect.motor_speed_index]);
-        one_wire_set_mode(6); // 关闭电机
-        // enable_one_wire();    // 启动发送电机数据
-        os_taskq_post("msg_task", 1, MSG_SEQUENCER_ONE_WIRE_SEND_INFO);
-    }
-
-    fc_effect.motor_speed_index++;
-    if (fc_effect.motor_speed_index >= 7)
-        fc_effect.motor_speed_index = 0;
-}
+ 
 
 void ls_add_motor_speed(void)
 {
 
-    if (fc_effect.motor_speed_index < 5)
+    if (fc_effect.motor_speed_index < ARRAY_SIZE(motor_period) - 1)
     {
         fc_effect.motor_speed_index++;
         one_wire_set_period(motor_period[fc_effect.motor_speed_index]);
@@ -845,27 +803,27 @@ void OpenMortor(void)
     mo_cnt = 3;
 }
 
-void power_motor_Init(void)
-{
+// void power_motor_Init(void)
+// {
 
-    if (mo_cnt > 1)
-    {
-        mo_cnt--;
+//     if (mo_cnt > 1)
+//     {
+//         mo_cnt--;
 
-        if (fc_effect.motor_on_off == DEVICE_ON)
-        {
-            one_wire_set_mode(4);
-            // enable_one_wire();
-            os_taskq_post("msg_task", 1, MSG_SEQUENCER_ONE_WIRE_SEND_INFO);
-        }
-        else
-        {
-            one_wire_set_mode(6); // 停止电机
-            // enable_one_wire();
-            os_taskq_post("msg_task", 1, MSG_SEQUENCER_ONE_WIRE_SEND_INFO);
-        }
-    }
-}
+//         if (fc_effect.motor_on_off == DEVICE_ON)
+//         {
+//             one_wire_set_mode(4);
+//             // enable_one_wire();
+//             os_taskq_post("msg_task", 1, MSG_SEQUENCER_ONE_WIRE_SEND_INFO);
+//         }
+//         else
+//         {
+//             one_wire_set_mode(6); // 停止电机
+//             // enable_one_wire();
+//             os_taskq_post("msg_task", 1, MSG_SEQUENCER_ONE_WIRE_SEND_INFO);
+//         }
+//     }
+// }
 
 /*********************************************************
  *

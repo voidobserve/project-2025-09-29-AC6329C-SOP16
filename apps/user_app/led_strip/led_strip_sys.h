@@ -120,6 +120,9 @@ extern const u16 colorful_lights_speed_array[MAX_SPEED_RANK]; // 存放七彩灯
 void ls_add_bright(void); // 增加亮度
 void ls_sub_bright(void); // 减少亮度
 
+void ls_add_sensitive(void); // 遥控加灵敏度
+void ls_sub_sensitive(void); // 遥控减灵敏度
+
 void set_static_mode(u8 r, u8 g, u8 b);
 void colorful_lights_set_static_mode(color_t colors_structure); // 七彩灯设置为静态模式，颜色值由传参设定
 
@@ -127,5 +130,8 @@ void ls_set_music_mode(void); // 通过遥控器控制七彩灯的音乐模式�
 
 void OpenMortor(void);
 void CloseMotor(void);
+
+void soft_turn_on_the_light(void); // 软件打开设备
+void soft_turn_off_lights(void);   // 软件关闭设备
 
 #endif

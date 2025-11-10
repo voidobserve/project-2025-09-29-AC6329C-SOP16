@@ -98,7 +98,9 @@ static void static_mode(void)
     WS2812FX_set_coloQty(0, fc_effect.dream_scene.c_n); // 设置颜色数量  0：第0段   fc_effect.dream_scene.c_n  颜色数量，一个颜色包含（RGB）
     ls_set_colors(1, &fc_effect.rgb);                   // 1:1个颜色    &fc_effect.rgb 这个颜色是什么色
     // WS2812FX_start(); // 同时有七彩灯和流星灯时，不能调用这个函数，会导致流星灯闪烁一次
-    WS2812FX_running_flag_set(); // 置位运行标志
+
+    WS2812FX_resetSegmentRuntime(0); // 清除指定段的显示缓存
+    WS2812FX_running_flag_set();     // 置位运行标志
 }
 
 /*----------------------------------彩虹效果----------------------------------*/
@@ -779,7 +781,7 @@ static void ls_scene_effect(void)
             fc_effect.dream_scene.speed, // 速 度
             NO_OPTIONS                   // 选项
         );
-        
+
         // WS2812FX_set_coloQty(0, fc_effect.dream_scene.c_n); // 设置颜色数量
         // ls_set_colors(fc_effect.dream_scene.c_n, &fc_effect.dream_scene.rgb);
         WS2812FX_running_flag_set();
@@ -812,6 +814,7 @@ static void ls_custom_effect(void)
  */
 void ls_meteor_stat_effect(void)
 {
+#if 0
     fc_effect.period_cnt = 0;
     if (fc_effect.star_on_off == DEVICE_ON)
     {
@@ -1098,6 +1101,37 @@ void ls_meteor_stat_effect(void)
     }
 
     save_user_data_area3(); // 保存参数配置到flash
+
+#endif
+
+    // fc_effect.period_cnt = 0;
+    if (fc_effect.star_on_off == DEVICE_OFF)
+    {
+        return;
+    }
+
+    if (1 == fc_effect.star_index)
+    {
+        // WS2812FX_stop();
+        WS2812FX_setSegment_colorOptions(
+            1,                     // 第x段
+            1,                     // 起始位置
+            fc_effect.led_num - 1, // 结束位置
+            meteor_effect_random_breath,
+            WHITE,                // 颜色，WS2812FX_setColors设置
+            fc_effect.star_speed, // 速度
+            NO_OPTIONS);          // 选项，这里像素点大小：3 REVERSE决定方向
+    }
+    else if (2 == fc_effect.star_index)
+    {
+    }
+    else
+    {
+        return;
+    }
+
+    WS2812FX_resetSegmentRuntime(1); // 重置流星灯所在的段运行时参数
+    WS2812FX_running_flag_set();
 }
 
 /**
@@ -1147,7 +1181,9 @@ static void ls_music_effect(void)
 
 #endif
 
-    WS2812FX_start();
+    // WS2812FX_start();
+    WS2812FX_resetSegmentRuntime(0); // 清除指定段的显示缓存
+    WS2812FX_running_flag_set();
 }
 
 /**
@@ -1157,6 +1193,52 @@ static void ls_music_effect(void)
 static void ls_smear_adjust_effect(void)
 {
 }
+
+// 设置流星灯的动画效果
+// void meteor_lights_effect_set(void)
+// {
+//     mode_ptr *animation_ptr = NULL;
+//     switch (fc_effect.star_index)
+//     {
+//     case STAR_INDEX_METEOR_NORMAL_SLOW:
+//         animation_ptr = meteor_effect_slow;
+//         break;
+
+//     case STAR_INDEX_METEOR_NORMAL_MIDDLE:
+//         animation_ptr = meteor_effect_middle;
+//         break;
+
+//     case STAR_INDEX_METEOR_NORMAL_FAST:
+//         animation_ptr = meteor_effect_fast;
+//         break;
+
+//     case STAR_INDEX_METEOR_RANDOM_BREATH:
+//         animation_ptr = meteor_effect_random_breath;
+//         break;
+
+//     case STAR_INDEX_METEOR_RANDOM_BREATH_2:
+//         break;
+
+//     case STAR_INDEX_METEOR_MUSIC_CONTROL: // 带声控的流星灯模式
+
+//         break;
+
+//     default:
+//         return; // 出错，直接返回
+//     }
+
+//     WS2812FX_setSegment_colorOptions(
+//         1,                     // 第x段
+//         1,                     // 起始位置
+//         fc_effect.led_num - 1, // 结束位置
+//         animation_ptr,         // 动画效果
+//         WHITE,                 // 颜色，WS2812FX_setColors设置
+//         0,                     // 速度，对于样机的正常流星模式，速度这一属性无效
+//         NO_OPTIONS);           // 选项
+
+//     WS2812FX_resetSegmentRuntime(1); //
+//     WS2812FX_running_flag_set();
+// }
 
 /**
  * @brief 静态效果集合
@@ -1177,42 +1259,43 @@ static void ls_static_effect(void)
  */
 void set_fc_effect(void)
 {
-
-    if (fc_effect.on_off_flag == DEVICE_ON)
+    if (fc_effect.on_off_flag == DEVICE_OFF)
     {
-        switch (fc_effect.Now_state)
-        {
-        // 幻彩场景
-        case IS_light_scene:
-            ls_scene_effect();
-            break;
+        return;
+    }
 
-        // 配对模式
-        case ACT_TY_PAIR:
-            // ls_ty_pair_effect();
-            break;
+    switch (fc_effect.Now_state)
+    {
+    // 幻彩场景
+    case IS_light_scene:
+        ls_scene_effect();
+        break;
 
-        // 自定义效果模式
-        case ACT_CUSTOM:
-            // ls_custom_effect();
-            break;
+    // 配对模式
+    case ACT_TY_PAIR:
+        // ls_ty_pair_effect();
+        break;
 
-        // 音乐模式
-        case IS_light_music:
-            ls_music_effect();
-            break;
+    // 自定义效果模式
+    case ACT_CUSTOM:
+        // ls_custom_effect();
+        break;
 
-        // 涂抹模式
-        case IS_smear_adjust:
-            // ls_smear_adjust_effect();
-            break;
+    // 音乐模式
+    case IS_light_music:
+        ls_music_effect();
+        break;
 
-        // 静态模式
-        case IS_STATIC:
-            ls_static_effect();
-            break;
-        default:
-            break;
-        }
+    // 涂抹模式
+    case IS_smear_adjust:
+        // ls_smear_adjust_effect();
+        break;
+
+    // 静态模式
+    case IS_STATIC:
+        ls_static_effect();
+        break;
+    default:
+        break;
     }
 }
