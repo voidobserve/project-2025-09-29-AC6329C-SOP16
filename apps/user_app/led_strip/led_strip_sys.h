@@ -114,6 +114,15 @@ typedef enum
     IR_TIMER_120MIN = 120 * 60 * 1000,
 } AUTO_TIME_T;
 
+enum
+{
+    MSG_SEQUENCER_NONE = 0x00,
+    MSG_SEQUENCER_ONE_WIRE_SEND_INFO, // 使能单线发送
+    MSG_METEOR_LIGHTS_ON , // 流星灯开启
+
+    MSG_USER_SAVE_INFO, // 将数据写入flash
+};
+
 extern const u8 led_b_array[MAX_BRIGHT_RANK];
 extern const u16 colorful_lights_speed_array[MAX_SPEED_RANK]; // 存放七彩灯动态模式下的所有速度值
 

@@ -1221,7 +1221,8 @@ u16 colorful_lights_auto(void)
 u16 meteor_effect_when_pwr_on(void)
 {
     u16 cur_led_index = _seg_rt->counter_mode_step;
-    u16 animation_time_interval = 500 / _seg_len; // 动画时间间隔
+    u16 animation_time_interval = 200 / _seg_len; // 动画时间间隔
+    // u16 animation_time_interval = 500 / _seg_len; // 动画时间间隔
     // u16 animation_time_interval = 5000 / _seg_len; // 动画时间间隔 -- 测试用，观察动画效果
 
     // 从起始索引开始，填充多少个

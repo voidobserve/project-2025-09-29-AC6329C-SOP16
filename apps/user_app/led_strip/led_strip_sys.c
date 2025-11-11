@@ -104,7 +104,8 @@ void soft_turn_on_the_light(void)
     ls_meteor_stat_effect(); // 设置流星灯的动画
 
     fb_led_on_off_state();  // 与app同步开关状态
-    save_user_data_area3(); // 保存参数配置到flash
+    // save_user_data_area3(); // 保存参数配置到flash
+    os_taskq_post("msg_task", 1, MSG_USER_SAVE_INFO);
 
     printf("soft_turn_on_the_light\n");
 }
@@ -128,7 +129,8 @@ void soft_turn_off_lights(void)
     WS2812FX_strip_off();
 
     fb_led_on_off_state();  // 与app同步开关状态
-    save_user_data_area3(); // 保存参数配置到flash
+    // save_user_data_area3(); // 保存参数配置到flash
+    os_taskq_post("msg_task", 1, MSG_USER_SAVE_INFO);
     printf("soft_turn_off_lights\n");
 }
 

@@ -55471,7 +55471,7 @@
 	"led_strip_drive.h"
 	"one_wire.h"
 
-1762746902 d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\led_strip\led_strip_sys.h
+1762843715 d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\led_strip\led_strip_sys.h
 	"cpu.h"
 
 1762227467 d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\ws2812-fx-lib\ws2812fx_c\ws2812fx.h
@@ -55494,10 +55494,10 @@
 	"asm/ledc.h"
 	"asm/gpio.h"
 
-1762223081 d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\one_wire\one_wire.h
+1762843691 d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\one_wire\one_wire.h
 	"system/includes.h"
 
-1762228865 source:d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\led_strip\led_strand_effect.c
+1762823378 source:d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\led_strip\led_strand_effect.c
 	"system/includes.h"
 	"led_strand_effect.h"
 	"WS2812FX.H"
@@ -55521,7 +55521,7 @@
 	"asm/mcpwm.h"
 	"led_strand_effect.h"
 
-1762746891 source:d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\led_strip\led_strip_sys.c
+1762846093 source:d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\led_strip\led_strip_sys.c
 	"led_strip_sys.h"
 	"Adafruit_NeoPixel.H"
 	"led_strand_effect.h"
@@ -55544,7 +55544,7 @@
 1719208267 d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\led_strip\paint_tool.h
 	"led_strip_sys.h"
 
-1762746589 source:d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\protocol\dp_data_tran.c
+1762846099 source:d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\protocol\dp_data_tran.c
 	"cpu.h"
 	"led_strip_sys.h"
 	"paint_tool.h"
@@ -55575,12 +55575,12 @@
 	"WS2812FX.H"
 	"led_strip_sys.h"
 
-1761187378 source:d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\save_flash\save_flash.c
+1762843994 source:d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\save_flash\save_flash.c
 	"system/includes.h"
 	"syscfg_id.h"
 	"save_flash.h"
 
-1761183863 d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\save_flash\save_flash.h
+1762840307 d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\save_flash\save_flash.h
 	"led_strand_effect.h"
 	"led_strip_drive.h"
 
@@ -55599,7 +55599,7 @@
 	<string.h>
 	"led_strip_sys.h"
 
-1762420055 source:d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\ws2812-fx-lib\ws2812fx_c\ws2812fx_effect.c
+1762847704 source:d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\ws2812-fx-lib\ws2812fx_c\ws2812fx_effect.c
 	"WS2812FX.h"
 	"ws2812fx_tool.h"
 	"Adafruit_NeoPixel.h"
@@ -57040,7 +57040,7 @@
 	"debug.h"
 	"uart_update.h"
 
-1762758269 source:d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\rf24g_key\rf24g_key.c
+1762848456 source:d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\rf24g_key\rf24g_key.c
 	"rf24g_key.h"
 	"../../../apps/user_app/one_wire/one_wire.h"
 	"../../../apps/user_app/led_strip/led_strand_effect.h"
@@ -57050,7 +57050,7 @@
 	"../../../apps/user_app/save_flash/save_flash.h"
 	"../../../apps/user_app/rf24g_key/rf24g_key_event_handle.h"
 
-1762223685 source:d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\spp_and_le\app_main.c
+1762848493 source:d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\spp_and_le\app_main.c
 	"system/includes.h"
 	"app_config.h"
 	"app_action.h"
@@ -57070,7 +57070,7 @@
 
 1719186884 d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\common\jl_kws\jl_kws_api.h
 
-1762746165 source:d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\one_wire\one_wire.c
+1762850139 source:d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\one_wire\one_wire.c
 	"system/includes.h"
 	"one_wire.h"
 	"led_strand_effect.h"
@@ -57078,4 +57078,15 @@
 1762760345 d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\rf24g_key\rf24g_key_event_handle.h
 	"includes.h"
 	"../../../apps/user_app/rf24g_key/rf24g_key.h"
+
+1762848618 source:d:\a_workst\aworkst\2025-09-29-天奕-ac6329c-sop16\01-code\project-2025-09-29-ac6329c-sop16\apps\user_app\rf24g_key\rf24g_key_event_handle.c
+	"rf24g_key_event_handle.h"
+	"rf24g_key.h"
+	"../../../apps/user_app/rf24g_key/rf24g_key.h"
+	"../../../apps/user_app/one_wire/one_wire.h"
+	"../../../apps/user_app/led_strip/led_strand_effect.h"
+	"../../../apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.h"
+	"../../../apps/user_app/ws2812-fx-lib/WS2812FX_C/WS2812FX.H"
+	"../../../apps/user_app/one_wire/one_wire.h"
+	"../../../apps/user_app/save_flash/save_flash.h"
 

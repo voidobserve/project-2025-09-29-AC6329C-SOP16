@@ -9,11 +9,13 @@ const u8 motor_period[6] = {8, 13, 18, 21, 26, 35}; // 转速  app指令，需�
 
 // 定义与驱动电机ic通信的引脚
 #define MOTOR_DATA_IO_PORT IO_PORTA_00
+// #define MOTOR_DATA_IO_PORT IO_PORTB_06
 
-#define INS_LEN (7) // 指令长度
+// #define INS_LEN (7) // 指令长度
+#define INS_LEN (8) // 指令长度
 // #define INS_LEN (16 - 1) // 指令长度
 // #define INS_LEN (16) // 指令长度
-#define W_0_5MS 4 // 脉宽0.5ms
+#define W_0_5MS 4    // 脉宽0.5ms
 #define W_1MS 8
 #define W_2MS 16
 static volatile u8 send_cnt = 0;
@@ -44,7 +46,7 @@ void pack_base(void)
 {
     u8 p;
     send_base_ins = 0;
-    send_base_ins |= fc_effect.base_ins.mode;
+    send_base_ins |= (fc_effect.base_ins.mode & 0x07); // bit0 ~ bit2 电机模式
 
     for (p = 0; p < 6; p++)
     {
@@ -57,10 +59,14 @@ void pack_base(void)
     if (p > 5)
         p = 0;
 
-    send_base_ins |= p << 3;
+    send_base_ins |= p << 3; // 电机速度
 
     if (fc_effect.base_ins.dir)
-        send_base_ins |= BIT(6);
+    {
+        send_base_ins |= BIT(6); // bit6 0:正转，1:反转
+    }
+
+    printf("send_base_ins == 0x %x\n", (u16)send_base_ins);
 }
 
 u8 is_one_wire_send_end(void)

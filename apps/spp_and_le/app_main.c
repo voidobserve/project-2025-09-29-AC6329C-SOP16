@@ -31,7 +31,6 @@
 #include "../../../apps/user_app/rf24g_key/rf24g_key.h"
 #include "../../../apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.h"
 
-
 // OS_SEM LED_TASK_SEM;
 
 /*任务列表   */
@@ -74,6 +73,7 @@ const struct task_info task_info_table[] = {
 #endif
 
     {"led_task", 2, 0, 512, 512}, // 灯光
+    // {"led_task", 2, 0, 1024, 1024}, // 灯光
     {"msg_task", 3, 0, 256, 256}, // 用户消息处理线程
     {0, 0},
 };
@@ -456,6 +456,12 @@ void user_msg_handle_task(void)
             WS2812FX_running_flag_set();
         }
         break;
+        
+        case MSG_USER_SAVE_INFO:
+        {
+            save_user_data_enable();
+        }
+        break;
         }
 #endif
 
@@ -475,7 +481,7 @@ void main_while(void)
         rf24_key_handle();
         // printf("main circle\n"); // 主循环约10ms
         // printf("sizeof  fc_effect_t %d\n", sizeof(fc_effect_t)); // 打印是 276，存放到flash中会有问题
-
+ 
         os_time_dly(1);
     }
 }
@@ -500,6 +506,7 @@ void my_main(void)
     // os_sem_create(&LED_TASK_SEM, 0);
 
     sys_s_hi_timer_add(NULL, WS2812_circle_task, 10); // 10ms
+    // sys_timer_add(NULL, WS2812_circle_task, 10); // 10ms
 
     task_create(user_msg_handle_task, NULL, "msg_task");
 

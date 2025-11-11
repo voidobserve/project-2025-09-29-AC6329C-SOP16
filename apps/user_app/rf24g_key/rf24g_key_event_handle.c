@@ -29,6 +29,10 @@ void rf24g_key_1_event_r1c1_click_handle(void)
 
         fc_effect.app_b = (fc_effect.ls_b + 1) * 10;
         fc_effect.b = led_b_array[fc_effect.ls_b];
+
+        // printf("fc_effect.ls_b %u\n", (u16)fc_effect.ls_b);
+        // printf("fc_effect.app_b %u\n", (u16)fc_effect.app_b);
+        printf("fc_effect.b %u\n", (u16)fc_effect.b);
         fb_bright();
     }
     else if (IS_light_scene == fc_effect.Now_state && // 七彩灯的动态模式
@@ -81,6 +85,10 @@ void rf24g_key_1_event_r1c2_click_handle(void)
         }
         fc_effect.app_b = (fc_effect.ls_b + 1) * 10;
         fc_effect.b = led_b_array[fc_effect.ls_b];
+
+        // printf("fc_effect.ls_b %u\n", (u16)fc_effect.ls_b);
+        // printf("fc_effect.app_b %u\n", (u16)fc_effect.app_b);
+        printf("fc_effect.b %u\n", (u16)fc_effect.b);
         fb_bright();
     }
     else if (IS_light_scene == fc_effect.Now_state &&
@@ -243,6 +251,7 @@ void rf24g_key_1_event_r4c3_click_handle(void)
 void rf24g_key_1_event_r4c4_click_handle(void)
 {
     // 流星灯开关
+    // USER_TO_DO 测试发现频繁开关流星灯会导致芯片复位
 
     if (fc_effect.star_on_off == DEVICE_OFF)
     {
@@ -269,7 +278,7 @@ void rf24g_key_1_event_r4c4_click_handle(void)
         WS2812FX_resetSegmentRuntime(1); // 清除指定段的显示缓存
         WS2812FX_running_flag_set();
 
-        fd_meteor_on_off(); // 向app反馈流星开关的状态
+        // fd_meteor_on_off(); // 向app反馈流星开关的状态
     }
     else
     {
@@ -286,7 +295,8 @@ void rf24g_key_1_event_r4c4_click_handle(void)
             0);                          // 选项，这里像素点大小：3 REVERSE决定方向
         WS2812FX_resetSegmentRuntime(1); // 清除指定段的显示缓存
         WS2812FX_running_flag_set();
-        fd_meteor_on_off(); // 向app反馈流星开关的状态
+
+        // fd_meteor_on_off(); // 向app反馈流星开关的状态
     }
 }
 
@@ -577,6 +587,11 @@ void rf24g_key_1_event_r7c1_click_handle(void)
 void rf24g_key_1_event_r7c2_click_handle(void)
 {
     // 电机转速 加
+    if (DEVICE_OFF == fc_effect.motor_on_off)
+    {
+        // 电机没有启动，不调节电机转速
+        return;
+    }
 
     u8 index = 0;
     for (; index < ARRAY_SIZE(motor_period); index++) // 找到当前电机速度索引对应的下标
@@ -596,6 +611,7 @@ void rf24g_key_1_event_r7c2_click_handle(void)
 
     one_wire_set_period(motor_period[index]);
     fc_effect.motor_speed_index = index;
+    printf("motor speed index %u\n", (u16)fc_effect.motor_speed_index);
     os_taskq_post("msg_task", 1, MSG_SEQUENCER_ONE_WIRE_SEND_INFO);
     fb_motor_speed(); // 向app反馈电机的转速
 
@@ -605,6 +621,12 @@ void rf24g_key_1_event_r7c2_click_handle(void)
 void rf24g_key_1_event_r7c3_click_handle(void)
 {
     // 电机转速 减
+
+    if (DEVICE_OFF == fc_effect.motor_on_off)
+    {
+        // 电机没有启动，不调节电机转速
+        return;
+    }
 
     u8 index = 0;
     for (; index < ARRAY_SIZE(motor_period); index++) // 找到当前电机速度索引对应的下标
@@ -624,6 +646,7 @@ void rf24g_key_1_event_r7c3_click_handle(void)
 
     one_wire_set_period(motor_period[index]);
     fc_effect.motor_speed_index = index;
+    printf("motor speed index %u\n", (u16)fc_effect.motor_speed_index);
     os_taskq_post("msg_task", 1, MSG_SEQUENCER_ONE_WIRE_SEND_INFO);
     fb_motor_speed(); // 向app反馈电机的转速
 
@@ -654,6 +677,8 @@ void rf24g_key_1_event_r7c4_click_handle(void)
 void rf24g_key_2_event_r3c1_click_handle(void)
 {
     // 红100% 绿50%
+    // printf("key 2 r3c1 click\n");
+
     color_t color_structure = {0};
     color_structure.r = 0xFF;
     color_structure.g = 0xFF / 2;
@@ -717,11 +742,65 @@ void rf24g_key_2_event_r4c3_click_handle(void)
     colorful_lights_set_static_mode(color_structure);
 }
 
+void rf24g_key_2_event_r5c1_click_handle(void)
+{
+    // 红100% 蓝50%
+    color_t color_structure = {0};
+    color_structure.r = 0xFF;
+    color_structure.g = 0x00;
+    color_structure.b = 0xFF / 2; // 50% 分量
+    color_structure.w = 0x00;
+    colorful_lights_set_static_mode(color_structure);
+}
+
+void rf24g_key_2_event_r5c2_click_handle(void)
+{
+    // 红100% 蓝100%
+    color_t color_structure = {0};
+    color_structure.r = 0xFF;
+    color_structure.g = 0x00;
+    color_structure.b = 0xFF;
+    color_structure.w = 0x00;
+    colorful_lights_set_static_mode(color_structure);
+}
+
+void rf24g_key_2_event_r5c3_click_handle(void)
+{
+    // 红20% 蓝100%
+    color_t color_structure = {0};
+    color_structure.r = (u8)((u16)0xFF * 20 / 100); // 20% 分量
+    color_structure.g = 0x00;
+    color_structure.b = 0xFF;
+    color_structure.w = 0x00;
+    colorful_lights_set_static_mode(color_structure);
+}
+
 void rf24g_key_2_event_r5c4_click_handle(void)
 {
     // 电机模式切换
     // 1.匀速转，2，正转+反转，3，带暂停的转动，4，速度可变模式，5，音频节奏转动
     // USER_TO_DO 可能要先套用现有的模式
+    // 测试发现电机一直是同一个方向，没有切换模式
+
+    if (DEVICE_OFF == fc_effect.motor_on_off)
+    {
+        // 电机没有启动，不调节电机模式
+        return;
+    }
+
+    fc_effect.base_ins.mode = (fc_effect.base_ins.mode + 1) % 6;
+
+    if (fc_effect.base_ins.mode == 2)
+    {
+        fc_effect.base_ins.dir = 1;
+    }
+    else
+    {
+        fc_effect.base_ins.dir = 0;
+    }
+
+    printf("motor mode %u \n", (u16)fc_effect.base_ins.mode);
+    os_taskq_post("msg_task", 1, MSG_SEQUENCER_ONE_WIRE_SEND_INFO);
 }
 
 const rf24_key_handle_func_t rf24_key_handle_func_buff[RF24G_KEY_EVENT_MAX] = {
@@ -816,9 +895,11 @@ const rf24_key_handle_func_t rf24_key_handle_func_buff[RF24G_KEY_EVENT_MAX] = {
     // key 2 目前表示控制【没有流星灯】的遥控器
     [RF24G_WHITE_KEY_2_EVENT_R1C1_CLICK] = rf24g_key_1_event_r1c1_click_handle, // 跟 key 1 一样的功能
     [RF24G_WHITE_KEY_2_EVENT_R1C1_LONG] = rf24g_key_1_event_r1c1_click_handle,  // 跟 key 1 一样的功能
+    // [RF24G_WHITE_KEY_2_EVENT_R1C1_HOLD] = rf24g_key_1_event_r1c1_click_handle,
 
     [RF24G_WHITE_KEY_2_EVENT_R1C2_CLICK] = rf24g_key_1_event_r1c2_click_handle, // 跟 key 1 一样的功能
     [RF24G_WHITE_KEY_2_EVENT_R1C2_LONG] = rf24g_key_1_event_r1c2_click_handle,  // 跟 key 1 一样的功能
+    // [RF24G_WHITE_KEY_2_EVENT_R1C2_HOLD] = rf24g_key_1_event_r1c2_click_handle,  // 跟 key 1 一样的功能
 
     [RF24G_WHITE_KEY_2_EVENT_R1C3_CLICK] = rf24g_key_1_event_r1c3_click_handle, // 跟 key 1 一样的功能
     [RF24G_WHITE_KEY_2_EVENT_R1C3_LONG] = rf24g_key_1_event_r1c3_click_handle,  // 跟 key 1 一样的功能
@@ -862,41 +943,41 @@ const rf24_key_handle_func_t rf24_key_handle_func_buff[RF24G_KEY_EVENT_MAX] = {
     [RF24G_WHITE_KEY_2_EVENT_R4C4_CLICK] = rf24g_key_1_event_r7c1_click_handle, // 电机开关，对应key 1 的 r7c1 click 功能
     [RF24G_WHITE_KEY_2_EVENT_R4C4_LONG] = rf24g_key_1_event_r7c1_click_handle,  // 电机开关，对应key 1 的 r7c1 click 功能
 
-    [RF24G_WHITE_KEY_2_EVENT_R5C1_CLICK] = rf24g_key_1_event_r5c1_click_handle,
-    [RF24G_WHITE_KEY_2_EVENT_R5C1_LONG] = rf24g_key_1_event_r5c1_click_handle,
+    [RF24G_WHITE_KEY_2_EVENT_R5C1_CLICK] = rf24g_key_2_event_r5c1_click_handle,
+    [RF24G_WHITE_KEY_2_EVENT_R5C1_LONG] = rf24g_key_2_event_r5c1_click_handle,
 
-    [RF24G_WHITE_KEY_2_EVENT_R5C2_CLICK] = rf24g_key_1_event_r5c2_click_handle,
-    [RF24G_WHITE_KEY_2_EVENT_R5C2_LONG] = rf24g_key_1_event_r5c2_click_handle,
+    [RF24G_WHITE_KEY_2_EVENT_R5C2_CLICK] = rf24g_key_2_event_r5c2_click_handle,
+    [RF24G_WHITE_KEY_2_EVENT_R5C2_LONG] = rf24g_key_2_event_r5c2_click_handle,
 
-    [RF24G_WHITE_KEY_2_EVENT_R5C3_CLICK] = rf24g_key_1_event_r5c3_click_handle,
-    [RF24G_WHITE_KEY_2_EVENT_R5C3_LONG] = rf24g_key_1_event_r5c3_click_handle,
+    [RF24G_WHITE_KEY_2_EVENT_R5C3_CLICK] = rf24g_key_2_event_r5c3_click_handle,
+    [RF24G_WHITE_KEY_2_EVENT_R5C3_LONG] = rf24g_key_2_event_r5c3_click_handle,
 
-    [RF24G_WHITE_KEY_2_EVENT_R5C4_CLICK] = NULL,
-    [RF24G_WHITE_KEY_2_EVENT_R5C4_LONG] = NULL,
+    [RF24G_WHITE_KEY_2_EVENT_R5C4_CLICK] = rf24g_key_2_event_r5c4_click_handle, // 电机模式 切换
+    [RF24G_WHITE_KEY_2_EVENT_R5C4_LONG] = rf24g_key_2_event_r5c4_click_handle,  // 电机模式 切换
 
-    [RF24G_WHITE_KEY_2_EVENT_R6C1_CLICK] = rf24g_key_1_event_r5c1_click_handle,
-    [RF24G_WHITE_KEY_2_EVENT_R6C1_LONG] = rf24g_key_1_event_r5c1_click_handle,
+    [RF24G_WHITE_KEY_2_EVENT_R6C1_CLICK] = rf24g_key_1_event_r5c1_click_handle, // FLASH ，对应 key 1 的 r5c1 click 功能
+    [RF24G_WHITE_KEY_2_EVENT_R6C1_LONG] = rf24g_key_1_event_r5c1_click_handle,  // FLASH ，对应 key 1 的 r5c1 click 功能
 
-    [RF24G_WHITE_KEY_2_EVENT_R6C2_CLICK] = rf24g_key_1_event_r6c2_click_handle,
-    [RF24G_WHITE_KEY_2_EVENT_R6C2_LONG] = rf24g_key_1_event_r6c2_click_handle,
+    [RF24G_WHITE_KEY_2_EVENT_R6C2_CLICK] = rf24g_key_1_event_r5c2_click_handle, // JUMP，对应 key 1 的 r5c2 click 功能
+    [RF24G_WHITE_KEY_2_EVENT_R6C2_LONG] = rf24g_key_1_event_r5c2_click_handle,  // JUMP，对应 key 1 的 r5c2 click 功能
 
-    [RF24G_WHITE_KEY_2_EVENT_R6C3_CLICK] = rf24g_key_1_event_r6c3_click_handle,
-    [RF24G_WHITE_KEY_2_EVENT_R6C3_LONG] = rf24g_key_1_event_r6c3_click_handle,
+    [RF24G_WHITE_KEY_2_EVENT_R6C3_CLICK] = rf24g_key_1_event_r5c3_click_handle, // FADE，对应 key 1 的 r5c3 click 功能
+    [RF24G_WHITE_KEY_2_EVENT_R6C3_LONG] = rf24g_key_1_event_r5c3_click_handle,  // FADE，对应 key 1 的 r5c3 click 功能
 
-    [RF24G_WHITE_KEY_2_EVENT_R6C4_CLICK] = rf24g_key_1_event_r6c4_click_handle,
-    [RF24G_WHITE_KEY_2_EVENT_R6C4_LONG] = rf24g_key_1_event_r6c4_click_handle,
+    [RF24G_WHITE_KEY_2_EVENT_R6C4_CLICK] = rf24g_key_1_event_r7c2_click_handle, // 电机速度 加，对应 key 1 的 r7c2 click 功能
+    [RF24G_WHITE_KEY_2_EVENT_R6C4_LONG] = rf24g_key_1_event_r7c2_click_handle,  // 电机速度 加，对应 key 1 的 r7c2 click 功能
 
-    [RF24G_WHITE_KEY_2_EVENT_R7C1_CLICK] = rf24g_key_1_event_r7c1_click_handle,
-    [RF24G_WHITE_KEY_2_EVENT_R7C1_LONG] = rf24g_key_1_event_r7c1_click_handle,
+    [RF24G_WHITE_KEY_2_EVENT_R7C1_CLICK] = rf24g_key_1_event_r6c1_click_handle, // AUTO，对应 key 1 的 r6c1 click 功能
+    [RF24G_WHITE_KEY_2_EVENT_R7C1_LONG] = rf24g_key_1_event_r6c1_click_handle,  // AUTO，对应 key 1 的 r6c1 click 功能
 
-    [RF24G_WHITE_KEY_2_EVENT_R7C2_CLICK] = rf24g_key_1_event_r7c2_click_handle,
-    [RF24G_WHITE_KEY_2_EVENT_R7C2_LONG] = rf24g_key_1_event_r7c2_click_handle,
+    [RF24G_WHITE_KEY_2_EVENT_R7C2_CLICK] = rf24g_key_1_event_r6c2_click_handle, // 声控模式，对应 key 1 的 r6c2 click 功能
+    [RF24G_WHITE_KEY_2_EVENT_R7C2_LONG] = rf24g_key_1_event_r6c2_click_handle,  // 声控模式，对应 key 1 的 r6c2 click 功能
 
-    [RF24G_WHITE_KEY_2_EVENT_R7C3_CLICK] = rf24g_key_1_event_r7c3_click_handle,
-    [RF24G_WHITE_KEY_2_EVENT_R7C3_LONG] = rf24g_key_1_event_r7c3_click_handle,
+    [RF24G_WHITE_KEY_2_EVENT_R7C3_CLICK] = rf24g_key_1_event_r6c3_click_handle, // BREATH，对应 key 1 的 r6c3 click 功能
+    [RF24G_WHITE_KEY_2_EVENT_R7C3_LONG] = rf24g_key_1_event_r6c3_click_handle,  // BREATH，对应 key 1 的 r6c3 click 功能
 
-    [RF24G_WHITE_KEY_2_EVENT_R7C4_CLICK] = rf24g_key_1_event_r7c4_click_handle,
-    [RF24G_WHITE_KEY_2_EVENT_R7C4_LONG] = rf24g_key_1_event_r7c4_click_handle,
+    [RF24G_WHITE_KEY_2_EVENT_R7C4_CLICK] = rf24g_key_1_event_r7c3_click_handle, // 电机速度 减，对应 key 1 的 r7c3 click 功能
+    [RF24G_WHITE_KEY_2_EVENT_R7C4_LONG] = rf24g_key_1_event_r7c3_click_handle,  // 电机速度 减，对应 key 1 的 r7c3 click 功能
 
     [RF24G_KEY_EVENT_NONE] = NULL,
 };

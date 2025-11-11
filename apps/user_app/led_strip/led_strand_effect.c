@@ -101,6 +101,7 @@ static void static_mode(void)
 
     WS2812FX_resetSegmentRuntime(0); // 清除指定段的显示缓存
     WS2812FX_running_flag_set();     // 置位运行标志
+    WS2812FX_triggered_by_colorful_lights();
 }
 
 /*----------------------------------彩虹效果----------------------------------*/
