@@ -215,13 +215,16 @@ void sound_handle(void)
         if (adc * fc_effect.meteor_lights_sensitivity / 100 > adc_sum_avrg)
         {
             // 如果流星灯在声控模式，并且触发了声控
-            if (0)
+            if (DEVICE_ON == fc_effect.star_on_off &&
+                (STAR_INDEX_METEOR_MUSIC_CONTROL == fc_effect.star_index ||
+                 STAR_INDEX_METEOR_MUSIC_CONTROL_2 == fc_effect.star_index ||
+                 STAR_INDEX_METEOR_MUSIC_CONTROL_3 == fc_effect.star_index))
             {
                 // 如果流星灯处于声控模式，会进入这里
                 // music_voic.meteor_trg = 1; // 流星声控
                 flag_sound_triggered_in_meteor_lights = 1;
 
-                WS2812FX_trigger_by_meteor_lights();
+                WS2812FX_triggered_by_meteor_lights();
             }
         }
     }

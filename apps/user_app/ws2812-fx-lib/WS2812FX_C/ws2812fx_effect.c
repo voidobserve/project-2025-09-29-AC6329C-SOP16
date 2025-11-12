@@ -1228,9 +1228,12 @@ u16 meteor_effect_when_pwr_on(void)
     // 从起始索引开始，填充多少个
     Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
 
+#if 1
     if (cur_led_index > _seg->stop) // 最后一个灯，防止越界
     {
         // cur_led_index = _seg->stop;
+
+        // 前面已经调用了全部填黑色，这里保持不变，不用再点亮灯光
     }
     else
     {
@@ -1247,6 +1250,8 @@ u16 meteor_effect_when_pwr_on(void)
             WS2812FX_setPixelColor(_seg->stop - cur_led_index + _seg->start, WHITE); // 点亮单个灯
         }
     }
+
+#endif
 
     /*
         到最后一个灯也需要点亮一段时间，所以要改成 _seg_len + 1
@@ -1691,7 +1696,7 @@ u16 meteor_effect_fast(void)
  *
  * @return uint16_t
  */
-uint16_t music_mode1(void)
+uint16_t meteor_light_sigle_channel_equalizer_effect(void)
 {
     static u8 trg_cnt = 0;
     static u8 no_trg_cnt = 0;
@@ -1701,6 +1706,12 @@ uint16_t music_mode1(void)
 
     // 下面的 WS2812FX_setPixelColor_rgbw() 传参是 颜色值 - rate，所以这里是由亮到暗
     const u8 rate[12] = {0, 50, 75, 100, 130, 180, 200, 220, 230, 240, 250, 253};
+
+    if (0 == _seg_rt->counter_mode_call)
+    {
+        // 刚进入该动画时，熄灭所有流星灯
+        Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
+    }
 
     if (get_sound_triggered_by_meteor_lights())
     {
@@ -1761,6 +1772,12 @@ u16 meteor_light_two_channel_equalizer_effect(void)
     // printf("_seg->start:  %u\n", (u16)_seg->start);
     // printf("_seg->stop:  %u\n", (u16)_seg->stop);
     // printf("trg_cnt:  %u\n", (u16)trg_cnt);
+
+    if (0 == _seg_rt->counter_mode_call)
+    {
+        // 刚进入该动画时，熄灭所有流星灯
+        Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
+    }
 
     if (get_sound_triggered_by_meteor_lights())
     {
@@ -1826,6 +1843,12 @@ u16 meteor_light_single_point_flow(void)
         cur_led_index = _seg->stop;
     }
 
+    if (0 == _seg_rt->counter_mode_call)
+    {
+        // 刚进入该动画时，熄灭所有流星灯
+        Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
+    }
+
     if (get_sound_triggered_by_meteor_lights())
     {
         sound_trigger_cnt = 3;
@@ -1889,6 +1912,8 @@ u16 meteor_light_single_point_flow(void)
  *
  *  6 -- 呼吸动画18s，乱闪动画8s
  *  7 -- 呼吸动画38s，乱闪动画18s
+ * 
+ * 注意，_seg_rt->speed至少要大于等于 1000 
  *
  * @return u16
  */
@@ -2006,11 +2031,15 @@ u16 meteor_effect_random_breath(void)
             // _seg_rt->counter_mode_step = 0; // 进入 ANIMATION_STAGE_1 之前，需要确保 _seg_rt->counter_mode_step == 0
 
             Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 全段填黑色，灭灯
+
+            // printf("__FUNC__ %s __LINE__ %u\n" , __func__, __LINE__);
         }
         else if (ANIMATION_STAGE_1_END == _seg_rt->cur_animation_stage)
         {
             _seg_rt->cur_animation_stage = ANIMATION_STAGE_2_BEGIN;
             // _seg_rt->counter_mode_step = 0; // 进入 ANIMATION_STAGE_2 之前，需要确保 _seg_rt->counter_mode_step == 0
+
+            // printf("__FUNC__ %s __LINE__ %u\n" , __func__, __LINE__);
         }
     }
 
@@ -2076,9 +2105,10 @@ u16 meteor_effect_random_breath(void)
                                     _seg_rt->led_index_mode_step[k] = 0;
                                 }
 
+                                _seg_rt->cur_animation_stage = ANIMATION_STAGE_1_END;
                                 // USER_TO_DO 乱闪还未调节好，这里先跳过乱闪的动画
-                                // _seg_rt->cur_animation_stage = ANIMATION_STAGE_1_END;
-                                _seg_rt->cur_animation_stage = ANIMATION_STAGE_2_END;
+                                // _seg_rt->cur_animation_stage = ANIMATION_STAGE_2_END;
+
                                 _seg_rt->counter_mode_step = 0;
                                 break;
                             }
@@ -2128,7 +2158,11 @@ u16 meteor_effect_random_breath(void)
         return ret;
     }
 
-#if 0
+#if 1 //   ANIMATION_STAGE_2_BEGIN   ~ ANIMATION_STAGE_2_END
+    /*
+        测试发现这段代码会导致芯片复位
+    */
+
     // 让灯光乱闪
     if (ANIMATION_STAGE_2_BEGIN == _seg_rt->cur_animation_stage)
     {
@@ -2140,13 +2174,23 @@ u16 meteor_effect_random_breath(void)
             u16 random_lum = WS2812FX_random16_lim((u16)512);                           // 随机亮度
             if (0 == _seg_rt->led_index_enable_buff[random_index])
             {
+                // 如果当前灯珠没有点亮，使能它，并设置对应的目标亮度
                 _seg_rt->led_index_enable_buff[random_index] = 1;
                 _seg_rt->led_index_mode_step[random_index] = random_lum;
+
+                // printf("random_index %u\n", (u16)random_index);
+                // printf("random_lum %u\n", (u16)random_lum);
             }
+
+            // printf(" __LINE__ %u i %u \n", __LINE__, i);
         }
 
+#if 1
+        // 在对应的灯珠上设置亮度：
         for (u8 i = 0; i < sizeof(_seg_rt->led_index_enable_buff); i++)
         {
+            // printf(" __LINE__ %u i %u \n", __LINE__, i);
+
             if (_seg_rt->led_index_enable_buff[i])
             {
                 int lum = _seg_rt->led_index_mode_step[i];
@@ -2181,7 +2225,9 @@ u16 meteor_effect_random_breath(void)
         }
 
         /* WS2812FX_service() 10ms调用一次，而 _seg->speed 以ms为单位，一般是 1000ms以上，这里除以10 */
+        // 这里speed不能太小，否则会跳过当前动画阶段，回到 ANIMATION_STAGE_1_BEGIN ~ ANIMATION_STAGE_1_END
         _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (_seg->speed / 10);
+        // printf("_seg->speed %u\n", _seg->speed); 
         if (0 == _seg_rt->counter_mode_step)
         {
             // printf("sys time %lu\n", sys_time_get() - last_sys_time);
@@ -2195,12 +2241,22 @@ u16 meteor_effect_random_breath(void)
                 _seg_rt->led_index_mode_step[k] = 0;
             }
 
+            // printf("__FUNC__ %s __LINE__ %u\n", __func__, __LINE__);
             _seg_rt->cur_animation_stage = ANIMATION_STAGE_2_END;
         }
+#endif
+
+        // _seg_rt->cur_animation_stage = ANIMATION_STAGE_2_END;
+        // for (u8 k = 0; k < sizeof(_seg_rt->led_index_enable_buff); k++)
+        // {
+        //     _seg_rt->led_index_enable_buff[k] = 0;
+        //     _seg_rt->led_index_mode_step[k] = 0;
+        // }
+        // _seg_rt->counter_mode_step = 0;
 
         return 1; //
     }
-#endif
+#endif //   ANIMATION_STAGE_2_BEGIN   ~ ANIMATION_STAGE_2_END
 }
 
 // 流星发射，声音触发，不支持连续发射，等上个流星发射完成再发射第二个

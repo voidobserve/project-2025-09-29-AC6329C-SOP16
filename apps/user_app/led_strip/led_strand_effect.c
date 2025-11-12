@@ -1111,25 +1111,67 @@ void ls_meteor_stat_effect(void)
         return;
     }
 
-    if (1 == fc_effect.star_index)
+    // 流星灯尾焰长度索引列表
+    const u8 meteor_tail_len_buff[] = {1, 2, 3, 4, 5, 6, 7, 8, 10, 12};
+    // 流星灯速度值索引列表
+    const u8 meteor_speed_buff[] = {0};
+    // 流星灯声控模式的灵敏度索引列表
+
+    // 流星灯乱闪速度值索引列表 1000ms ~ 20 000ms
+    // USER_TO_DO 
+
+
+    mode_ptr meteor_func_ptr = NULL; // 函数指针，流星灯动画
+
+    if (STAR_INDEX_METEOR_NORMAL_SLOW == fc_effect.star_index)
     {
-        // WS2812FX_stop();
-        WS2812FX_setSegment_colorOptions(
-            1,                     // 第x段
-            1,                     // 起始位置
-            fc_effect.led_num - 1, // 结束位置
-            meteor_effect_random_breath,
-            WHITE,                // 颜色，WS2812FX_setColors设置
-            fc_effect.star_speed, // 速度
-            NO_OPTIONS);          // 选项，这里像素点大小：3 REVERSE决定方向
+        meteor_func_ptr = meteor_effect_slow;
     }
-    else if (2 == fc_effect.star_index)
+    else if (STAR_INDEX_METEOR_NORMAL_MIDDLE == fc_effect.star_index)
     {
+        meteor_func_ptr = meteor_effect_middle;
+    }
+    else if (STAR_INDEX_METEOR_NORMAL_FAST == fc_effect.star_index)
+    {
+        meteor_func_ptr = meteor_effect_fast;
+    }
+    else if (STAR_INDEX_METEOR_RANDOM_BREATH == fc_effect.star_index)
+    {
+        meteor_func_ptr = meteor_effect_random_breath;
+    }
+    else if (STAR_INDEX_METEOR_MUSIC_CONTROL == fc_effect.star_index)
+    {
+        // 带声控的流星灯模式，
+        /*
+            单点流水
+            单路的均衡器
+            双路的均衡器
+            ...
+            依次循环
+        */
+        meteor_func_ptr = meteor_light_single_point_flow; // 声控模式每次都从流星灯单点流水开始
+    }
+    else if (STAR_INDEX_METEOR_MUSIC_CONTROL_2 == fc_effect.star_index)
+    {
+        meteor_func_ptr = meteor_light_sigle_channel_equalizer_effect;
+    }
+    else if (STAR_INDEX_METEOR_MUSIC_CONTROL_3 == fc_effect.star_index)
+    {
+        meteor_func_ptr = meteor_light_two_channel_equalizer_effect;
     }
     else
     {
         return;
     }
+
+    WS2812FX_setSegment_colorOptions(
+        1,                     // 第x段
+        1,                     // 起始位置
+        fc_effect.led_num - 1, // 结束位置
+        meteor_func_ptr,
+        WHITE,                // 颜色，WS2812FX_setColors设置
+        fc_effect.star_speed, // 速度
+        NO_OPTIONS);          // 选项，这里像素点大小   REVERSE 决定方向
 
     WS2812FX_resetSegmentRuntime(1); // 重置流星灯所在的段运行时参数
     WS2812FX_running_flag_set();

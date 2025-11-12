@@ -142,9 +142,11 @@ enum
 
     STAR_INDEX_METEOR_RANDOM_BREATH, // 乱闪模式
 
-    STAR_INDEX_METEOR_RANDOM_BREATH_2, // 同时最多2个灯随机呼吸的模式
+    // STAR_INDEX_METEOR_RANDOM_BREATH_2, // 同时最多2个灯随机呼吸的模式
 
     STAR_INDEX_METEOR_MUSIC_CONTROL, // 带声控的流星灯模式
+    STAR_INDEX_METEOR_MUSIC_CONTROL_2, // 带声控的流星灯模式
+    STAR_INDEX_METEOR_MUSIC_CONTROL_3, // 带声控的流星灯模式
 
     STAR_INDEX_METEOR_MAX,
 };
@@ -185,10 +187,8 @@ typedef struct
     unsigned char star_index;  // 流星灯动画索引
     unsigned short star_speed;
     unsigned char app_star_speed; // 反馈给APP流星速度
-    u8 meteor_speed_index; // 流星灯速度值索引
-
-    // u8 meteor_tail_len; // 流星灯尾焰长度
-
+    u8 meteor_speed_index; // 流星灯速度值索引（正常流星下回影响流星尾焰长度）
+  
 
     u8 meteor_lights_sensitivity; // 声控模式下，流星灯的灵敏度
 
@@ -209,5 +209,7 @@ extern volatile fc_effect_t fc_effect; // 幻彩灯串效果数据
 void base_Dynamic_Effect(u8 tp_num);
 
 void ls_set_color(uint8_t n, uint32_t c);
+
+void ls_meteor_stat_effect(void);
 
 #endif

@@ -49,23 +49,27 @@ void fc_data_init(void)
     fc_effect.music.m = 0;
     fc_effect.music.m_type = 0;
 
-    fc_effect.app_rgb_mode = 0; 
+    fc_effect.app_rgb_mode = 0;
 
     fc_effect.colorful_lights_sensitivity = 80; // 七彩灯在声控模式下的灵敏度
 
     // 流星
     fc_effect.star_on_off = DEVICE_ON;
-    fc_effect.star_index = 1; // 流星灯动画索引
+    // fc_effect.star_index = 1; // 流星灯动画索引
     // fc_effect.star_index = 99; // 流星灯动画索引
-    fc_effect.star_speed = 30; // 变化速度
-    fc_effect.app_star_speed = 100;
+    // fc_effect.star_index = STAR_INDEX_METEOR_NORMAL_SLOW; // 流星灯动画索引
+    fc_effect.star_index = STAR_INDEX_METEOR_RANDOM_BREATH; // 流星灯动画索引 测试时使用
+    // fc_effect.star_speed = 30;                            // 变化速度
+    // fc_effect.star_speed = 100; // 测试时使用
+    fc_effect.star_speed = 1000; // 测试时使用
+    // fc_effect.star_speed = 2000; // 测试时使用
+    // fc_effect.app_star_speed = 100;
     fc_effect.meteor_period = 8;                           // 默认8秒  周期值
     fc_effect.period_cnt = fc_effect.meteor_period * 1000; // ms,运行时的计数器
     fc_effect.mode_cycle = 0;                              // 模式完成一个循环的标志
     fc_effect.motor_speed_index = 0;
     // fc_effect.meteor_tail_len = 6; // 流星灯尾焰长度
     fc_effect.meteor_lights_sensitivity = 80; // 流星灯在声控模式下的灵敏度
-
 
     // 电机
     fc_effect.base_ins.mode = 4;   // 360转
@@ -75,17 +79,17 @@ void fc_data_init(void)
     fc_effect.motor_on_off = DEVICE_ON;
 
     // sizeof(fc_effect_t);
-} 
+}
 
 /**
  * @brief 软件开启设备
- * 
+ *
  */
-void soft_turn_on_the_light(void) 
+void soft_turn_on_the_light(void)
 {
-    fc_effect.on_off_flag = DEVICE_ON; 
+    fc_effect.on_off_flag = DEVICE_ON;
 
-    motor_Init(); 
+    motor_Init();
 
     if (DEVICE_ON == fc_effect.motor_on_off)
     {
@@ -103,23 +107,22 @@ void soft_turn_on_the_light(void)
     set_fc_effect();         // 设置七彩灯的动画
     ls_meteor_stat_effect(); // 设置流星灯的动画
 
-    fb_led_on_off_state();  // 与app同步开关状态
+    fb_led_on_off_state(); // 与app同步开关状态
     // save_user_data_area3(); // 保存参数配置到flash
     os_taskq_post("msg_task", 1, MSG_USER_SAVE_INFO);
 
     printf("soft_turn_on_the_light\n");
 }
 
-
 /**
  * @brief 软件关闭设备
- * 
- * @return * void 
+ *
+ * @return * void
  */
-void soft_turn_off_lights(void)  
+void soft_turn_off_lights(void)
 {
-    fc_effect.on_off_flag = DEVICE_OFF; 
-    
+    fc_effect.on_off_flag = DEVICE_OFF;
+
     // 改成只发送关闭电机的控制命令，不给 fc_effect.motor_on_off 赋值为 DEVICE_OFF
     one_wire_set_period(motor_period[fc_effect.motor_speed_index]);
     one_wire_set_mode(6); // 关闭电机
@@ -128,7 +131,7 @@ void soft_turn_off_lights(void)
     WS2812FX_stop();
     WS2812FX_strip_off();
 
-    fb_led_on_off_state();  // 与app同步开关状态
+    fb_led_on_off_state(); // 与app同步开关状态
     // save_user_data_area3(); // 保存参数配置到flash
     os_taskq_post("msg_task", 1, MSG_USER_SAVE_INFO);
     printf("soft_turn_off_lights\n");
@@ -297,7 +300,7 @@ void ls_sub_speed(void)
  * @param tp_s  0-100;
  */
 void app_set_sensitive(u8 tp_s)
-{ 
+{
     fc_effect.music.s = tp_s;
 }
 
@@ -760,7 +763,6 @@ void ls_set_star_tail(void)
         app_set_mereor_mode(19);
     }
 }
- 
 
 void ls_add_motor_speed(void)
 {

@@ -412,7 +412,22 @@ void user_msg_handle_task(void)
         break;
         case MSG_METEOR_LIGHTS_ON:
         {
-            mode_ptr *animation_ptr = NULL;
+            mode_ptr animation_ptr = NULL;
+
+            printf("fc_effect.star_index %u\n", fc_effect.star_index);
+
+            /*
+                通过按下遥控器的流星灯开关、流星灯模式切换、流星灯参数加/减，都有可能进入这里，
+                需要检查流星灯当前动画索引，流星灯模式切换、流星灯参数加/减只支持部分动画，
+                要先切换至对应动画，防止后续调节参数时，会没有明显现象
+            */
+            if (fc_effect.star_index < STAR_INDEX_METEOR_NORMAL_SLOW ||
+                fc_effect.star_index > STAR_INDEX_METEOR_MUSIC_CONTROL)
+            {
+                // 默认动画索引设置为 慢速流星
+                fc_effect.star_index = STAR_INDEX_METEOR_NORMAL_SLOW;
+            }
+
             switch (fc_effect.star_index)
             {
             case STAR_INDEX_METEOR_NORMAL_SLOW:
@@ -431,17 +446,25 @@ void user_msg_handle_task(void)
                 animation_ptr = meteor_effect_random_breath;
                 break;
 
-            case STAR_INDEX_METEOR_RANDOM_BREATH_2:
-                break;
+                // case STAR_INDEX_METEOR_RANDOM_BREATH_2:
+                //     break;
 
             case STAR_INDEX_METEOR_MUSIC_CONTROL: // 带声控的流星灯模式
 
                 break;
 
             default:
-                return; // 出错，直接返回
+            {
+                // return; // 出错，直接返回
+                // memset(msg, 0, sizeof(msg)); // 清空收到的消息
+                continue; // 其他的索引值，直接返回
+                // break;
+            }
+            break;
             }
 
+            // printf("__FUNC__ %s __LINE__ %u\n", __func__, __LINE__);
+#if 1
             // WS2812FX_stop();
             WS2812FX_setSegment_colorOptions(
                 1,                     // 第0段
@@ -454,9 +477,10 @@ void user_msg_handle_task(void)
             // WS2812FX_start();
             WS2812FX_resetSegmentRuntime(1); //
             WS2812FX_running_flag_set();
+#endif
         }
         break;
-        
+
         case MSG_USER_SAVE_INFO:
         {
             save_user_data_enable();
@@ -469,6 +493,48 @@ void user_msg_handle_task(void)
     } // while (1)
 }
 
+void meteor_sound_effect_switch_handle(void)
+{
+    static volatile u16 time_cnt = 0;
+
+    // 声控模式下，每25s切换一次模式
+    if (DEVICE_OFF == fc_effect.star_on_off ||
+        (STAR_INDEX_METEOR_MUSIC_CONTROL != fc_effect.star_index &&
+         STAR_INDEX_METEOR_MUSIC_CONTROL_2 != fc_effect.star_index &&
+         STAR_INDEX_METEOR_MUSIC_CONTROL_3 != fc_effect.star_index))
+    {
+        time_cnt = 0;
+        return;
+    }
+
+    time_cnt++;
+    // if (time_cnt >= 25 * 100) // 函数放在10ms的循环
+    // printf("time_cnt %u\n", (u16)time_cnt);
+    if (time_cnt < 25 * 100)
+    {
+        return;
+    }
+
+    // printf("__FUNC__ %s __LINE__ %u\n", __func__, __LINE__);
+
+    time_cnt = 0;
+
+    if (STAR_INDEX_METEOR_MUSIC_CONTROL == fc_effect.star_index) // 带声控的流星灯模式
+    {
+        fc_effect.star_index = STAR_INDEX_METEOR_MUSIC_CONTROL_2;
+    }
+    else if (STAR_INDEX_METEOR_MUSIC_CONTROL_2 == fc_effect.star_index) // 带声控的流星
+    {
+        fc_effect.star_index = STAR_INDEX_METEOR_MUSIC_CONTROL_3;
+    }
+    else if (STAR_INDEX_METEOR_MUSIC_CONTROL_3 == fc_effect.star_index) // 带声控的流星灯模式
+    {
+        fc_effect.star_index = STAR_INDEX_METEOR_MUSIC_CONTROL;
+    }
+
+    ls_meteor_stat_effect();
+}
+
 void main_while(void)
 {
     read_flash_device_status_init();
@@ -479,9 +545,12 @@ void main_while(void)
         effect_stepmotor(); // 声控，电机的音乐效果
         stepmotor();        // 无霍尔时，电机停止指令计时
         rf24_key_handle();
+
+        meteor_sound_effect_switch_handle();
+
         // printf("main circle\n"); // 主循环约10ms
         // printf("sizeof  fc_effect_t %d\n", sizeof(fc_effect_t)); // 打印是 276，存放到flash中会有问题
- 
+
         os_time_dly(1);
     }
 }

@@ -11,8 +11,8 @@ const u8 motor_period[6] = {8, 13, 18, 21, 26, 35}; // 转速  app指令，需�
 #define MOTOR_DATA_IO_PORT IO_PORTA_00
 // #define MOTOR_DATA_IO_PORT IO_PORTB_06
 
-// #define INS_LEN (7) // 指令长度
-#define INS_LEN (8) // 指令长度
+#define INS_LEN (7) // 指令长度
+// #define INS_LEN (8) // 指令长度
 // #define INS_LEN (16 - 1) // 指令长度
 // #define INS_LEN (16) // 指令长度
 #define W_0_5MS 4    // 脉宽0.5ms
@@ -66,7 +66,7 @@ void pack_base(void)
         send_base_ins |= BIT(6); // bit6 0:正转，1:反转
     }
 
-    printf("send_base_ins == 0x %x\n", (u16)send_base_ins);
+    // printf("send_base_ins == 0x %x\n", (u16)send_base_ins);
 }
 
 u8 is_one_wire_send_end(void)
