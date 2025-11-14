@@ -9,9 +9,6 @@
 #include "../../../apps/user_app/one_wire/one_wire.h"                        // 包含电机的驱动程序
 #include "../../../apps/user_app/save_flash/save_flash.h"
 
-// 流星灯尾焰长度索引列表
-const u8 meteor_tail_len_buff[] = {1, 2, 3, 4, 5, 6, 7, 8, 10, 12};
-
 // =========================================================
 // key 1 目前表示控制带有流星灯的遥控器
 
@@ -57,7 +54,7 @@ void rf24g_key_1_event_r1c1_click_handle(void)
         fc_effect.app_speed = 100 - (fc_effect.ls_speed) * 10;                         // 根据速度等级得到要反馈给app的速度值
         fb_speed();                                                                    // 给app反馈速度值
         WS2812FX_setSpeed_seg(0, fc_effect.dream_scene.speed);                         // 通过库提供的接口修改速度，而不是修改速度后再调用一次动画函数
-        // printf("fc_effect.dream_scene.speed %u\n", (u16)fc_effect.dream_scene.speed);
+        printf("fc_effect.dream_scene.speed %u\n", (u16)fc_effect.dream_scene.speed);
     }
     else if (IS_light_music == fc_effect.Now_state)
     {
@@ -113,8 +110,7 @@ void rf24g_key_1_event_r1c2_click_handle(void)
         fc_effect.app_speed = 100 - (fc_effect.ls_speed) * 10;                         // 根据速度等级得到要反馈给app的速度值
         fb_speed();                                                                    // 给app反馈速度值
         WS2812FX_setSpeed_seg(0, fc_effect.dream_scene.speed);                         // 通过库提供的接口修改速度，而不是修改速度后再调用一次动画函数
-
-        // printf("fc_effect.dream_scene.speed %u\n", (u16)fc_effect.dream_scene.speed);
+        printf("fc_effect.dream_scene.speed %u\n", (u16)fc_effect.dream_scene.speed);
     }
     else if (IS_light_music == fc_effect.Now_state)
     {
@@ -137,7 +133,7 @@ void rf24g_key_1_event_r1c3_click_handle(void)
 
 void rf24g_key_1_event_r1c4_click_handle(void)
 {
-    if (DEVICE_ON ==  fc_effect.on_off_flag )
+    if (DEVICE_ON == fc_effect.on_off_flag)
     {
         // 如果已经开机，不响应该按键事件
         return;
@@ -284,7 +280,7 @@ void rf24g_key_1_event_r4c4_click_handle(void)
             fc_effect.star_speed,        // 速度
             0);                          // 选项，这里像素点大小：3 REVERSE决定方向
         WS2812FX_resetSegmentRuntime(1); // 清除指定段的显示缓存
-        WS2812FX_running_flag_set(); 
+        WS2812FX_running_flag_set();
     }
     else
     {
@@ -301,10 +297,8 @@ void rf24g_key_1_event_r4c4_click_handle(void)
             0);                          // 选项，这里像素点大小：3 REVERSE决定方向
         WS2812FX_resetSegmentRuntime(1); // 清除指定段的显示缓存
         WS2812FX_running_flag_set();
-
-        
     }
-    
+
     fd_meteor_on_off(); // 向app反馈流星开关的状态
 }
 
@@ -518,13 +512,14 @@ void rf24g_key_1_event_r6c4_click_handle(void)
     }
 
     // 限制范围：0 ~ 9 ，总共10种索引
-    if (fc_effect.meteor_speed_index < ARRAY_SIZE(meteor_tail_len_buff))
+    if (fc_effect.meteor_speed_index < ARRAY_SIZE(meteor_tail_len_buff) - 1)
     {
         fc_effect.meteor_speed_index++;
     }
 
     // 成功调整参数后，需要重新跑流星灯动画
 
+#if 0
     // 正常流星模式下，增加尾焰长度
     if (STAR_INDEX_METEOR_NORMAL_SLOW == fc_effect.star_index ||
         STAR_INDEX_METEOR_NORMAL_MIDDLE == fc_effect.star_index ||
@@ -534,19 +529,29 @@ void rf24g_key_1_event_r6c4_click_handle(void)
     }
     else if (STAR_INDEX_METEOR_RANDOM_BREATH == fc_effect.star_index)
     {
-        // 流星灯乱闪模式下，调节速度
-        // USER_TO_DO 
+        /*
+            流星灯乱闪模式下，调节速度
+
+            random_breath_index 索引值越小，速度越快
+        */
+        random_breath_index = 9 - fc_effect.meteor_speed_index;
+        printf("fc_effect.meteor_speed_index %u\n", (u16)fc_effect.meteor_speed_index);
+        printf("random_breath_index %u\n", (u16)random_breath_index);
     }
     else if (STAR_INDEX_METEOR_MUSIC_CONTROL <= fc_effect.star_index ||
              STAR_INDEX_METEOR_MUSIC_CONTROL_3 >= fc_effect.star_index)
     {
         // 带声控的流星灯模式下，调节灵敏度
-        meteor_lights_sound_sensitivity_add();
+        // meteor_lights_sound_sensitivity_add();
+        fc_effect.meteor_lights_sensitivity = (fc_effect.meteor_speed_index + 1) * 10;
     }
 
     // 让流星灯动画重新开始跑
     WS2812FX_resetSegmentRuntime(1); //
     WS2812FX_running_flag_set();
+#endif
+
+    ls_meteor_stat_effect();
 }
 
 void rf24g_key_1_event_r7c1_click_handle(void)
@@ -654,6 +659,7 @@ void rf24g_key_1_event_r7c4_click_handle(void)
         fc_effect.meteor_speed_index--;
     }
 
+#if 0
     // 成功调整参数后，需要重新跑流星灯动画
 
     // 正常流星模式下，增加尾焰长度
@@ -665,19 +671,28 @@ void rf24g_key_1_event_r7c4_click_handle(void)
     }
     else if (STAR_INDEX_METEOR_RANDOM_BREATH == fc_effect.star_index)
     {
-        // 流星灯乱闪模式下，调节速度
-        // USER_TO_DO 
+        /*
+            流星灯乱闪模式下，调节速度
+
+            random_breath_index 索引值越小，速度越快
+        */
+        random_breath_index = 9 - fc_effect.meteor_speed_index;
+        printf("random_breath_index %u\n", (u16)random_breath_index);
     }
     else if (STAR_INDEX_METEOR_MUSIC_CONTROL <= fc_effect.star_index ||
              STAR_INDEX_METEOR_MUSIC_CONTROL_3 >= fc_effect.star_index)
     {
         // 带声控的流星灯模式下，调节灵敏度
-        meteor_lights_sound_sensitivity_sub();
+        // meteor_lights_sound_sensitivity_sub();
+        fc_effect.meteor_lights_sensitivity = (fc_effect.meteor_speed_index + 1) * 10;
     }
 
     // 让流星灯动画重新开始跑
     WS2812FX_resetSegmentRuntime(1); //
     WS2812FX_running_flag_set();
+#endif
+
+    ls_meteor_stat_effect();
 }
 
 // =================================================================================

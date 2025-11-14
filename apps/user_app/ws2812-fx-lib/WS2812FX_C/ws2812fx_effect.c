@@ -919,17 +919,6 @@ u16 colorful_lights_auto(void)
         u32 colors_buff[MAX_NUM_COLORS] = {0};
         u8 colors_nums = 0;
 
-        // colors_buff[colors_nums++] = RED;
-        // colors_buff[colors_nums++] = ORANGE;
-        // colors_buff[colors_nums++] = YELLOW;
-        // colors_buff[colors_nums++] = GREEN;
-        // colors_buff[colors_nums++] = CYAN;
-        // colors_buff[colors_nums++] = BLUE;
-        // colors_buff[colors_nums++] = PURPLE;
-        // colors_buff[colors_nums++] = PINK;
-        // colors_buff[colors_nums++] = MAGENTA; // 品红
-        // colors_buff[colors_nums++] = WHITE;
-
         colors_buff[colors_nums++] = BLUE;
         colors_buff[colors_nums++] = GREEN;
         colors_buff[colors_nums++] = RED;
@@ -947,7 +936,6 @@ u16 colorful_lights_auto(void)
     }
     else if (COLORFUL_LIGHTS_FLASH_END == _seg_rt->aux_param3)
     { // 频闪模式结束
-
         u32 colors_buff[MAX_NUM_COLORS] = {0};
         u8 colors_nums = 0;
 
@@ -958,7 +946,7 @@ u16 colorful_lights_auto(void)
         colors_buff[colors_nums++] = CYAN;
         colors_buff[colors_nums++] = PURPLE;
         colors_buff[colors_nums++] = WHITE;
-        colors_buff[colors_nums++] = BLACK; // 添加一段黑色，用来间隔动画
+        // colors_buff[colors_nums++] = BLACK; // 添加一段黑色，用来间隔动画
 
         WS2812FX_setColors(0, colors_buff);   // 往颜色数组填充颜色
         WS2812FX_set_coloQty(0, colors_nums); // 设置颜色数量（参数1，颜色数组索引；参数2，颜色数量）
@@ -970,23 +958,6 @@ u16 colorful_lights_auto(void)
     }
     else if (COLORFUL_LIGHTS_JUMP_END == _seg_rt->aux_param3)
     { // 跳变模式结束
-        // u32 colors_buff[MAX_NUM_COLORS] = {0};
-        // u8 colors_nums = 0;
-
-        // colors_buff[colors_nums++] = RED;
-        // colors_buff[colors_nums++] = ORANGE;
-        // colors_buff[colors_nums++] = YELLOW;
-        // colors_buff[colors_nums++] = GREEN;
-        // colors_buff[colors_nums++] = CYAN;
-        // colors_buff[colors_nums++] = BLUE;
-        // colors_buff[colors_nums++] = PURPLE;
-        // colors_buff[colors_nums++] = PINK;
-        // colors_buff[colors_nums++] = MAGENTA; // 品红
-        // colors_buff[colors_nums++] = WHITE;
-        // colors_buff[colors_nums++] = BLACK;   // 添加一段黑色，用来间隔动画
-        // WS2812FX_setColors(0, colors_buff);   // 往颜色数组填充颜色
-        // WS2812FX_set_coloQty(0, colors_nums); // 设置颜色数量（参数1，颜色数组索引；参数2，颜色数量）
-
         // 渐变模式使用的颜色改成由对应的动画内部自动生成
         _seg_rt->aux_param3 = COLORFUL_LIGHTS_GRADUAL_BEGIN;
         _seg_rt->counter_mode_call = 0;
@@ -1002,9 +973,9 @@ u16 colorful_lights_auto(void)
         colors_buff[colors_nums++] = GREEN;
         colors_buff[colors_nums++] = CYAN;
         colors_buff[colors_nums++] = BLUE;
-        colors_buff[colors_nums++] = PURPLE;
+        colors_buff[colors_nums++] = PURPLE; // 紫、粉色、品红，颜色过于接近，看上去可能是相同的颜色在呼吸
         colors_buff[colors_nums++] = PINK;
-        colors_buff[colors_nums++] = MAGENTA; // 品红
+        // colors_buff[colors_nums++] = MAGENTA; // 品红
         colors_buff[colors_nums++] = WHITE;
         colors_buff[colors_nums++] = BLACK;   // 添加一段黑色，用来间隔动画
         WS2812FX_setColors(0, colors_buff);   // 往颜色数组填充颜色（参数1，颜色数组索引）
@@ -1058,8 +1029,10 @@ u16 colorful_lights_auto(void)
     }
     else if (COLORFUL_LIGHTS_GRADUAL_BEGIN == _seg_rt->aux_param3)
     { // 渐变模式
-        static u32 cur_colors = BLACK;
-        static u32 dest_colors = BLACK; // 目标颜色
+      // static u32 cur_colors = BLACK;
+      // static u32 dest_colors = BLACK; // 目标颜色
+        u32 cur_colors = BLACK;
+        u32 dest_colors = BLACK; // 目标颜色
 
         u16 brightness = fc_effect.b;
 
@@ -1079,14 +1052,12 @@ u16 colorful_lights_auto(void)
             _seg_rt->counter_mode_step = 0;
             SET_CYCLE;
             _seg_rt->aux_param3 = COLORFUL_LIGHTS_GRADUAL_END;
-
-            // printf("sys time %lu\n", sys_time_get() - last_sys_time);
-            // last_sys_time = sys_time_get();
         }
 
         // printf("_seg->speed %u\n", (u16)_seg->speed);
 
-        return ((u32)_seg->speed * 2 / 128); // 控制 变化的速度
+        // return ((u32)_seg->speed * 2 / 128); // 控制 变化的速度
+        return ((u32)_seg->speed * 8 / 128); // 控制 变化的速度
     }
     else if (COLORFUL_LIGHTS_BREATHING_BEGIN == _seg_rt->aux_param3)
     {
@@ -1186,13 +1157,13 @@ u16 colorful_lights_auto(void)
                     if (_seg_rt->aux_param >= _seg->c_n - 1)
                     {
                         _seg_rt->aux_param = 0;
+                        _seg_rt->aux_param3 = COLORFUL_LIGHTS_BREATHING_END;
                     }
 
                     dest_color = _seg->colors[_seg_rt->aux_param];
                     // Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len); // 防止动画最后没有熄灭灯光
                     // dest_color = WS2812FX_color_blend(BLACK, _seg->colors[_seg_rt->aux_param], (u8)fc_effect.b);
 
-                    _seg_rt->aux_param3 = COLORFUL_LIGHTS_BREATHING_END;
                     SET_CYCLE;
                 }
             }
@@ -1200,11 +1171,6 @@ u16 colorful_lights_auto(void)
 
         u32 color = WS2812FX_color_blend(BLACK, dest_color, (u8)brightness);
         Adafruit_NeoPixel_fill(color, _seg->start, _seg_len);
-
-        // printf("brightness %u\n", (u16)brightness); //
-        // printf("temp_step %lu\n", (u32)temp_step);  // 打印为0
-        // printf("step %lu\n", (u32)step);
-        // printf("_seg_rt->counter_mode_step %lu\n", (u32)_seg_rt->counter_mode_step);
 
         return 1; // ws2812fx_service() 10ms调用一次，这个值只需要小于10
     }
@@ -1912,8 +1878,8 @@ u16 meteor_light_single_point_flow(void)
  *
  *  6 -- 呼吸动画18s，乱闪动画8s
  *  7 -- 呼吸动画38s，乱闪动画18s
- * 
- * 注意，_seg_rt->speed至少要大于等于 1000 
+ *
+ * 注意，_seg_rt->speed 至少要大于等于 1000
  *
  * @return u16
  */
@@ -1968,39 +1934,102 @@ u16 meteor_effect_random_breath(void)
         ret = (u32)18000 / _seg_len / (255 / brightness_add_step + (255 - next_led_begin_threshold_val) / brightness_sub_step);
     */
     u16 animation_time_during_breath = 0; // 一轮呼吸动画所需时间，单位：ms
-    // brightness_sub_step = 1; // 随着动画时间变长，这里衰减速度显得太慢
+    u16 animation_time_during_flash = 0;  // 一轮灯光乱闪动画所需时间，单位：ms
 
     // 最后得到的动画时间肯定会有一定误差，因为计算和返回值都会丢失部分精度
     switch (random_breath_index)
     {
+
+#if 0  // 大致按照样机的动画时间
     case 0:
         brightness_sub_step = 1; // 动画时间越短，渐渐变暗的步长就要变慢
         animation_time_during_breath = 2000;
+        animation_time_during_flash = 1000;
         break;
     case 1:
     case 2:
     case 3:                      // 1、2、3，一轮呼吸动画的时间都是3s，breath_time_interval = 3000
         brightness_sub_step = 2; // 亮度变化越快，越快变暗
         animation_time_during_breath = 3000;
+        animation_time_during_flash = 2000;
         break;
     case 4:
         brightness_sub_step = 3;
         animation_time_during_breath = 5000;
+        animation_time_during_flash = 3000;
         break;
 
     case 5:
         brightness_sub_step = 4;
         animation_time_during_breath = 7000;
+        animation_time_during_flash = 5000;
         break;
 
     case 6:
         brightness_sub_step = 10; // 动画时间越长，渐渐变暗的速度就要变快，但是会造成灯光闪烁
         animation_time_during_breath = 18000;
+        animation_time_during_breath = 10000;
         break;
     case 7:
+    default:
         brightness_sub_step = 12;
         animation_time_during_breath = 38000;
+        animation_time_during_flash = 20000;
         break;
+#endif // 大致按照样机的动画时间
+
+#if 1 // 不按照样机的动画时间
+
+    case 0:
+    case 1:
+    {
+        brightness_sub_step = 1; // 动画时间越短，渐渐变暗的步长就要变慢
+        animation_time_during_breath = 2000;
+        animation_time_during_flash = 1000;
+    }
+    break;
+    case 2:
+    case 3:
+    {
+        brightness_sub_step = 2; // 亮度变化越快，越快变暗
+        animation_time_during_breath = 3000;
+        animation_time_during_flash = 2000;
+        break;
+    }
+    break;
+    case 4:
+    case 5:
+    {
+        brightness_sub_step = 3;
+        animation_time_during_breath = 5000;
+        animation_time_during_flash = 3000;
+    }
+    break;
+    case 6:
+    case 7:
+    {
+        brightness_sub_step = 4;
+        animation_time_during_breath = 7000;
+        animation_time_during_flash = 5000;
+    }
+    break;
+    case 8:
+    {
+        brightness_sub_step = 10; // 动画时间越长，渐渐变暗的速度就要变快，但是会造成灯光闪烁
+        animation_time_during_breath = 18000;
+        animation_time_during_breath = 10000;
+    }
+    break;
+    case 9: // 目前数值大于等于 5，都是用下面的代码块
+    default:
+    {
+        brightness_sub_step = 12;
+        animation_time_during_breath = 38000;
+        animation_time_during_flash = 20000;
+    }
+    break;
+
+#endif // 不按照样机的动画时间
     }
 
     // 2000 / 12 / (7 + (51) / 1)  == 2 【next_led_begin_threshold_val == 255 * 8 / 10】
@@ -2163,7 +2192,8 @@ u16 meteor_effect_random_breath(void)
         测试发现这段代码会导致芯片复位
     */
 
-    // 让灯光乱闪
+    // 让灯光乱闪 ，动画时间 == _seg->speed，单位：ms
+    // 让灯光乱闪 ，动画时间 == animation_time_during_flash，单位：ms
     if (ANIMATION_STAGE_2_BEGIN == _seg_rt->cur_animation_stage)
     {
         // printf("random\n");
@@ -2226,8 +2256,12 @@ u16 meteor_effect_random_breath(void)
 
         /* WS2812FX_service() 10ms调用一次，而 _seg->speed 以ms为单位，一般是 1000ms以上，这里除以10 */
         // 这里speed不能太小，否则会跳过当前动画阶段，回到 ANIMATION_STAGE_1_BEGIN ~ ANIMATION_STAGE_1_END
-        _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (_seg->speed / 10);
-        // printf("_seg->speed %u\n", _seg->speed); 
+        // _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (_seg->speed / 10);
+        // printf("_seg->speed %u\n", _seg->speed);
+
+        /* WS2812FX_service() 10ms调用一次，而 animation_time_during_flash 以ms为单位，一般是 1000ms以上，这里除以10 */
+        // 这里 animation_time_during_flash 不能太小，否则会跳过当前动画阶段，回到 ANIMATION_STAGE_1_BEGIN ~ ANIMATION_STAGE_1_END
+        _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (animation_time_during_flash / 10);
         if (0 == _seg_rt->counter_mode_step)
         {
             // printf("sys time %lu\n", sys_time_get() - last_sys_time);
@@ -2245,14 +2279,6 @@ u16 meteor_effect_random_breath(void)
             _seg_rt->cur_animation_stage = ANIMATION_STAGE_2_END;
         }
 #endif
-
-        // _seg_rt->cur_animation_stage = ANIMATION_STAGE_2_END;
-        // for (u8 k = 0; k < sizeof(_seg_rt->led_index_enable_buff); k++)
-        // {
-        //     _seg_rt->led_index_enable_buff[k] = 0;
-        //     _seg_rt->led_index_mode_step[k] = 0;
-        // }
-        // _seg_rt->counter_mode_step = 0;
 
         return 1; //
     }
@@ -4316,4 +4342,26 @@ uint16_t fc_music_twinkle(void)
         Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len);
     }
     return 50;
+}
+
+/**
+ * @brief 七彩灯的声控 渐变效果，默认最大亮度
+ *
+ * @return * u16
+ */
+u16 colorful_lights_sound_gradual_max_brightness(void)
+{
+    uint32_t color = WS2812FX_color_wheel(_seg_rt->counter_mode_step);
+    Adafruit_NeoPixel_fill_with_max_brightness(color, _seg->start, _seg_len); // 填充最大亮度值对应的颜色
+    if (get_sound_triggered_by_colorful_lights())
+    {
+        _seg_rt->counter_mode_step += 20;
+    }
+
+    _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) & 0xFF;
+
+    if (_seg_rt->counter_mode_step == 0)
+        SET_CYCLE;
+
+    return (100);
 }

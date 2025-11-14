@@ -120,15 +120,27 @@ enum
 };
 // 七彩灯动画
 u16 colorful_lights_static(void); // 七彩灯的静态效果
-u16 colorful_lights_flash(void); // 七彩灯的频闪效果
-u16 colorful_lights_jump(void);  // 七彩灯跳变动画
+u16 colorful_lights_flash(void);  // 七彩灯的频闪效果
+u16 colorful_lights_jump(void);   // 七彩灯跳变动画
 u16 colorful_lights_gradual(void);
 u16 colorful_lights_breathing(void);
 u16 colorful_lights_auto(void); // 七彩灯的自动模式
 
-// ==============================================================
+// 七彩灯声控模式下，对应的动画
+u16 colorful_lights_sound_gradual_max_brightness(void);
 
+// ==============================================================
+/*
+    meteor_effect_slow()、meteor_effect_middle()、
+    meteor_effect_fast()动画中使用到的流星灯尾焰长度
+    meteor_tail_len == 1，整个流星灯长度为1个灯珠
+    meteor_tail_len == 4，整个流星灯长度为4个灯珠，尾焰3个灯珠
+*/
 extern volatile u8 meteor_tail_len;
+/*
+    meteor_effect_random_breath()动画中的速度和动画时间索引
+*/
+extern volatile u8 random_breath_index;
 
 // 快速流星效果
 // 在每次开启流星灯时使用
@@ -140,12 +152,12 @@ u16 meteor_effect_when_pwr_on(void);
 u16 meteor_effect(void);
 // u16 meteor_light_random_breath(void); // 流星动画，对应样机的乱闪效果
 
-u16 meteor_effect_slow(void);          // 样机的正常流星（慢速）模式
-u16 meteor_effect_middle(void);        // 样机的正常流星（中速）模式
-u16 meteor_effect_fast(void);          // 样机的正常流星（快速）模式
-u16 meteor_effect_random_breath(void); // 流星动画，对应样机的乱闪效果
-u16 meteor_light_single_point_flow(void); // 声控模式下，流星灯单点流水
+u16 meteor_effect_slow(void);                          // 样机的正常流星（慢速）模式
+u16 meteor_effect_middle(void);                        // 样机的正常流星（中速）模式
+u16 meteor_effect_fast(void);                          // 样机的正常流星（快速）模式
+u16 meteor_effect_random_breath(void);                 // 流星动画，对应样机的乱闪效果
+u16 meteor_light_single_point_flow(void);              // 声控模式下，流星灯单点流水
 u16 meteor_light_sigle_channel_equalizer_effect(void); // 飙升（相当于声控模式下的单路均衡器效果）
-u16 meteor_light_two_channel_equalizer_effect(void); // 双路并行均衡器效果
+u16 meteor_light_two_channel_equalizer_effect(void);   // 双路并行均衡器效果
 
 #endif

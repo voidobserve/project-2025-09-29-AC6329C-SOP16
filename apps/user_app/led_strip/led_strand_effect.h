@@ -206,6 +206,8 @@ countdown_t zd_countdown[ALARM_NUMBER];
 
 extern volatile fc_effect_t fc_effect; // 幻彩灯串效果数据
 
+extern const u8 meteor_tail_len_buff[10];
+
 void base_Dynamic_Effect(u8 tp_num);
 
 void ls_set_color(uint8_t n, uint32_t c);

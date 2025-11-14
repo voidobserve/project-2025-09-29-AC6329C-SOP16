@@ -65,7 +65,7 @@ void save_data_time_count_down(void *p)
         {
             sys_timer_del(timer_id);
             timer_id = 0;
-            printf("timer del\n");
+            // printf("timer del\n");
         }
 
         save_user_data_area3();

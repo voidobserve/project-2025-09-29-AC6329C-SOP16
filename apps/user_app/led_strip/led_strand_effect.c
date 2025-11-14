@@ -19,6 +19,9 @@ const u8 fade_type[3] =
         FADE_XFAST, FADE_FAST, FADE_MEDIUM //,FADE_SLOW
 };
 
+// 流星灯尾焰长度索引列表
+const u8 meteor_tail_len_buff[] = {1, 2, 3, 4, 5, 6, 7, 8, 10, 12};
+
 #define segment_num 1
 #define _0_seg_start 0
 #define _0_seg_stop 0
@@ -1104,22 +1107,16 @@ void ls_meteor_stat_effect(void)
     save_user_data_area3(); // 保存参数配置到flash
 
 #endif
-
-    // fc_effect.period_cnt = 0;
+ 
     if (fc_effect.star_on_off == DEVICE_OFF)
     {
         return;
-    }
-
-    // 流星灯尾焰长度索引列表
-    const u8 meteor_tail_len_buff[] = {1, 2, 3, 4, 5, 6, 7, 8, 10, 12};
-    // 流星灯速度值索引列表
-    const u8 meteor_speed_buff[] = {0};
-    // 流星灯声控模式的灵敏度索引列表
-
-    // 流星灯乱闪速度值索引列表 1000ms ~ 20 000ms
-    // USER_TO_DO 
-
+    } 
+    
+    // 根据 fc_effect.meteor_speed_index ，更新流星灯相关的参数
+    meteor_tail_len = meteor_tail_len_buff[fc_effect.meteor_speed_index];
+    random_breath_index = 9 - fc_effect.meteor_speed_index;
+    fc_effect.meteor_lights_sensitivity = (fc_effect.meteor_speed_index + 1) * 10;
 
     mode_ptr meteor_func_ptr = NULL; // 函数指针，流星灯动画
 
