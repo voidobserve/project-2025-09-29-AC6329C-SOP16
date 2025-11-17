@@ -406,10 +406,18 @@ void rf24g_key_1_event_r5c4_click_handle(void)
 
     printf("meteor mode change\n");
 
+    /*
+        USER_TO_DO 
+        如果fc_effect.star_index不是在
+        STAR_INDEX_METEOR_NORMAL_SLOW ~ STAR_INDEX_METEOR_MUSIC_CONTROL，
+        需要限制在范围内
+    */ 
+
     fc_effect.star_index++;
     // if (fc_effect.star_index >= STAR_INDEX_METEOR_MAX) // 防止溢出
     // if (fc_effect.star_index >= STAR_INDEX_METEOR_RANDOM_BREATH_2) // 测试时使用
-    if (fc_effect.star_index > STAR_INDEX_METEOR_MUSIC_CONTROL)
+    if (fc_effect.star_index > STAR_INDEX_METEOR_MUSIC_CONTROL || 
+        fc_effect.star_index < STAR_INDEX_METEOR_NORMAL_SLOW) // 如果流星灯索引小于正常流星（慢速）模式，变为正常流星（慢速）模式
     {
         fc_effect.star_index = STAR_INDEX_METEOR_NORMAL_SLOW; // 默认为正常流星（慢速）
     }
@@ -510,6 +518,13 @@ void rf24g_key_1_event_r6c4_click_handle(void)
     {
         return;
     }
+
+    // if (fc_effect.star_index < STAR_INDEX_METEOR_NORMAL_SLOW || 
+    // fc_effect.star_index >= STAR_INDEX_METEOR_MAX)
+    // {
+    //     // 如果当前流星灯的动画索引不在遥控器可以调节到的动画范围内，可能是在app调节的范围内，不做处理
+    //     return;
+    // }
 
     // 限制范围：0 ~ 9 ，总共10种索引
     if (fc_effect.meteor_speed_index < ARRAY_SIZE(meteor_tail_len_buff) - 1)

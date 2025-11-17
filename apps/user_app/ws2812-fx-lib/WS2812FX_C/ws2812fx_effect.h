@@ -127,7 +127,12 @@ u16 colorful_lights_breathing(void);
 u16 colorful_lights_auto(void); // 七彩灯的自动模式
 
 // 七彩灯声控模式下，对应的动画
-u16 colorful_lights_sound_gradual_max_brightness(void);
+u16 colorful_lights_sound_gradual_max_brightness(void); // 七彩灯的 声控渐变 效果
+u16 colorful_lights_sound_breath_max_brightness(void); // 七彩灯的 声控呼吸 效果
+u16 colorful_lights_sound_static_max_brightness(void); // 七彩灯的 声控静态 效果
+u16 colorful_lights_sound_twinkle_max_brightness(void); // 七彩灯的 声控跳变 效果
+
+
 
 // ==============================================================
 /*

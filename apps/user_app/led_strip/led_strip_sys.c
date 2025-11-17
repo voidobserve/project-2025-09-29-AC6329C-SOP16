@@ -117,7 +117,7 @@ void soft_turn_on_the_light(void)
 /**
  * @brief 软件关闭设备
  *
- * @return * void
+ * @return  void
  */
 void soft_turn_off_lights(void)
 {
@@ -479,9 +479,23 @@ void app_set_music_mode(u8 tp_m)
  */
 void ls_set_music_mode(void)
 {
-    fc_effect.music.m++;
-    fc_effect.music.m %= MAX_MUSIC_EFFECT_NUMBER;
-    fc_effect.Now_state = IS_light_music;
+    if (IS_light_music != fc_effect.Now_state)
+    {
+        // 如果进入声控模式前，不处于声控模式
+        fc_effect.Now_state = IS_light_music;
+
+        if (fc_effect.music.m >= MAX_MUSIC_EFFECT_NUMBER)
+        {
+            // 如果进入声控模式前，声控模式的索引超出了范围
+            fc_effect.music.m = 0;
+        }
+    }
+    else
+    {
+        // 如果本身就处于声控模式
+        fc_effect.music.m++;
+        fc_effect.music.m %= MAX_MUSIC_EFFECT_NUMBER;
+    }
 
     // printf("fc_effect.music.m = %u\n", (u16)fc_effect.music.m); // 打印声控模式的索引
     set_fc_effect();
@@ -614,7 +628,7 @@ void app_set_mereor_speed(u8 tp_s)
         return;
     fc_effect.app_star_speed = tp_s;
     fc_effect.star_speed = MAX_STAR_SEPPD * (100 - fc_effect.app_star_speed + 10) / 100;
-    printf(" fc_effect.star_speed=%d", fc_effect.star_speed);
+    printf(" fc_effect.star_speed=%d\n", fc_effect.star_speed);
     ls_meteor_stat_effect();
 }
 
@@ -677,8 +691,8 @@ void ls_set_star_speed(void)
     fc_effect.star_speed = MAX_STAR_SEPPD * (100 - fc_effect.app_star_speed + 10) / 100;
 
     ls_meteor_stat_effect();
-    printf("fc_effect.star_speed  = %d", fc_effect.app_star_speed);
-    printf(" fc_effect.star_speed = %d", fc_effect.star_speed);
+    printf("fc_effect.star_speed  = %d\n", fc_effect.app_star_speed);
+    printf(" fc_effect.star_speed = %d\n", fc_effect.star_speed);
     fd_meteor_speed();
 }
 
@@ -700,8 +714,8 @@ void ls_add_star_speed(void)
     fc_effect.star_speed = MAX_STAR_SEPPD * (100 - fc_effect.app_star_speed + 10) / 100;
 
     ls_meteor_stat_effect();
-    printf("fc_effect.star_speed  = %d", fc_effect.app_star_speed);
-    printf(" fc_effect.star_speed = %d", fc_effect.star_speed);
+    printf("fc_effect.star_speed  = %d\n", fc_effect.app_star_speed);
+    printf(" fc_effect.star_speed = %d\n", fc_effect.star_speed);
     fd_meteor_speed();
 }
 
@@ -723,8 +737,8 @@ void ls_sub_star_speed(void)
     fc_effect.star_speed = MAX_STAR_SEPPD * (100 - fc_effect.app_star_speed + 10) / 100;
 
     ls_meteor_stat_effect();
-    printf("fc_effect.star_speed  = %d", fc_effect.app_star_speed);
-    printf(" fc_effect.star_speed = %d", fc_effect.star_speed);
+    printf("fc_effect.star_speed  = %d\n", fc_effect.app_star_speed);
+    printf(" fc_effect.star_speed = %d\n", fc_effect.star_speed);
     fd_meteor_speed();
 }
 

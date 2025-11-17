@@ -548,6 +548,11 @@ void main_while(void)
 
         meteor_sound_effect_switch_handle();
 
+        if (save_user_data_status_get())
+        {
+            save_user_data_area3();
+        }
+
         // printf("main circle\n"); // 主循环约10ms
         // printf("sizeof  fc_effect_t %d\n", sizeof(fc_effect_t)); // 打印是 276，存放到flash中会有问题
 

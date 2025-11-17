@@ -4345,12 +4345,13 @@ uint16_t fc_music_twinkle(void)
 }
 
 /**
- * @brief 七彩灯的声控 渐变效果，默认最大亮度
+ * @brief 七彩灯的 声控渐变 效果，默认以最大的亮度进行
  *
  * @return * u16
  */
 u16 colorful_lights_sound_gradual_max_brightness(void)
 {
+    // 生成指定颜色：
     uint32_t color = WS2812FX_color_wheel(_seg_rt->counter_mode_step);
     Adafruit_NeoPixel_fill_with_max_brightness(color, _seg->start, _seg_len); // 填充最大亮度值对应的颜色
     if (get_sound_triggered_by_colorful_lights())
@@ -4364,4 +4365,75 @@ u16 colorful_lights_sound_gradual_max_brightness(void)
         SET_CYCLE;
 
     return (100);
+}
+
+/**
+ * @brief 七彩灯的 声控呼吸 效果，默认以最大的亮度进行
+ *
+ */
+u16 colorful_lights_sound_breath_max_brightness(void)
+{
+    static uint32_t color1;
+    if (get_sound_triggered_by_colorful_lights())
+    {
+        color1 = WS2812FX_color_wheel(_seg_rt->aux_param);
+        _seg_rt->aux_param += 5;
+
+        _seg_rt->counter_mode_step = 1;
+    }
+
+    int lum = _seg_rt->counter_mode_step;
+    if (lum > 255)
+        lum = 511 - lum; // lum = 0 -> 255 -> 0
+
+    uint32_t color = WS2812FX_color_blend(0, color1, lum);
+    Adafruit_NeoPixel_fill_with_max_brightness(color, _seg->start, _seg_len);
+    if (_seg_rt->counter_mode_step != 0)
+    {
+        _seg_rt->counter_mode_step += 8;
+    }
+    if (_seg_rt->counter_mode_step > 511)
+    {
+        _seg_rt->counter_mode_step = 0;
+    }
+
+    return 10;
+}
+
+/**
+ * @brief 七彩灯的 声控静态 效果，默认以最大的亮度进行
+ *
+ */
+u16 colorful_lights_sound_static_max_brightness(void)
+{
+    uint32_t color;
+    if (get_sound_triggered_by_colorful_lights())
+    {
+
+        color = WS2812FX_color_wheel(_seg_rt->aux_param);
+        _seg_rt->aux_param += 20;
+
+        Adafruit_NeoPixel_fill_with_max_brightness(color, _seg->start, _seg_len);
+    }
+    return 100;
+}
+
+/**
+ * @brief 七彩灯的 声控跳变 效果，默认以最大的亮度进行
+ *
+ */
+u16 colorful_lights_sound_twinkle_max_brightness(void)
+{
+    uint32_t color;
+    if (get_sound_triggered_by_colorful_lights())
+    {
+        color = WS2812FX_color_wheel(_seg_rt->aux_param);
+        _seg_rt->aux_param += 20;
+        Adafruit_NeoPixel_fill_with_max_brightness(color, _seg->start, _seg_len);
+    }
+    else
+    {
+        Adafruit_NeoPixel_fill_with_max_brightness(BLACK, _seg->start, _seg_len);
+    }
+    return 50;
 }

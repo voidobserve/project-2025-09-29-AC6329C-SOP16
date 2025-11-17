@@ -104,7 +104,7 @@ static void static_mode(void)
 
     WS2812FX_resetSegmentRuntime(0); // 清除指定段的显示缓存
     WS2812FX_running_flag_set();     // 置位运行标志
-    WS2812FX_triggered_by_colorful_lights();
+    // WS2812FX_triggered_by_colorful_lights();
 }
 
 /*----------------------------------彩虹效果----------------------------------*/
@@ -1103,16 +1103,13 @@ void ls_meteor_stat_effect(void)
             WS2812FX_start();
         }
     }
-
-    save_user_data_area3(); // 保存参数配置到flash
-
 #endif
- 
+
     if (fc_effect.star_on_off == DEVICE_OFF)
     {
         return;
-    } 
-    
+    }
+
     // 根据 fc_effect.meteor_speed_index ，更新流星灯相关的参数
     meteor_tail_len = meteor_tail_len_buff[fc_effect.meteor_speed_index];
     random_breath_index = 9 - fc_effect.meteor_speed_index;
@@ -1190,6 +1187,8 @@ static void ls_music_effect(void)
     // app_set_bright(100); // 设置为最大亮度
     WS2812FX_setBrightness(255); // 设置为最大亮度，但不改变 fc_effect.b 的值
 #if (LED_STRIP_TYPE == TYPE_Fiber_optic_lights)
+
+#if 0
     switch (fc_effect.music.m)
     {
     case 0:
@@ -1203,6 +1202,25 @@ static void ls_music_effect(void)
         break;
     case 3:
         music_effect_addr = &fc_music_twinkle;
+        break;
+    default:
+        break;
+    }
+#endif
+
+    switch (fc_effect.music.m)
+    {
+    case 0:
+        music_effect_addr = &colorful_lights_sound_gradual_max_brightness;
+        break;
+    case 1:
+        music_effect_addr = &colorful_lights_sound_breath_max_brightness;
+        break;
+    case 2:
+        music_effect_addr = &colorful_lights_sound_static_max_brightness;
+        break;
+    case 3:
+        music_effect_addr = &colorful_lights_sound_twinkle_max_brightness;
         break;
     default:
         break;
@@ -1286,6 +1304,7 @@ static void ls_smear_adjust_effect(void)
  */
 static void ls_static_effect(void)
 {
+    extern void static_mode(void);
     static_mode();
 }
 
