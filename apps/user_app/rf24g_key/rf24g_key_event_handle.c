@@ -304,7 +304,14 @@ void rf24g_key_1_event_r4c4_click_handle(void)
 
 void rf24g_key_1_event_r5c1_click_handle(void)
 {
-    // 七彩频闪
+    // 七彩频闪 FLASH
+    if (IS_light_scene == fc_effect.Now_state &&
+        MODO_COLORFUL_LIGHTS_FLASH == fc_effect.dream_scene.change_type &&
+        7 == fc_effect.dream_scene.c_n)
+    {
+        // 如果现在就是七彩灯的频闪模式，不做处理
+        return;
+    }
 
     ls_set_color(0, BLUE);
     ls_set_color(1, GREEN);
@@ -332,7 +339,13 @@ void rf24g_key_1_event_r5c1_click_handle(void)
 
 void rf24g_key_1_event_r5c2_click_handle(void)
 {
-    // 七色跳变
+    // 七色跳变 JUMP
+    if (IS_light_scene == fc_effect.Now_state &&
+        MODE_COLORFUL_LIGHTS_JUMP == fc_effect.dream_scene.change_type)
+    {
+        // 如果本来就是七彩灯的跳变模式，不做处理 （目前只会是遥控器控制会进入这里）
+        return;
+    }
 
     ls_set_color(0, RED);
     ls_set_color(1, GREEN);
@@ -361,6 +374,12 @@ void rf24g_key_1_event_r5c2_click_handle(void)
 void rf24g_key_1_event_r5c3_click_handle(void)
 {
     // 七彩渐变
+    if (IS_light_scene == fc_effect.Now_state &&
+        MODE_COLORFUL_LIGHTS_GRADUAL == fc_effect.dream_scene.change_type)
+    {
+        // 如果当前是七彩灯渐变模式，不做处理
+        return;
+    }
 
     if ((fc_effect.dream_scene.change_type != MODE_COLORFUL_LIGHTS_GRADUAL) ||
         (fc_effect.Now_state != IS_light_scene))
@@ -407,16 +426,15 @@ void rf24g_key_1_event_r5c4_click_handle(void)
     printf("meteor mode change\n");
 
     /*
-        USER_TO_DO 
+        USER_TO_DO （还未测试）
         如果fc_effect.star_index不是在
         STAR_INDEX_METEOR_NORMAL_SLOW ~ STAR_INDEX_METEOR_MUSIC_CONTROL，
         需要限制在范围内
-    */ 
-
+    */
     fc_effect.star_index++;
     // if (fc_effect.star_index >= STAR_INDEX_METEOR_MAX) // 防止溢出
     // if (fc_effect.star_index >= STAR_INDEX_METEOR_RANDOM_BREATH_2) // 测试时使用
-    if (fc_effect.star_index > STAR_INDEX_METEOR_MUSIC_CONTROL || 
+    if (fc_effect.star_index > STAR_INDEX_METEOR_MUSIC_CONTROL ||
         fc_effect.star_index < STAR_INDEX_METEOR_NORMAL_SLOW) // 如果流星灯索引小于正常流星（慢速）模式，变为正常流星（慢速）模式
     {
         fc_effect.star_index = STAR_INDEX_METEOR_NORMAL_SLOW; // 默认为正常流星（慢速）
@@ -428,6 +446,13 @@ void rf24g_key_1_event_r5c4_click_handle(void)
 void rf24g_key_1_event_r6c1_click_handle(void)
 {
     // AUTO
+
+    if (IS_light_scene == fc_effect.Now_state &&
+        MODE_COLORFUL_LIGHTS_AUTO == fc_effect.dream_scene.change_type)
+    {
+        // 如果之前是七彩灯的AUTO模式，则不做处理
+        return;
+    }
 
     if ((fc_effect.dream_scene.change_type != MODE_COLORFUL_LIGHTS_AUTO) ||
         (fc_effect.Now_state != IS_light_scene))
@@ -458,9 +483,11 @@ void rf24g_key_1_event_r6c3_click_handle(void)
     u8 color_nums = 0; // 存放颜色数量
 
     if (IS_light_scene == fc_effect.Now_state &&
-        MODE_COLORFUL_LIGHTS_BREATH == fc_effect.dream_scene.change_type)
+        MODE_COLORFUL_LIGHTS_BREATH == fc_effect.dream_scene.change_type &&
+        7 == fc_effect.dream_scene.c_n)
     { // 如果本来就是呼吸模式，不响应该事件
       // printf("__LINE__ %d\n", __LINE__);
+        return;
     }
     else if (IS_STATIC == fc_effect.Now_state)
     {
@@ -481,6 +508,7 @@ void rf24g_key_1_event_r6c3_click_handle(void)
             如果不是从静态模式进入呼吸模式，
             变成变色呼吸（每轮呼吸完换一种颜色）
         */
+#if 0
         ls_set_color(color_nums++, RED);
         ls_set_color(color_nums++, ORANGE);
         ls_set_color(color_nums++, YELLOW);
@@ -488,10 +516,19 @@ void rf24g_key_1_event_r6c3_click_handle(void)
         ls_set_color(color_nums++, CYAN);
         ls_set_color(color_nums++, BLUE);
         ls_set_color(color_nums++, PURPLE);
-        ls_set_color(color_nums++, PINK);
+        // ls_set_color(color_nums++, PINK);
         ls_set_color(color_nums++, MAGENTA); // 品红
         ls_set_color(color_nums++, WHITE);
         // printf("__LINE__ %d\n", __LINE__);
+#endif
+
+        ls_set_color(color_nums++, BLUE);
+        ls_set_color(color_nums++, GREEN);
+        ls_set_color(color_nums++, RED);
+        ls_set_color(color_nums++, WHITE);
+        ls_set_color(color_nums++, YELLOW);
+        ls_set_color(color_nums++, CYAN);
+        ls_set_color(color_nums++, PURPLE);
     }
 
     if ((fc_effect.dream_scene.change_type != MODE_COLORFUL_LIGHTS_BREATH) ||
@@ -519,7 +556,7 @@ void rf24g_key_1_event_r6c4_click_handle(void)
         return;
     }
 
-    // if (fc_effect.star_index < STAR_INDEX_METEOR_NORMAL_SLOW || 
+    // if (fc_effect.star_index < STAR_INDEX_METEOR_NORMAL_SLOW ||
     // fc_effect.star_index >= STAR_INDEX_METEOR_MAX)
     // {
     //     // 如果当前流星灯的动画索引不在遥控器可以调节到的动画范围内，可能是在app调节的范围内，不做处理

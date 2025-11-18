@@ -647,6 +647,7 @@ void parse_zd_data(unsigned char *LedCommand)
                     break; // YELLOW
 
                 case 5:
+                    // USER_TO_DO 这里紫色不是最亮
                     set_static_mode((PURPLE >> 16) & 0xff, (PURPLE >> 8) & 0xff, (PURPLE >> 0) & 0xff);
                     break; // PURPLE
 
@@ -658,14 +659,15 @@ void parse_zd_data(unsigned char *LedCommand)
             //---------------------------------动态处理-----------------------------------
             if (LedCommand[0] == 0x04 && LedCommand[1] == 0x02 && LedCommand[2] >= 0x07 && LedCommand[2] <= 0x1e)
             {
+                // 通过app设置七彩灯动态模式
                 phone_music_soure = 1;
                 fc_effect.app_rgb_mode = LedCommand[2];
-
                 base_Dynamic_Effect(LedCommand[2]);
             }
             //---------------------------------调节亮度0-100-----------------------------------
             if (LedCommand[0] == 0x04 && LedCommand[1] == 0x03)
             {
+                // 通过app设置七彩灯的亮度，只有在静态模式才设置亮度
                 phone_music_soure = 1;
                 extern void app_set_bright(u8 tp_b);
                 app_set_bright(LedCommand[2]);
@@ -674,6 +676,7 @@ void parse_zd_data(unsigned char *LedCommand)
             //---------------------------------调节速度0-100-----------------------------------
             if (LedCommand[0] == 0x04 && LedCommand[1] == 0x04)
             {
+                // 通过app设置七彩灯在动态模式下的速度
                 // 范围0-100
                 extern void app_set_speed(u8 tp_speed);
                 app_set_speed(LedCommand[2]);
@@ -712,11 +715,36 @@ void parse_zd_data(unsigned char *LedCommand)
                 if (fc_effect.music.m_type == PHONE_MIC) // 手机麦模式
                 {
 
-                    app_set_bright(LedCommand[5]);
+                    // app_set_bright(LedCommand[5]); // 样机的声控模式一直是最大亮度，这里注释掉
+
                     if (phone_music_soure == 1)
                     {
                         phone_music_soure = 0;
-                        set_static_mode(LedCommand[2], LedCommand[3], LedCommand[4]);
+                        // set_static_mode(LedCommand[2], LedCommand[3], LedCommand[4]);
+                        fc_effect.Now_state = IS_IN_MODE_PHONE_MIC;
+
+                        fc_effect.rgb.r = LedCommand[2];
+                        fc_effect.rgb.g = LedCommand[3];
+                        fc_effect.rgb.b = LedCommand[4];
+                        // fc_effect.rgb.w = 0;
+
+                        // printf("r = %d, g = %d, b = %d", r, g, b);
+
+                        if (fc_effect.rgb.r == 0xFF &&
+                            fc_effect.rgb.g == 0xFF &&
+                            fc_effect.rgb.b == 0xFF)
+                        {
+
+                            fc_effect.rgb.r = 0;
+                            fc_effect.rgb.g = 0;
+                            fc_effect.rgb.b = 0;
+                            fc_effect.rgb.w = 255;
+                        }
+                        else
+                        {
+                            fc_effect.rgb.w = 0;
+                        }
+                        set_fc_effect(); // 效果调度
                     }
                     else
                     {
@@ -743,6 +771,8 @@ void parse_zd_data(unsigned char *LedCommand)
 
                         ls_set_colors(1, &fc_effect.rgb);
                     }
+
+                    // printf("phone_music_soure %u\n", (u16)phone_music_soure);
                 }
             }
             //---------------------------------外麦声控模式-----------------------------------
@@ -774,6 +804,7 @@ void parse_zd_data(unsigned char *LedCommand)
             //---------------------------------设置麦克风灵，电机，流星敏度-----------------------------------
             if (LedCommand[0] == 0x2F && LedCommand[1] == 0x05)
             {
+                // 通过app设置灵敏度
                 app_set_sensitive(LedCommand[2]);
                 fb_sensitive();
             }
@@ -801,12 +832,11 @@ void parse_zd_data(unsigned char *LedCommand)
                 fd_meteor_on_off();
             }
 
-            // --------------------------------流星灯时间间隔-----------------------------------
+            // --------------------------------流星灯时间间隔  流星灯周期 -----------------------------------
             if (LedCommand[0] == 0x2F && LedCommand[1] == 0x03 && fc_effect.star_on_off == DEVICE_ON)
             {
-
                 app_set_meteor_pro(LedCommand[2]);
-                fd_meteor_cycle();
+                fd_meteor_cycle(); // 反馈流星周期
             }
 
             // ---------------------------------设置电机模式-----------------------------------

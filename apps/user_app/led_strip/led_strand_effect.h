@@ -20,6 +20,7 @@ typedef enum
     IS_light_scene,  // 炫彩情景
     IS_smear_adjust, // 涂抹功能
 
+    IS_IN_MODE_PHONE_MIC, // 手机麦克风模式
 } Now_state_e;
 
 // 涂抹工具
@@ -68,7 +69,7 @@ typedef enum
     MODE_GRADUAL = 34,                                           // 标准渐变，彩虹颜色
     MODE_MUTIL_C_BREATH = 35,
 
-    MODO_COLORFUL_LIGHTS_FLASH, // 七彩灯动画，频闪（闪烁使用到的颜色，在颜色数组中循环索引 ）
+    MODO_COLORFUL_LIGHTS_FLASH, // 七彩灯动画，频闪（闪烁使用到的颜色，在颜色数组中循环索引，可以只有一个颜色 ）
     MODE_COLORFUL_LIGHTS_JUMP,    // 七彩灯动画，跳变（跳变使用到的颜色，在颜色数组中循环索引 ）
     MODE_COLORFUL_LIGHTS_GRADUAL, // 七彩灯动画，渐变（渐变使用到的颜色，在颜色数组中循环索引；至少要有两个颜色）
     MODE_COLORFUL_LIGHTS_BREATH,  // 七彩灯动画，呼吸（呼吸使用到的颜色，在颜色数组中循环索引；可以只有一个颜色）
@@ -185,9 +186,9 @@ typedef struct
     // 流星灯的相关参数
     unsigned char star_on_off; // 流星灯开关
     unsigned char star_index;  // 流星灯动画索引
-    unsigned short star_speed;
+    unsigned short star_speed; // 目前范围：30 - 300
     unsigned char app_star_speed; // 反馈给APP流星速度
-    u8 meteor_speed_index; // 流星灯速度值索引（正常流星下回影响流星尾焰长度）
+    u8 meteor_speed_index; // 流星灯速度值索引（正常流星下会影响流星尾焰长度）
   
 
     u8 meteor_lights_sensitivity; // 声控模式下，流星灯的灵敏度

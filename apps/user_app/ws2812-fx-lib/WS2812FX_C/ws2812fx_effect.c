@@ -20,7 +20,7 @@ uint8_t step2_flag, music_dly, change_mode, cycle_t;
 
 u8 ws2811fx_set_cycle; // 1：效果跑完一轮
 
-//----------------------------------- 天奕流星效果 -----------------------------------
+//----------------------------------- 流星效果 -----------------------------------
 #pragma region
 /**
  * @brief 单色灯带渐变灭灯,做流星效果   兼容正反方向
@@ -34,7 +34,14 @@ uint16_t WS2812FX_mode_comet_1(void)
         return (_seg->speed);
     }
 
+    if (0 == _seg_rt->counter_mode_call)
+    {
+        // 刚进入，清除之前的数据残留
+        Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len);
+    }
+
     WS2812FX_fade_out();
+    // WS2812FX_fade_out_with_max_brightness();
     u8 offset;
     offset = 13;
     if (IS_REVERSE)
@@ -78,6 +85,13 @@ uint16_t WS2812FX_mode_comet_2(void)
     if ((get_effect_p() == 1) && (fc_effect.mode_cycle == 2)) // 计时ms,运行时的计数器    //1:模式完成一个循环。0：正在跑，和meteor_period搭配用
     {
         return (_seg->speed); // 步数，进度
+    }
+
+    // 补丁：
+    if (0 == _seg_rt->counter_mode_call)
+    {
+        // 刚进入，清除之前的数据残留
+        Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len);
     }
 
     WS2812FX_fade_out(); // 颜色弹出，类似渐变，效果工具 使用这个工具时，不需要另外灭灯
@@ -133,8 +147,16 @@ uint16_t WS2812FX_mode_comet_3(void)
 
         return (20); // 定频闪烁
     }
+
     if (get_effect_p() == 0) // 计时完成
     {
+        Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len);
+    }
+
+    // 补丁：
+    if (0 == _seg_rt->counter_mode_call)
+    {
+        // 刚进入，清除之前的数据残留
         Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len);
     }
 
@@ -221,6 +243,13 @@ uint16_t meteor_effect_G(void)
         return (_seg->speed);
     }
 
+    // 补丁：
+    if (0 == _seg_rt->counter_mode_call)
+    {
+        // 刚进入，清除之前的数据残留
+        Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len);
+    }
+
     if (_seg_rt->counter_mode_step < _seg_len / 2)
     {
 
@@ -270,6 +299,14 @@ uint16_t meteor_effect_H(void)
     {
         Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len);
     }
+
+    // 补丁：
+    if (0 == _seg_rt->counter_mode_call)
+    {
+        // 刚进入，清除之前的数据残留
+        Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len);
+    }
+
     // 跑第一次
     if (_seg_rt->counter_mode_step < _seg_len / 2)
         WS2812FX_setPixelColor(_seg->start + _seg_rt->counter_mode_step, WHITE);
@@ -322,6 +359,13 @@ uint16_t WS2812FX_mode_comet_4(void)
         return (_seg->speed);
     }
 
+    // 补丁：
+    if (0 == _seg_rt->counter_mode_call)
+    {
+        // 刚进入，清除之前的数据残留
+        Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len);
+    }
+
     if (IS_REVERSE)
     {
 
@@ -370,6 +414,14 @@ uint16_t WS2812FX_mode_comet_5(void)
     {
         return (_seg->speed);
     }
+
+    // 补丁：
+    if (0 == _seg_rt->counter_mode_call)
+    {
+        // 刚进入，清除之前的数据残留
+        Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len);
+    }
+
     u8 offset = 1;
     if (IS_REVERSE)
     {
@@ -407,6 +459,13 @@ uint16_t fc_double_meteor(void)
     {
         return (_seg->speed);
     }
+
+    if (0 == _seg_rt->counter_mode_call)
+    {
+        // 刚进入，清除之前的数据残留
+        Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len);
+    }
+
     u8 offset = _seg_len / 2 + 1;
     WS2812FX_fade_out();
 
@@ -470,12 +529,19 @@ uint16_t fc_double_meteor(void)
  * @return uint16_t
  */
 uint16_t WS2812FX_mode_comet_6(void)
-{
-
+{ 
     if ((get_effect_p() == 1) && (fc_effect.mode_cycle == 1)) // 计时中 && 完成一个循环
     {
         return (_seg->speed);
     }
+
+    // 补丁：
+    if (0 == _seg_rt->counter_mode_call)
+    {
+        // 刚进入，清除之前的数据残留
+        Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len);
+    }
+
     u8 offset = 1;
     if (IS_REVERSE)
     {
@@ -511,13 +577,13 @@ void close_metemor(void)
 }
 
 #pragma endregion
-//-----------------------------------天奕流星效果 END-----------------------------------
+//-----------------------------------流星效果 END-----------------------------------
 
 //-----------------------------------声控流星效果--------------------------------------
 #pragma region
 
 // ==============================================================
-// 七彩灯动画
+// 七彩灯动画：
 
 /**
  * @brief 七彩灯的静态效果
@@ -529,6 +595,15 @@ u16 colorful_lights_static(void)
     u8 brightness = fc_effect.b;
     u32 color = WS2812FX_color_blend(BLACK, _seg->colors[0], (u8)brightness); // 得到对应亮度的RGB颜色
     Adafruit_NeoPixel_fill(color, _seg->start, _seg_len);
+    SET_CYCLE;
+    return _seg->speed;
+}
+
+u16 colorful_lights_static_max_brightness(void)
+{
+    u8 brightness = 255;
+    u32 color = WS2812FX_color_blend(BLACK, _seg->colors[0], (u8)brightness); // 得到对应亮度的RGB颜色
+    Adafruit_NeoPixel_fill_with_max_brightness(color, _seg->start, _seg_len);
     SET_CYCLE;
     return _seg->speed;
 }
@@ -559,7 +634,8 @@ u16 colorful_lights_flash(void)
     // printf("sys time %lu\n", sys_time_get() - last_sys_time);
     // last_sys_time = sys_time_get();
 
-    return _seg->speed / 2; // 一半的时间点亮，一半的时间熄灭
+    // return _seg->speed / 2; // 一半的时间点亮，一半的时间熄灭
+    return fc_effect.dream_scene.speed / 2; // 一半的时间点亮，一半的时间熄灭
 }
 
 /**
@@ -582,7 +658,8 @@ u16 colorful_lights_jump(void)
         // last_sys_time = sys_time_get();
     }
 
-    return _seg->speed;
+    // return _seg->speed;
+    return fc_effect.dream_scene.speed;
 }
 
 /**
@@ -762,7 +839,8 @@ u16 colorful_lights_gradual(void)
 
     // printf("_seg->speed %u\n", (u16)_seg->speed);
 
-    return ((u32)_seg->speed * 2 / 128); // 控制 变化的速度
+    // return ((u32)_seg->speed * 2 / 128); // 控制 变化的速度
+    return ((u32)fc_effect.dream_scene.speed * 2 / 128); // 控制 变化的速度
 
 #endif
 }
@@ -810,7 +888,8 @@ u16 colorful_lights_breathing(void)
     static volatile u32 temp_step = 0;  // 累计放大了1000倍的步长，超过1000后，才执行动画的下一步骤
     static volatile u16 brightness = 0; // 亮度值
     u32 step = 0;                       // 步长（放大了1000倍）
-    step = ((u32)fc_effect.b + 1) * 10 * 1000 / _seg->speed;
+    // step = ((u32)fc_effect.b + 1) * 10 * 1000 / _seg->speed;
+    step = ((u32)fc_effect.b + 1) * 10 * 1000 / fc_effect.dream_scene.speed;
     // step = ((u32)fc_effect.b - 1) * 10 * 10000 / _seg->speed; // （放大了10000倍）
 
     if (0 == _seg_rt->counter_mode_step &&
@@ -870,7 +949,7 @@ u16 colorful_lights_breathing(void)
                 brightness = 0;
 
                 _seg_rt->aux_param += 1; // 切换颜色数组 _seg->colors[] 中的下一个颜色
-                if (_seg_rt->aux_param >= _seg->c_n - 1)
+                if (_seg_rt->aux_param >= _seg->c_n)
                 {
                     _seg_rt->aux_param = 0;
                 }
@@ -1010,7 +1089,8 @@ u16 colorful_lights_auto(void)
 
         _seg_rt->aux_param = !_seg_rt->aux_param;
 
-        return _seg->speed / 2; // 一半的时间点亮，一半的时间熄灭
+        // return _seg->speed / 2; // 一半的时间点亮，一半的时间熄灭
+        return fc_effect.dream_scene.speed / 2; // 一半的时间点亮，一半的时间熄灭
     }
     else if (COLORFUL_LIGHTS_JUMP_BEGIN == _seg_rt->aux_param3)
     { // 跳变模式
@@ -1025,7 +1105,8 @@ u16 colorful_lights_auto(void)
             _seg_rt->aux_param3 = COLORFUL_LIGHTS_JUMP_END;
         }
 
-        return _seg->speed;
+        // return _seg->speed;
+        return fc_effect.dream_scene.speed;
     }
     else if (COLORFUL_LIGHTS_GRADUAL_BEGIN == _seg_rt->aux_param3)
     { // 渐变模式
@@ -1056,8 +1137,8 @@ u16 colorful_lights_auto(void)
 
         // printf("_seg->speed %u\n", (u16)_seg->speed);
 
-        // return ((u32)_seg->speed * 2 / 128); // 控制 变化的速度
-        return ((u32)_seg->speed * 8 / 128); // 控制 变化的速度
+        // return ((u32)_seg->speed * 8 / 128); // 控制 变化的速度
+        return ((u32)fc_effect.dream_scene.speed * 8 / 128); // 控制 变化的速度
     }
     else if (COLORFUL_LIGHTS_BREATHING_BEGIN == _seg_rt->aux_param3)
     {
@@ -1094,7 +1175,8 @@ u16 colorful_lights_auto(void)
         static volatile u32 temp_step = 0;  // 累计放大了1000倍的步长，超过1000后，才执行动画的下一步骤
         static volatile u16 brightness = 0; // 亮度值
         u32 step = 0;                       // 步长（放大了1000倍）
-        step = ((u32)fc_effect.b + 1) * 10 * 1000 / _seg->speed;
+        // step = ((u32)fc_effect.b + 1) * 10 * 1000 / _seg->speed;
+        step = ((u32)fc_effect.b + 1) * 10 * 1000 / fc_effect.dream_scene.speed;
         // step = ((u32)fc_effect.b - 1) * 10 * 10000 / _seg->speed; // （放大了10000倍）
 
         if (0 == _seg_rt->counter_mode_step &&
@@ -1178,7 +1260,7 @@ u16 colorful_lights_auto(void)
     return 1;
 }
 
-// 七彩灯动画
+// 七彩灯动画 end
 // ==============================================================
 
 // 快速流星效果
@@ -1879,7 +1961,7 @@ u16 meteor_light_single_point_flow(void)
  *  6 -- 呼吸动画18s，乱闪动画8s
  *  7 -- 呼吸动画38s，乱闪动画18s
  *
- * 注意，_seg_rt->speed 至少要大于等于 1000
+ * 注意，_seg_rt->speed 至少要大于等于 1000，否则会导致芯片复位
  *
  * @return u16
  */
@@ -2036,7 +2118,8 @@ u16 meteor_effect_random_breath(void)
     // 2000 / 12 / (7) == 23 【next_led_begin_threshold_val == 255】
     // 应该是经过一段时间再熄灭亮度到 next_led_begin_threshold_val 时，再点亮下一个灯，每一帧动画的时间间隔更短
 
-    ret = (u32)animation_time_during_breath / _seg_len / (255 / brightness_add_step + (255 - next_led_begin_threshold_val) / brightness_sub_step);
+    ret = (u32)animation_time_during_breath / _seg_len /
+          (255 / brightness_add_step + (255 - (u8)next_led_begin_threshold_val) / brightness_sub_step);
 
     if (0 == _seg_rt->counter_mode_step)
     {
@@ -2135,9 +2218,6 @@ u16 meteor_effect_random_breath(void)
                                 }
 
                                 _seg_rt->cur_animation_stage = ANIMATION_STAGE_1_END;
-                                // USER_TO_DO 乱闪还未调节好，这里先跳过乱闪的动画
-                                // _seg_rt->cur_animation_stage = ANIMATION_STAGE_2_END;
-
                                 _seg_rt->counter_mode_step = 0;
                                 break;
                             }
@@ -2264,10 +2344,7 @@ u16 meteor_effect_random_breath(void)
         _seg_rt->counter_mode_step = (_seg_rt->counter_mode_step + 1) % (animation_time_during_flash / 10);
         if (0 == _seg_rt->counter_mode_step)
         {
-            // printf("sys time %lu\n", sys_time_get() - last_sys_time);
-            // last_sys_time = sys_time_get();
-
-            // 让灯光全灭
+            // 动画最后，让灯光全灭
             Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len);
             for (u8 k = 0; k < sizeof(_seg_rt->led_index_enable_buff); k++)
             {
@@ -2275,7 +2352,6 @@ u16 meteor_effect_random_breath(void)
                 _seg_rt->led_index_mode_step[k] = 0;
             }
 
-            // printf("__FUNC__ %s __LINE__ %u\n", __func__, __LINE__);
             _seg_rt->cur_animation_stage = ANIMATION_STAGE_2_END;
         }
 #endif
@@ -2297,6 +2373,13 @@ uint16_t meteor(void)
     int r = (_seg->colors[0] >> 16) & 0xff;
     int g = (_seg->colors[0] >> 8) & 0xff;
     int b = _seg->colors[0] & 0xff;
+
+    // 补丁：
+    if (0 == _seg_rt->counter_mode_call)
+    {
+        // 刚进入，清除之前的数据残留
+        Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len);
+    }
 
     if (get_sound_triggered_by_meteor_lights())
     {
@@ -2385,6 +2468,13 @@ uint16_t music_meteor3(void)
     int r = (_seg->colors[0] >> 16) & 0xff;
     int g = (_seg->colors[0] >> 8) & 0xff;
     int b = _seg->colors[0] & 0xff;
+
+    // 补丁：
+    if (0 == _seg_rt->counter_mode_call)
+    {
+        // 刚进入，清除之前的数据残留
+        Adafruit_NeoPixel_fill(BLACK, _seg->start, _seg_len);
+    }
 
     if (get_sound_triggered_by_meteor_lights())
     {

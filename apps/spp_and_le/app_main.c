@@ -412,6 +412,7 @@ void user_msg_handle_task(void)
         break;
         case MSG_METEOR_LIGHTS_ON:
         {
+#if 0
             mode_ptr animation_ptr = NULL;
 
             printf("fc_effect.star_index %u\n", fc_effect.star_index);
@@ -463,9 +464,8 @@ void user_msg_handle_task(void)
             break;
             }
 
-            // printf("__FUNC__ %s __LINE__ %u\n", __func__, __LINE__);
-#if 1
-            // WS2812FX_stop();
+  
+     
             WS2812FX_setSegment_colorOptions(
                 1,                     // 第0段
                 1,                     // 起始位置
@@ -478,6 +478,8 @@ void user_msg_handle_task(void)
             WS2812FX_resetSegmentRuntime(1); //
             WS2812FX_running_flag_set();
 #endif
+
+            ls_meteor_stat_effect();
         }
         break;
 
@@ -546,13 +548,10 @@ void main_while(void)
         stepmotor();        // 无霍尔时，电机停止指令计时
         rf24_key_handle();
 
-        meteor_sound_effect_switch_handle();
+        meteor_sound_effect_switch_handle(); // 样机的流星灯声控模式下，每25s切换一次模式
 
-        if (save_user_data_status_get())
-        {
-            save_user_data_area3();
-        }
-
+        save_user_data_time_count_down();
+        save_user_data_handle();
         // printf("main circle\n"); // 主循环约10ms
         // printf("sizeof  fc_effect_t %d\n", sizeof(fc_effect_t)); // 打印是 276，存放到flash中会有问题
 
@@ -566,6 +565,7 @@ void WS2812_circle_task(void)
     run_tick_per_10ms();
     WS2812FX_service();
 
+    meteor_period_sub(); // 控制流星灯周期，10ms进行一次递减计数
     // printf("cycle\n"); // 测试调用的周期
 }
 

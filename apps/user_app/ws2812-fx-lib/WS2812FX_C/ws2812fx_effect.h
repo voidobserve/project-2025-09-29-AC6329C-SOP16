@@ -89,7 +89,7 @@ uint16_t breath_w(void);
 uint16_t WS2812FX_mutil_strobe(void);
 uint16_t breath_rgb(void);
 
-/***************天奕光纤满天星流星效果*****************/
+/*************** 光纤满天星流星效果*****************/
 
 uint16_t WS2812FX_mode_comet_1(void);
 uint16_t WS2812FX_mode_comet_2(void);
@@ -100,10 +100,15 @@ uint16_t WS2812FX_mode_comet_4(void);
 uint16_t WS2812FX_mode_comet_5(void);
 uint16_t WS2812FX_mode_comet_6(void);
 
+uint16_t meteor(void);
+uint16_t music_meteor3(void);
+
 uint16_t fc_double_meteor(void);
 void close_metemor(void);
 
 // ==============================================================
+
+u16 colorful_lights_static_max_brightness(void);
 
 // 定义在七彩灯自动模式下的各个子模式步骤：
 enum

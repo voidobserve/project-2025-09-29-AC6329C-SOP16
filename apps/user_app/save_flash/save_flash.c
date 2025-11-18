@@ -8,8 +8,8 @@
 
 #define FLASH_CRC_DATA 0xC5
 
-static volatile u16 timer_id = 0;
-static volatile u16 time_count_down = 0;
+// static volatile u16 timer_id = 0;
+static volatile u16 time_count_down = 0; // 存放当前的倒计时
 static volatile u8 flag_is_enable_count_down = 0;
 static volatile u8 flag_is_enable_to_save = 0; // 标志位，是否使能了保存
 
@@ -27,9 +27,9 @@ volatile save_flash_t save_data;
 void read_flash_device_status_init(void)
 {
     int ret = 0;
-    local_irq_disable(); // 禁用中断
+    // local_irq_disable(); // 禁用中断
     ret = syscfg_read(CFG_USER_LED_LEDGTH_DATA, (u8 *)(&save_data), sizeof(save_flash_t));
-    local_irq_enable(); // 使能中断
+    // local_irq_enable(); // 使能中断
     if (ret != sizeof(save_flash_t))
     {
         // 如果读取到的数据个数不一致
@@ -55,7 +55,17 @@ void read_flash_device_status_init(void)
 }
 
 // 写入flash时间倒计时
-void save_data_time_count_down(void *p)
+// void save_data_time_count_down(void *p)
+/**
+ * @brief 写入flash倒计时
+ *      10ms调用一次，不需要特别准确
+ * 
+ *      如果 flag_is_enable_count_down == 1，表示使能倒计时
+ *      如果 flag_is_enable_count_down == 0，表示未使能倒计时
+ * 
+ *      计时结束，将 flag_is_enable_to_save 置一
+ */
+void save_user_data_time_count_down(void)
 {
 #if 0
     if (time_count_down > 0)
@@ -129,21 +139,38 @@ void save_user_data_enable(void)
     timer_id = sys_timer_add(NULL, save_data_time_count_down, 100); // 创建 100ms 的定时
 #endif
 
-    flag_is_enable_count_down = 0;
-    time_count_down = 30; // 30 * 100 ms定时器，实现 3000 ms延时
-    flag_is_enable_count_down = 1;
-    if (0 == timer_id)
-    {
-        timer_id = sys_timer_add(NULL, save_data_time_count_down, 100); // 创建 100ms 的定时
-    }
+    // flag_is_enable_count_down = 0;
+    // time_count_down = 30; // 30 * 100 ms定时器，实现 3000 ms延时
+    // flag_is_enable_count_down = 1;
+    // if (0 == timer_id)
+    // {
+    //     timer_id = sys_timer_add(NULL, save_data_time_count_down, 100); // 创建 100ms 的定时
+    // }
 
     // printf("timer create success\n");
     // printf("timer id %u\n", (u16)timer_id);
+
+    flag_is_enable_count_down = 0;
+    time_count_down = DELAY_SAVE_FLASH_TIMES / 10; // DELAY_SAVE_FLASH_TIMES / 10 ms计时，实现 DELAY_SAVE_FLASH_TIMES ms延时
+    flag_is_enable_count_down = 1;
 }
 
-u8 save_user_data_status_get(void)
+// u8 save_user_data_status_get(void)
+// {
+//     return flag_is_enable_to_save;
+// }
+
+/**
+ * @brief 保存用户数据
+ *          需要放到主循环执行
+ * 
+ * @return * void 
+ */
+void save_user_data_handle(void)
 {
-    return flag_is_enable_to_save;
+    if (flag_is_enable_to_save)
+    {
+        flag_is_enable_to_save = 0;
+        save_user_data_area3();
+    }
 }
-
-

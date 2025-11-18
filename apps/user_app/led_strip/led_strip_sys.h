@@ -118,12 +118,13 @@ enum
 {
     MSG_SEQUENCER_NONE = 0x00,
     MSG_SEQUENCER_ONE_WIRE_SEND_INFO, // 使能单线发送
-    MSG_METEOR_LIGHTS_ON , // 流星灯开启
+    MSG_METEOR_LIGHTS_ON,             // 流星灯开启
 
     MSG_USER_SAVE_INFO, // 将数据写入flash
 };
 
 extern const u8 led_b_array[MAX_BRIGHT_RANK];
+extern const u16 led_speed_array[MAX_SPEED_RANK]; // 存放旧版的七彩灯动态模式下的所有速度值
 extern const u16 colorful_lights_speed_array[MAX_SPEED_RANK]; // 存放七彩灯动态模式下的所有速度值
 
 void ls_add_bright(void); // 增加亮度
@@ -132,6 +133,9 @@ void ls_sub_bright(void); // 减少亮度
 void ls_add_sensitive(void); // 遥控加灵敏度
 void ls_sub_sensitive(void); // 遥控减灵敏度
 
+void ls_add_star_speed(void); // 还未测试
+void ls_sub_star_speed(void); // 还未测试
+
 void set_static_mode(u8 r, u8 g, u8 b);
 void colorful_lights_set_static_mode(color_t colors_structure); // 七彩灯设置为静态模式，颜色值由传参设定
 
@@ -139,6 +143,11 @@ void ls_set_music_mode(void); // 通过遥控器控制七彩灯的音乐模式�
 
 void OpenMortor(void);
 void CloseMotor(void);
+
+void app_set_bright(u8 tp_b);
+void app_set_sensitive(u8 tp_s);   // 通过app设置灵敏度
+void app_set_mereor_mode(u8 tp_m); // 通过app设置流星模式
+void app_set_meteor_pro(u8 tp_p);  // 通过app设置流星周期时间
 
 void soft_turn_on_the_light(void); // 软件打开设备
 void soft_turn_off_lights(void);   // 软件关闭设备

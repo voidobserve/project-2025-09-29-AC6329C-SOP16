@@ -145,6 +145,7 @@ void soft_turn_off_lights(void)
 const u8 led_b_array[MAX_BRIGHT_RANK] = {
     MIN_BRIGHT_VALUE, 50, 75, 100, 125,
     150, 175, 200, 225, 255}; // 0-255
+
 const u16 led_speed_array[MAX_SPEED_RANK] = {
     MAX_FAST_SPEED, 100, 150, 200, 250,
     300, 350, 400, 450, MIN_SLOW_SPEED}; // 0-500
@@ -200,16 +201,38 @@ u16 get_max_sp(void)
  */
 void app_set_speed(u8 tp_speed)
 {
-    if (fc_effect.Now_state == IS_light_scene)
+    if (fc_effect.Now_state != IS_light_scene)
     {
-        fc_effect.dream_scene.speed = MIN_SLOW_SPEED - (MIN_SLOW_SPEED * tp_speed / 100);
-        fc_effect.app_speed = tp_speed;
-        if (fc_effect.dream_scene.speed <= get_max_sp())
-        {
-            fc_effect.dream_scene.speed = get_max_sp();
-        }
-        set_fc_effect();
+        // 如果七彩灯不处于对应的动态模式，则返回
+        return;
     }
+
+    // fc_effect.dream_scene.speed = MIN_SLOW_SPEED - (MIN_SLOW_SPEED * tp_speed / 100);
+    fc_effect.app_speed = tp_speed;
+    // if (fc_effect.dream_scene.speed <= get_max_sp())
+    // {
+    //     fc_effect.dream_scene.speed = get_max_sp();
+    // }
+
+    /*
+        原本的七彩灯动态模式的速度值和新加的七彩灯动态模式速度值划分不一样，
+        这里要做区分
+    */
+    // if (fc_effect.dream_scene.change_type >= MODO_COLORFUL_LIGHTS_FLASH &&
+    //     fc_effect.dream_scene.change_type <= MODE_COLORFUL_LIGHTS_AUTO)
+    {
+        /*
+            最后让 fc_effect.dream_scene.speed 的范围在 200 ~ 2000
+        */
+        // fc_effect.dream_scene.speed =
+        //     (u32)(colorful_lights_speed_array[MAX_SPEED_RANK - 1] - colorful_lights_speed_array[0]) * tp_speed / 100 +
+        //     colorful_lights_speed_array[0];
+        fc_effect.dream_scene.speed = 2000 - (u32)(colorful_lights_speed_array[MAX_SPEED_RANK - 1] - colorful_lights_speed_array[0]) * tp_speed / 100;
+        printf("fc_effect.dream_scene.speed = %u\n", fc_effect.dream_scene.speed);
+    }
+
+    //
+    set_fc_effect();
 }
 
 /**
@@ -302,6 +325,8 @@ void ls_sub_speed(void)
 void app_set_sensitive(u8 tp_s)
 {
     fc_effect.music.s = tp_s;
+    fc_effect.colorful_lights_sensitivity = tp_s; // 七彩灯的灵敏度
+    fc_effect.meteor_lights_sensitivity = tp_s;   // 流星灯的灵敏度
 }
 
 /**
