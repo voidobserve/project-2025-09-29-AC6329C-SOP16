@@ -8,6 +8,7 @@
 #include "../../../apps/user_app/ws2812-fx-lib/WS2812FX_C/WS2812FX.H"        // 包含 ws2812的部分函数接口
 #include "../../../apps/user_app/one_wire/one_wire.h"                        // 包含电机的驱动程序
 #include "../../../apps/user_app/save_flash/save_flash.h"
+#include "../../../apps/user_app/protocol/dp_data_tran.h"
 
 // =========================================================
 // key 1 目前表示控制带有流星灯的遥控器
@@ -60,7 +61,7 @@ void rf24g_key_1_event_r1c1_click_handle(void)
     {
         // 七彩灯声控模式下，调节灵敏度
         colorful_lights_sound_sensitivity_add();
-        fb_sensitive(); // 向app反馈灵敏度
+        // fb_sensitive(); // 向app反馈灵敏度
     }
     else
     {
@@ -117,7 +118,7 @@ void rf24g_key_1_event_r1c2_click_handle(void)
         // 七彩灯声控模式下，调节灵敏度
         // ls_sub_sensitive();
         colorful_lights_sound_sensitivity_sub();
-        fb_sensitive(); // 向app反馈灵敏度
+        // fb_sensitive(); // 向app反馈灵敏度
     }
     else
     {
@@ -556,53 +557,60 @@ void rf24g_key_1_event_r6c4_click_handle(void)
         return;
     }
 
-    // if (fc_effect.star_index < STAR_INDEX_METEOR_NORMAL_SLOW ||
-    // fc_effect.star_index >= STAR_INDEX_METEOR_MAX)
-    // {
-    //     // 如果当前流星灯的动画索引不在遥控器可以调节到的动画范围内，可能是在app调节的范围内，不做处理
-    //     return;
-    // }
-
-    // 限制范围：0 ~ 9 ，总共10种索引
-    if (fc_effect.meteor_speed_index < ARRAY_SIZE(meteor_tail_len_buff) - 1)
+    if (fc_effect.star_index >= 1 && fc_effect.star_index <= 16 ||
+        (fc_effect.star_index == STAR_INDEX_METEOR_RANDOM_BREATH))
     {
-        fc_effect.meteor_speed_index++;
-    }
+        // index 1 ~ 16 ，对应app的16种流星灯模式，这个时候通过遥控器调节流星灯参数，调节的是速度值
+        // app显示的速度值在 0~100 ，速度值越大，速度越快
+        if (fc_effect.app_star_speed < 100 - 10)
+        {
+            fc_effect.app_star_speed += 10;
+        }
+        else
+        {
+            fc_effect.app_star_speed = 100;
+        }
 
-    // 成功调整参数后，需要重新跑流星灯动画
+        fc_effect.star_speed = 330 - (u16)330 * (fc_effect.app_star_speed) / 100; // 实际控制流星灯的速度值在 30 ~ 330 ，速度值越小，速度越快
 
-#if 0
-    // 正常流星模式下，增加尾焰长度
-    if (STAR_INDEX_METEOR_NORMAL_SLOW == fc_effect.star_index ||
-        STAR_INDEX_METEOR_NORMAL_MIDDLE == fc_effect.star_index ||
-        STAR_INDEX_METEOR_NORMAL_FAST == fc_effect.star_index)
-    {
-        meteor_tail_len = meteor_tail_len_buff[fc_effect.meteor_speed_index];
+        fd_meteor_speed(); // 向app反馈流星灯的速度值
+        printf("fc_effect.app_star_speed = %u\n", (u16)fc_effect.app_star_speed);
+        printf("fc_effect.star_speed = %u\n", (u16)fc_effect.star_speed);
     }
-    else if (STAR_INDEX_METEOR_RANDOM_BREATH == fc_effect.star_index)
+    else if ((fc_effect.star_index >= 17 && fc_effect.star_index <= 18) ||
+             (fc_effect.star_index >= STAR_INDEX_METEOR_MUSIC_CONTROL && fc_effect.star_index <= STAR_INDEX_METEOR_MUSIC_CONTROL_3))
     {
         /*
-            流星灯乱闪模式下，调节速度
-
-            random_breath_index 索引值越小，速度越快
+            index 17 ~ 18，对应app的两种流星灯声控模式，
+            STAR_INDEX_METEOR_MUSIC_CONTROL ~ STAR_INDEX_METEOR_MUSIC_CONTROL_3 ，对应遥控器的流星灯声控模式
+            此时调节的是流星灯的灵敏度
         */
-        random_breath_index = 9 - fc_effect.meteor_speed_index;
-        printf("fc_effect.meteor_speed_index %u\n", (u16)fc_effect.meteor_speed_index);
-        printf("random_breath_index %u\n", (u16)random_breath_index);
+        if (fc_effect.meteor_lights_sensitivity < 100 - 10)
+        {
+            fc_effect.meteor_lights_sensitivity += 10;
+        }
+        else
+        {
+            fc_effect.meteor_lights_sensitivity = 100;
+        }
+
+        printf("fc_effect.meteor_lights_sensitivity = %u\n", (u16)fc_effect.meteor_lights_sensitivity);
     }
-    else if (STAR_INDEX_METEOR_MUSIC_CONTROL <= fc_effect.star_index ||
-             STAR_INDEX_METEOR_MUSIC_CONTROL_3 >= fc_effect.star_index)
+    else if (fc_effect.star_index >= STAR_INDEX_METEOR_NORMAL_SLOW && fc_effect.star_index <= STAR_INDEX_METEOR_NORMAL_FAST)
     {
-        // 带声控的流星灯模式下，调节灵敏度
-        // meteor_lights_sound_sensitivity_add();
-        fc_effect.meteor_lights_sensitivity = (fc_effect.meteor_speed_index + 1) * 10;
+        /*
+            STAR_INDEX_METEOR_NORMAL_SLOW ~ STAR_INDEX_METEOR_NORMAL_FAST 模式下，
+            调节流星灯尾焰长度
+        */
+        if (fc_effect.meteor_tail_len < 12)
+        {
+            fc_effect.meteor_tail_len++;
+        }
+
+        printf("meteor_tail_len = %u\n", (u16)fc_effect.meteor_tail_len);
     }
 
-    // 让流星灯动画重新开始跑
-    WS2812FX_resetSegmentRuntime(1); //
-    WS2812FX_running_flag_set();
-#endif
-
+    // 成功调整参数后，需要重新跑流星灯动画：
     ls_meteor_stat_effect();
 }
 
@@ -705,45 +713,61 @@ void rf24g_key_1_event_r7c4_click_handle(void)
         return;
     }
 
-    // 目前 fc_effect.meteor_speed_index 范围：0 ~ 9 ，总共10种索引
-    if (fc_effect.meteor_speed_index > 0)
+    if (fc_effect.star_index >= 1 && fc_effect.star_index <= 16 ||
+        (fc_effect.star_index == STAR_INDEX_METEOR_RANDOM_BREATH))
     {
-        fc_effect.meteor_speed_index--;
-    }
+        // index 1 ~ 16 ，对应app的16种流星灯模式，这个时候通过遥控器调节流星灯参数，调节的是速度值
+        // app显示的速度值在 0~100 ，速度值越大，速度越快
+        if (fc_effect.app_star_speed > 10)
+        {
+            fc_effect.app_star_speed -= 10;
+        }
+        else
+        {
+            fc_effect.app_star_speed = 0;
+        }
 
-#if 0
-    // 成功调整参数后，需要重新跑流星灯动画
+        fc_effect.star_speed = 330 - (u16)330 * (fc_effect.app_star_speed) / 100; // 实际控制流星灯的速度值在 30 ~ 330 ，速度值越小，速度越快
 
-    // 正常流星模式下，增加尾焰长度
-    if (STAR_INDEX_METEOR_NORMAL_SLOW == fc_effect.star_index ||
-        STAR_INDEX_METEOR_NORMAL_MIDDLE == fc_effect.star_index ||
-        STAR_INDEX_METEOR_NORMAL_FAST == fc_effect.star_index)
-    {
-        meteor_tail_len = meteor_tail_len_buff[fc_effect.meteor_speed_index];
+        fd_meteor_speed(); // 向app反馈流星灯的速度值
+        printf("fc_effect.app_star_speed = %u\n", (u16)fc_effect.app_star_speed);
+        printf("fc_effect.star_speed = %u\n", (u16)fc_effect.star_speed);
     }
-    else if (STAR_INDEX_METEOR_RANDOM_BREATH == fc_effect.star_index)
+    else if ((fc_effect.star_index >= 17 && fc_effect.star_index <= 18) ||
+             (fc_effect.star_index >= STAR_INDEX_METEOR_MUSIC_CONTROL && fc_effect.star_index <= STAR_INDEX_METEOR_MUSIC_CONTROL_3))
     {
         /*
-            流星灯乱闪模式下，调节速度
-
-            random_breath_index 索引值越小，速度越快
+            index 17 ~ 18，对应app的两种流星灯声控模式，
+            STAR_INDEX_METEOR_MUSIC_CONTROL ~ STAR_INDEX_METEOR_MUSIC_CONTROL_3，对应遥控器的流星灯声控模式
+            此时 调节流星灯声控模式下的灵敏度
         */
-        random_breath_index = 9 - fc_effect.meteor_speed_index;
-        printf("random_breath_index %u\n", (u16)random_breath_index);
+
+        if (fc_effect.meteor_lights_sensitivity > 10)
+        {
+            fc_effect.meteor_lights_sensitivity -= 10;
+        }
+        else
+        {
+            fc_effect.meteor_lights_sensitivity = 0;
+        }
+
+        printf("fc_effect.meteor_lights_sensitivity = %u\n", (u16)fc_effect.meteor_lights_sensitivity);
     }
-    else if (STAR_INDEX_METEOR_MUSIC_CONTROL <= fc_effect.star_index ||
-             STAR_INDEX_METEOR_MUSIC_CONTROL_3 >= fc_effect.star_index)
+    else if (fc_effect.star_index >= STAR_INDEX_METEOR_NORMAL_SLOW && fc_effect.star_index <= STAR_INDEX_METEOR_NORMAL_FAST)
     {
-        // 带声控的流星灯模式下，调节灵敏度
-        // meteor_lights_sound_sensitivity_sub();
-        fc_effect.meteor_lights_sensitivity = (fc_effect.meteor_speed_index + 1) * 10;
+        /*
+            STAR_INDEX_METEOR_NORMAL_SLOW ~ STAR_INDEX_METEOR_NORMAL_FAST 模式下，
+            调节流星灯尾焰长度
+        */
+        if (fc_effect.meteor_tail_len > 1)
+        {
+            fc_effect.meteor_tail_len--;
+        }
+
+        printf("meteor_tail_len = %u\n", (u16)fc_effect.meteor_tail_len);
     }
 
-    // 让流星灯动画重新开始跑
-    WS2812FX_resetSegmentRuntime(1); //
-    WS2812FX_running_flag_set();
-#endif
-
+    // 成功调整参数后，需要重新跑流星灯动画：
     ls_meteor_stat_effect();
 }
 

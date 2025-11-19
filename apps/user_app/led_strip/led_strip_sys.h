@@ -148,6 +148,7 @@ void app_set_bright(u8 tp_b);
 void app_set_sensitive(u8 tp_s);   // 通过app设置灵敏度
 void app_set_mereor_mode(u8 tp_m); // 通过app设置流星模式
 void app_set_meteor_pro(u8 tp_p);  // 通过app设置流星周期时间
+void app_set_mereor_speed(u8 tp_s); // 通过app设置流星速度
 
 void soft_turn_on_the_light(void); // 软件打开设备
 void soft_turn_off_lights(void);   // 软件关闭设备

@@ -5,6 +5,7 @@
 #include "led_strand_effect.h"
 
 #include "../../../apps/user_app/one_wire/one_wire.h" // 包含电机驱动的相关定义
+#include "../../../apps/user_app/ws2812-fx-lib/WS2812FX_C/ws2812fx_effect.h"
 
 #define MIN_BRIGHT_VALUE 10
 #define MIN_SLOW_SPEED 500
@@ -21,8 +22,8 @@ void fc_data_init(void)
 {
     // 灯具
     fc_effect.on_off_flag = DEVICE_ON; // 灯为开启状态
-    fc_effect.led_num = 12 + 1;        // 灯带的总灯珠数量 （12颗流星灯+1颗七彩灯）
-    fc_effect.Now_state = IS_STATIC;   // 当前运行状态 静态
+    fc_effect.led_num = 12 + 1;        // 灯带的总灯珠数量 （12颗流星灯 + 1颗七彩灯）
+    fc_effect.Now_state = IS_STATIC;   // 当前 七彩灯 运行状态 静态
     fc_effect.rgb.r = 255;
     fc_effect.rgb.g = 0;
     fc_effect.rgb.b = 0;
@@ -55,27 +56,21 @@ void fc_data_init(void)
 
     // 流星
     fc_effect.star_on_off = DEVICE_ON;
-    // fc_effect.star_index = 1; // 流星灯动画索引
-    // fc_effect.star_index = 99; // 流星灯动画索引
-    // fc_effect.star_index = STAR_INDEX_METEOR_NORMAL_SLOW; // 流星灯动画索引
-    fc_effect.star_index = STAR_INDEX_METEOR_RANDOM_BREATH; // 流星灯动画索引 测试时使用
-    // fc_effect.star_speed = 30;                            // 变化速度
-    // fc_effect.star_speed = 100; // 测试时使用
-    fc_effect.star_speed = 1000; // 测试时使用
-    // fc_effect.star_speed = 2000; // 测试时使用
-    // fc_effect.app_star_speed = 100;
-    fc_effect.meteor_period = 8;                           // 默认8秒  周期值
-    fc_effect.period_cnt = fc_effect.meteor_period * 1000; // ms,运行时的计数器
-    fc_effect.mode_cycle = 0;                              // 模式完成一个循环的标志
-    fc_effect.motor_speed_index = 0;
-    // fc_effect.meteor_tail_len = 6; // 流星灯尾焰长度
+    fc_effect.star_index = STAR_INDEX_METEOR_NORMAL_SLOW; // 流星灯动画索引
+    fc_effect.app_star_speed = 80;
+    fc_effect.star_speed = (u32)330 * fc_effect.app_star_speed / 100;
+    fc_effect.meteor_period = 10;                          // 默认 10 秒  周期值
+    fc_effect.period_cnt = fc_effect.meteor_period * 1000; // 周期值计数值，单位 ms
+    // fc_effect.mode_cycle = 0;                              // 模式完成一个循环的标志
+    fc_effect.meteor_tail_len = 6;            // 流星灯尾焰长度
     fc_effect.meteor_lights_sensitivity = 80; // 流星灯在声控模式下的灵敏度
 
     // 电机
     fc_effect.base_ins.mode = 4;   // 360转
     fc_effect.base_ins.period = 8; // 速度8s
-    fc_effect.base_ins.dir = 0;    // 0: 正转  1：
+    fc_effect.base_ins.dir = 0;    // 0: 正转  1：反转
     fc_effect.base_ins.music_mode = 0;
+    fc_effect.motor_speed_index = 0; // 电机的速度值索引
     fc_effect.motor_on_off = DEVICE_ON;
 
     // sizeof(fc_effect_t);
@@ -128,8 +123,30 @@ void soft_turn_off_lights(void)
     one_wire_set_mode(6); // 关闭电机
     os_taskq_post("msg_task", 1, MSG_SEQUENCER_ONE_WIRE_SEND_INFO);
 
-    WS2812FX_stop();
-    WS2812FX_strip_off();
+    WS2812FX_setSegment_colorOptions(
+        0,                             // 第0段
+        0,                             // 起始位置
+        0,         // 结束位置
+        &colorful_lights_effect_close, // 效果
+        0,                             // 颜色
+        0,                             // 速度
+        0);                            // 选项，这里像素点大小：3 REVERSE决定方向
+    WS2812FX_resetSegmentRuntime(0);   // 清除指定段的显示缓存
+    WS2812FX_running_flag_set();
+
+    WS2812FX_setSegment_colorOptions(
+        1,                           // 第0段
+        1,                           // 起始位置
+        fc_effect.led_num - 1,       // 结束位置
+        &close_metemor,              // 效果
+        0,                           // 颜色
+        fc_effect.star_speed,        // 速度
+        0);                          // 选项，这里像素点大小：3 REVERSE决定方向
+    WS2812FX_resetSegmentRuntime(1); // 清除指定段的显示缓存
+    WS2812FX_running_flag_set();
+
+    // WS2812FX_stop();
+    // WS2812FX_strip_off();
 
     fb_led_on_off_state(); // 与app同步开关状态
     // save_user_data_area3(); // 保存参数配置到flash
@@ -169,7 +186,7 @@ const u16 colorful_lights_speed_array[MAX_SPEED_RANK] = {
  */
 void app_set_bright(u8 tp_b)
 {
-    if (fc_effect.Now_state == IS_STATIC)
+    // if (fc_effect.Now_state == IS_STATIC)
     {
         if (tp_b < MIN_BRIGHT_VALUE)
             tp_b = MIN_BRIGHT_VALUE;
@@ -551,23 +568,23 @@ void ls_pause_and_play(void)
 // 放在了while循环，10ms减一次
 // fc_effect.meteor_period = 8;//默认8秒  周期值
 // fc_effect.period_cnt = fc_effect.meteor_period*1000;  //ms,运行时的计数器 8000ms
-void meteor_period_sub(void)
-{
+// void meteor_period_sub(void)
+// {
 
-    if (fc_effect.period_cnt > 10)
-    {
-        fc_effect.period_cnt -= 10;
-    }
-    else
-    {
-        fc_effect.period_cnt = 0; // 计数器清零
-        if (fc_effect.mode_cycle) // 模式循环完成，更新
-        {
-            fc_effect.period_cnt = fc_effect.meteor_period * 1000;
-            fc_effect.mode_cycle = 0;
-        }
-    }
-}
+//     if (fc_effect.period_cnt > 10)
+//     {
+//         fc_effect.period_cnt -= 10;
+//     }
+//     else
+//     {
+//         fc_effect.period_cnt = 0; // 计数器清零
+//         if (fc_effect.mode_cycle) // 模式循环完成，更新
+//         {
+//             fc_effect.period_cnt = fc_effect.meteor_period * 1000;
+//             fc_effect.mode_cycle = 0;
+//         }
+//     }
+// }
 
 // 0:计时完成
 // 1：计时中
@@ -589,8 +606,12 @@ void app_set_meteor_pro(u8 tp_p)
 
     if (tp_p >= 2 && tp_p <= 20)
     {
+        // fc_effect.meteor_period = tp_p;
+        // fc_effect.period_cnt = 0;
+
+        // USER_TO_DO
         fc_effect.meteor_period = tp_p;
-        fc_effect.period_cnt = 0;
+        fc_effect.period_cnt = fc_effect.meteor_period * 1000;
     }
 }
 
@@ -602,25 +623,67 @@ void app_set_meteor_pro(u8 tp_p)
 void app_set_on_off_meteor(u8 tp_sw)
 {
 
-    fc_effect.star_on_off = tp_sw;
-    if (fc_effect.star_on_off == DEVICE_ON)
+    // fc_effect.star_on_off = tp_sw;
+    // if (fc_effect.star_on_off == DEVICE_ON)
+    // {
+
+    //     ls_meteor_stat_effect();
+    // }
+
+    // else
+    // {
+    //     extern void close_metemor(void);
+    //     WS2812FX_stop();
+    //     WS2812FX_setSegment_colorOptions(
+    //         1,                    // 第0段
+    //         1, fc_effect.led_num, // 起始位置，结束位置
+    //         &close_metemor,       // 效果
+    //         0,                    // 颜色
+    //         fc_effect.star_speed, // 速度
+    //         0);                   // 选项，这里像素点大小：3 REVERSE决定方向
+    //     WS2812FX_start();
+    // }
+
+    if (DEVICE_ON == tp_sw)
     {
-
-        ls_meteor_stat_effect();
+        fc_effect.star_on_off = DEVICE_ON;
+        printf("meteor on\n");
     }
-
     else
     {
-        extern void close_metemor(void);
-        WS2812FX_stop();
+        fc_effect.star_on_off = DEVICE_OFF;
+        printf("meteor off\n");
+    }
+
+    if (DEVICE_ON == fc_effect.star_on_off)
+    {
+        // 执行一次快速流星动画，在动画结束后，给处理消息的线程发送消息，让它切换流星灯动画
         WS2812FX_setSegment_colorOptions(
-            1,                    // 第0段
-            1, fc_effect.led_num, // 起始位置，结束位置
-            &close_metemor,       // 效果
-            0,                    // 颜色
-            fc_effect.star_speed, // 速度
-            0);                   // 选项，这里像素点大小：3 REVERSE决定方向
-        WS2812FX_start();
+            1,                           // 第0段
+            1,                           // 起始位置
+            fc_effect.led_num - 1,       // 结束位置
+            &meteor_effect_when_pwr_on,  // 效果
+            0,                           // 颜色
+            fc_effect.star_speed,        // 速度
+            0);                          // 选项，这里像素点大小：3 REVERSE决定方向
+        WS2812FX_resetSegmentRuntime(1); // 清除指定段的显示缓存
+        WS2812FX_running_flag_set();
+    }
+    else
+    {
+        // 关闭流星灯，实际上是让流星灯一直熄灭
+        // extern void close_metemor(void);
+        // WS2812FX_stop();
+        WS2812FX_setSegment_colorOptions(
+            1,                           // 第0段
+            1,                           // 起始位置
+            fc_effect.led_num - 1,       // 结束位置
+            &close_metemor,              // 效果
+            0,                           // 颜色
+            fc_effect.star_speed,        // 速度
+            0);                          // 选项，这里像素点大小：3 REVERSE决定方向
+        WS2812FX_resetSegmentRuntime(1); // 清除指定段的显示缓存
+        WS2812FX_running_flag_set();
     }
 }
 
@@ -652,6 +715,11 @@ void app_set_mereor_speed(u8 tp_s)
     if (fc_effect.star_on_off == DEVICE_OFF)
         return;
     fc_effect.app_star_speed = tp_s;
+
+    /*
+        tp_s ： 0 ~ 100
+        最后得到的 fc_effect.star_speed 会在 30 ~ 330
+    */
     fc_effect.star_speed = MAX_STAR_SEPPD * (100 - fc_effect.app_star_speed + 10) / 100;
     printf(" fc_effect.star_speed=%d\n", fc_effect.star_speed);
     ls_meteor_stat_effect();

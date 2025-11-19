@@ -647,7 +647,6 @@ void parse_zd_data(unsigned char *LedCommand)
                     break; // YELLOW
 
                 case 5:
-                    // USER_TO_DO 这里紫色不是最亮
                     set_static_mode((PURPLE >> 16) & 0xff, (PURPLE >> 8) & 0xff, (PURPLE >> 0) & 0xff);
                     break; // PURPLE
 
@@ -806,7 +805,7 @@ void parse_zd_data(unsigned char *LedCommand)
             {
                 // 通过app设置灵敏度
                 app_set_sensitive(LedCommand[2]);
-                fb_sensitive();
+                // fb_sensitive();
             }
 
             //--------------------------  流星相关 ----------------------------------------------

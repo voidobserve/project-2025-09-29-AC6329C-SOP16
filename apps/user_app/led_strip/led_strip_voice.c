@@ -7,6 +7,8 @@
 static volatile u8 flag_sound_triggered_in_colorful_lights = 0; // 标志位，七彩灯触发声控。0--未触发，1--触发
 static volatile u8 flag_sound_triggered_in_meteor_lights = 0;   // 标志位，流星灯触发声控。0--未触发，1--触发
 
+static volatile u8 flag_sound_triggered_in_motor = 0; // 标志位，电机声控模式下，触发声控，0--未触发，1--触发
+
 // 获取七彩灯的声控结果
 u8 get_sound_triggered_by_colorful_lights(void)
 {
@@ -20,6 +22,14 @@ u8 get_sound_triggered_by_meteor_lights(void)
 {
     u8 ret = flag_sound_triggered_in_meteor_lights;
     flag_sound_triggered_in_meteor_lights = 0;
+    return ret;
+}
+
+// 电机声控模式下，获取声控结果
+u8 get_sound_triggered_by_motor(void)
+{
+    u8 ret = flag_sound_triggered_in_motor;
+    flag_sound_triggered_in_motor = 0;
     return ret;
 }
 
@@ -117,6 +127,12 @@ void sound_handle(void)
 {
 #if 1 // 移植其他项目的声控程序
 
+    if (fc_effect.on_off_flag != DEVICE_ON)
+    {
+        return;
+    }
+
+
 #define SAMPLE_N 20
     static volatile u32 adc_sum = 0;
     static volatile u32 adc_sum_n = 0;
@@ -200,6 +216,7 @@ void sound_handle(void)
         u32 adc_sum_avrg = adc_sum / adc_sum_n;
         if (adc * fc_effect.colorful_lights_sensitivity / 100 > adc_sum_avrg)
         {
+
             if (fc_effect.Now_state == IS_light_music)
             {
                 // 如果七彩灯处于声控模式，会进入这里
@@ -210,6 +227,13 @@ void sound_handle(void)
 
                 // printf("trigger_by_colorful_lights\n");
             }
+
+            // 目前电机的声控模式没有独立的变量来控制，跟旧版的工程一样并入了七彩灯的声控模式中
+            // 跟七彩灯声控使用同一个灵敏度
+            if (5 == fc_effect.base_ins.mode)
+            {
+                flag_sound_triggered_in_motor = 1;
+            }
         }
 
         if (adc * fc_effect.meteor_lights_sensitivity / 100 > adc_sum_avrg)
@@ -218,7 +242,10 @@ void sound_handle(void)
             if (DEVICE_ON == fc_effect.star_on_off &&
                 (STAR_INDEX_METEOR_MUSIC_CONTROL == fc_effect.star_index ||
                  STAR_INDEX_METEOR_MUSIC_CONTROL_2 == fc_effect.star_index ||
-                 STAR_INDEX_METEOR_MUSIC_CONTROL_3 == fc_effect.star_index))
+                 STAR_INDEX_METEOR_MUSIC_CONTROL_3 == fc_effect.star_index ||
+                 17 == fc_effect.star_index ||
+                 18 == fc_effect.star_index) && 
+                 DEVICE_ON == fc_effect.star_on_off) // 流星灯要确保是开启
             {
                 // 如果流星灯处于声控模式，会进入这里
                 // music_voic.meteor_trg = 1; // 流星声控

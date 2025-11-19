@@ -427,7 +427,7 @@ void effect_stepmotor(void)
     if (fc_effect.base_ins.mode == 0x05)
     {
 
-        if (get_sound_triggered_by_colorful_lights())
+        if (get_sound_triggered_by_motor())
         {
             set_stepmotor_fast();
             printf("1111\n");

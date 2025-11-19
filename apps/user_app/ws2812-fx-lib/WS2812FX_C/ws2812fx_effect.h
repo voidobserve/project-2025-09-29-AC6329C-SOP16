@@ -131,6 +131,8 @@ u16 colorful_lights_gradual(void);
 u16 colorful_lights_breathing(void);
 u16 colorful_lights_auto(void); // 七彩灯的自动模式
 
+u16 colorful_lights_effect_close(void); // 熄灭七彩灯
+
 // 七彩灯声控模式下，对应的动画
 u16 colorful_lights_sound_gradual_max_brightness(void); // 七彩灯的 声控渐变 效果
 u16 colorful_lights_sound_breath_max_brightness(void); // 七彩灯的 声控呼吸 效果
@@ -156,11 +158,7 @@ extern volatile u8 random_breath_index;
 // 在每次开启流星灯时使用
 // u16 meteor_fast_effect(void);
 u16 meteor_effect_when_pwr_on(void);
-/*
-    流星效果
-*/
-u16 meteor_effect(void);
-// u16 meteor_light_random_breath(void); // 流星动画，对应样机的乱闪效果
+ 
 
 u16 meteor_effect_slow(void);                          // 样机的正常流星（慢速）模式
 u16 meteor_effect_middle(void);                        // 样机的正常流星（中速）模式

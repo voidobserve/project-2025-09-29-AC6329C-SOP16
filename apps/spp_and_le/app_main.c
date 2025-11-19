@@ -565,7 +565,7 @@ void WS2812_circle_task(void)
     run_tick_per_10ms();
     WS2812FX_service();
 
-    meteor_period_sub(); // 控制流星灯周期，10ms进行一次递减计数
+    // meteor_period_sub(); // 控制流星灯周期，10ms进行一次递减计数
     // printf("cycle\n"); // 测试调用的周期
 }
 

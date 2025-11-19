@@ -69,7 +69,7 @@ typedef enum
     MODE_GRADUAL = 34,                                           // 标准渐变，彩虹颜色
     MODE_MUTIL_C_BREATH = 35,
 
-    MODO_COLORFUL_LIGHTS_FLASH, // 七彩灯动画，频闪（闪烁使用到的颜色，在颜色数组中循环索引，可以只有一个颜色 ）
+    MODO_COLORFUL_LIGHTS_FLASH,   // 七彩灯动画，频闪（闪烁使用到的颜色，在颜色数组中循环索引，可以只有一个颜色 ）
     MODE_COLORFUL_LIGHTS_JUMP,    // 七彩灯动画，跳变（跳变使用到的颜色，在颜色数组中循环索引 ）
     MODE_COLORFUL_LIGHTS_GRADUAL, // 七彩灯动画，渐变（渐变使用到的颜色，在颜色数组中循环索引；至少要有两个颜色）
     MODE_COLORFUL_LIGHTS_BREATH,  // 七彩灯动画，呼吸（呼吸使用到的颜色，在颜色数组中循环索引；可以只有一个颜色）
@@ -138,14 +138,14 @@ enum
 {
     STAR_INDEX_METEOR_CONTROL_BY_APP = 0, // 由app控制的流星灯模式
     STAR_INDEX_METEOR_NORMAL_SLOW = 23,   // 正常流星，慢速
-    STAR_INDEX_METEOR_NORMAL_MIDDLE, // 正常流星，中速
-    STAR_INDEX_METEOR_NORMAL_FAST,   // 正常流星，快速
+    STAR_INDEX_METEOR_NORMAL_MIDDLE,      // 正常流星，中速
+    STAR_INDEX_METEOR_NORMAL_FAST,        // 正常流星，快速
 
     STAR_INDEX_METEOR_RANDOM_BREATH, // 乱闪模式
 
     // STAR_INDEX_METEOR_RANDOM_BREATH_2, // 同时最多2个灯随机呼吸的模式
 
-    STAR_INDEX_METEOR_MUSIC_CONTROL, // 带声控的流星灯模式
+    STAR_INDEX_METEOR_MUSIC_CONTROL,   // 带声控的流星灯模式
     STAR_INDEX_METEOR_MUSIC_CONTROL_2, // 带声控的流星灯模式
     STAR_INDEX_METEOR_MUSIC_CONTROL_3, // 带声控的流星灯模式
 
@@ -166,31 +166,29 @@ typedef struct
 
     color_t rgb; // 静态模式颜色
 
-    unsigned char meteor_period; // 周期值，单位秒
-    unsigned char mode_cycle;    // 1:模式完成一个循环。0：正在跑，和meteor_period搭配用
-    u16 period_cnt;              // ms,运行时的计数器
-    Now_state_e Now_state;       // 当前运行模式
-    dream_scene_t dream_scene;   // 幻彩情景
+    unsigned char meteor_period; // 周期值，单位秒（用于反馈给app，控制 period_cnt 的数值）
+    // unsigned char mode_cycle;    // 1:模式完成一个循环。0：正在跑，和meteor_period搭配用
+    u16 period_cnt;            // ms  范围： 2000 ~ 20000
+    Now_state_e Now_state;     // 当前运行模式
+    dream_scene_t dream_scene; // 幻彩情景
 
     music_t music; // 音乐效果
 
     u8 colorful_lights_sensitivity; // 声控模式下，七彩灯的灵敏度
 
     // unsigned char auto_f;
-    base_ins_t base_ins;        // 电机 ( base instruction ) 
+    base_ins_t base_ins; // 电机 ( base instruction )
 
-    
     unsigned char motor_on_off; // 电机开关状态
 
     // =========================================================
     // 流星灯的相关参数
-    unsigned char star_on_off; // 流星灯开关
-    unsigned char star_index;  // 流星灯动画索引
-    unsigned short star_speed; // 目前范围：30 - 300
-    unsigned char app_star_speed; // 反馈给APP流星速度
-    u8 meteor_speed_index; // 流星灯速度值索引（正常流星下会影响流星尾焰长度）
-  
-
+    unsigned char star_on_off;    // 流星灯开关
+    unsigned char star_index;     // 流星灯动画索引
+    unsigned short star_speed;    // 目前范围：30 - 330
+    unsigned char app_star_speed; // 反馈给APP流星速度 ， 范围： 0 ~ 100
+    // u8 meteor_speed_index; // 流星灯速度值索引
+    u8 meteor_tail_len;           // star_index 在 STAR_INDEX_METEOR_NORMAL_SLOW ~ STAR_INDEX_METEOR_NORMAL_FAST 之间 流星灯尾焰长度
     u8 meteor_lights_sensitivity; // 声控模式下，流星灯的灵敏度
 
     // =========================================================
@@ -207,7 +205,7 @@ countdown_t zd_countdown[ALARM_NUMBER];
 
 extern volatile fc_effect_t fc_effect; // 幻彩灯串效果数据
 
-extern const u8 meteor_tail_len_buff[10];
+// extern const u8 meteor_tail_len_buff[11];
 
 void base_Dynamic_Effect(u8 tp_num);
 
