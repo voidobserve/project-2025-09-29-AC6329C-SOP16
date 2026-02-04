@@ -71,7 +71,7 @@ typedef enum
 
     MODO_COLORFUL_LIGHTS_FLASH,   // 七彩灯动画，频闪（闪烁使用到的颜色，在颜色数组中循环索引，可以只有一个颜色 ）
     MODE_COLORFUL_LIGHTS_JUMP,    // 七彩灯动画，跳变（跳变使用到的颜色，在颜色数组中循环索引 ）
-    MODE_COLORFUL_LIGHTS_GRADUAL, // 七彩灯动画，渐变（渐变使用到的颜色，在颜色数组中循环索引；至少要有两个颜色）
+    MODE_COLORFUL_LIGHTS_GRADUAL, // 七彩灯动画，渐变（渐变使用到的颜色， ）
     MODE_COLORFUL_LIGHTS_BREATH,  // 七彩灯动画，呼吸（呼吸使用到的颜色，在颜色数组中循环索引；可以只有一个颜色）
     MODE_COLORFUL_LIGHTS_AUTO,    // 七彩灯动画，自动模式
 } change_type_e;

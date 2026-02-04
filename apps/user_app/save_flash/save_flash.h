@@ -26,9 +26,8 @@ typedef struct
 void read_flash_device_status_init(void);
 void save_user_data_area3(void);
 
-void save_user_data_enable(void);
- 
-// u8 save_user_data_status_get(void);
+void save_user_data_enable(void); 
+
 void save_user_data_time_count_down(void);
 void save_user_data_handle(void);
 

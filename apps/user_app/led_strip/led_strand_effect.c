@@ -639,7 +639,7 @@ void base_Dynamic_Effect(u8 tp_num)
         fc_effect.dream_scene.change_type = MODE_COLORFUL_LIGHTS_BREATH;
         fc_effect.dream_scene.c_n = 1;
         fc_effect.Now_state = IS_light_scene;
-    }
+    } 
     break;
 
     case 0x11:

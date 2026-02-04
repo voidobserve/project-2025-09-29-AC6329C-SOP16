@@ -126,7 +126,7 @@ void soft_turn_off_lights(void)
     WS2812FX_setSegment_colorOptions(
         0,                             // 第0段
         0,                             // 起始位置
-        0,         // 结束位置
+        0,                             // 结束位置
         &colorful_lights_effect_close, // 效果
         0,                             // 颜色
         0,                             // 速度
@@ -611,7 +611,7 @@ void app_set_meteor_pro(u8 tp_p)
 
         // USER_TO_DO
         fc_effect.meteor_period = tp_p;
-        fc_effect.period_cnt = fc_effect.meteor_period * 1000;
+        fc_effect.period_cnt = (u32)fc_effect.meteor_period * 1000;
     }
 }
 

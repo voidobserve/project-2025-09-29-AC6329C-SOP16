@@ -821,12 +821,10 @@ void rf24g_key_2_event_r4c1_click_handle(void)
 
 void rf24g_key_2_event_r4c2_click_handle(void)
 {
-    // 绿100% 红10% 蓝10%
-    color_t color_structure = {0};
-    // color_structure.r = (u8)((u16)0xFF * 10 / 100); // 10%分量
+    // 绿 100% 红 20% 蓝 20%
+    color_t color_structure = {0}; 
     color_structure.r = (u8)((u16)0xFF * 20 / 100); //  %分量
-    color_structure.g = 0xFF;
-    // color_structure.b = (u8)((u16)0xFF * 10 / 100); // 10%分量
+    color_structure.g = 0xFF; 
     color_structure.b = (u8)((u16)0xFF * 20 / 100); //  %分量
     color_structure.w = 0x00;
     colorful_lights_set_static_mode(color_structure);

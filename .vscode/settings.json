@@ -8,6 +8,7 @@
         "led_strip_sys.h": "c",
         "adafruit_neopixel.h": "c",
         "ws2812fx_effect.h": "c",
-        "Adafruit_NeoPixel.H": "cpp"
+        "Adafruit_NeoPixel.H": "cpp",
+        "syscfg_id.h": "c"
     }
 }
